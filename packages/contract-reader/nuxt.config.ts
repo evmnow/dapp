@@ -31,11 +31,6 @@ export default defineNuxtConfig({
     },
   },
   css: ['~/assets/css/contract-reader.css'],
-  vite: {
-    optimizeDeps: {
-      include: ['@1001-digital/layers.evm > qrcode', 'qrcode'],
-    },
-  },
   app: {
     head: {
       title: 'Contract Reader',
