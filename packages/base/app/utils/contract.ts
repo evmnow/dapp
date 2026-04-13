@@ -98,12 +98,10 @@ function normalizeContractMetadata(
   }
 }
 
-function normalizeRole(value: unknown, index: number): SourceRole {
+function normalizeRole(value: unknown): SourceRole {
   return SOURCE_ROLES.includes(value as SourceRole)
     ? (value as SourceRole)
-    : index === 0
-      ? 'main'
-      : 'implementation'
+    : 'main'
 }
 
 function encodeSourceMap(value: Record<string, unknown>) {
@@ -136,7 +134,7 @@ function normalizeSources(
           '',
         compilerVersion: stringValue(entry.compilerVersion),
         entryFileName: stringValue(entry.entryFileName) || null,
-        role: normalizeRole(entry.role, index),
+        role: normalizeRole(entry.role),
       }
     })
   }
@@ -269,7 +267,6 @@ function normalizeProxySources(
 
 function normalizeContractType(
   value: unknown,
-  sources: ContractSourceUnit[],
   proxy: ContractProxy | undefined,
 ): ContractType {
   if (CONTRACT_TYPES.includes(value as ContractType)) {
@@ -278,8 +275,6 @@ function normalizeContractType(
 
   if (proxy?.pattern === 'eip-2535-diamond') return 'diamond'
   if (proxy) return 'proxy'
-  if (sources.some((source) => source.role === 'facet')) return 'diamond'
-  if (sources.some((source) => source.role === 'implementation')) return 'proxy'
   return 'standard'
 }
 
@@ -326,7 +321,7 @@ export function toContractData(
     abi,
     name,
     metadata,
-    contractType: normalizeContractType(raw.contractType, sources, proxy),
+    contractType: normalizeContractType(raw.contractType, proxy),
     functions:
       normalizeFunctions(raw.functions) ||
       parseAbiFunctions(abi, metadata, sources),
