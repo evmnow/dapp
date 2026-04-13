@@ -68,7 +68,3 @@ The base components do not know about routing. They receive props and emit event
 - If no custom RPC is set, read calls use the connected wallet connector when available, then fall back to the wagmi public client from the wallet/layer configuration.
 - Metadata calls use the custom RPC first. Without one, the app passes the SDK an internal JSON-RPC fetch adapter backed by the connected wallet/provider when available.
 - Contract writes are sent through the connected wallet and the existing `EvmTransactionFlowDialog`.
-
-## Qrcode Workaround
-
-`packages/contract-reader/nuxt.config.ts` still includes `qrcode` in `vite.optimizeDeps.include`. Keep that as a temporary workaround for the inherited `@1001-digital/layers.evm` dependency graph until the upstream packaging issue is gone.
