@@ -71,7 +71,7 @@
                 </component>
               </td>
               <td>
-                <pre>{{ line }}</pre>
+                <pre v-html="highlightedLines[index]" />
               </td>
             </slot>
           </tr>
@@ -91,6 +91,7 @@
 <script setup lang="ts">
 import type { SourceFile } from '../types/contract'
 import { findFunctionInSource } from '../utils/source'
+import { highlightSolidity } from '../utils/syntax'
 
 interface SourceSelection {
   file?: number
@@ -143,6 +144,9 @@ const activeFile = computed(
   () => props.files[activeFileIndex.value] || props.files[0],
 )
 const lines = computed(() => activeFile.value?.content.split('\n') || [])
+const highlightedLines = computed(() =>
+  activeFile.value ? highlightSolidity(activeFile.value.content) : [],
+)
 
 function fileLink(file: SourceFile | undefined, index: number) {
   if (!file) return null
