@@ -1,11 +1,15 @@
 import { fileURLToPath } from 'node:url'
 
+interface ViteConfig {
+  optimizeDeps?: { include?: string[] }
+}
+
 export default defineNuxtConfig({
   extends: ['@1001-digital/layers.evm'],
   css: [fileURLToPath(new URL('./app/assets/css/index.css', import.meta.url))],
 
   hooks: {
-    'vite:extendConfig': (config) => {
+    'vite:extendConfig': (config: ViteConfig) => {
       config.optimizeDeps ??= {}
       config.optimizeDeps.include = config.optimizeDeps.include || []
       config.optimizeDeps.include = config.optimizeDeps.include.filter(
