@@ -19,7 +19,13 @@ export function escapeCodeHtml(value: string): string {
 
 function renderToken(content: string, style: unknown): string {
   const text = escapeCodeHtml(content)
-  if (!style || typeof style !== 'object') return text
+  if (!style) return text
+
+  if (typeof style === 'string') {
+    return style ? `<span style="${style}">${text}</span>` : text
+  }
+
+  if (typeof style !== 'object') return text
 
   const color = (style as Record<string, string>).color
   return color ? `<span style="color:${color}">${text}</span>` : text
@@ -39,7 +45,7 @@ export function highlightSolidity(source: string): string[] {
       if (!tokenLine?.length) return escapeCodeHtml(line)
 
       return tokenLine
-        .map((token) => renderToken(token.content, token.htmlStyle))
+        .map((token) => renderToken(token.content, token.htmlStyle || token))
         .join('')
     })
   } catch {
