@@ -1,0 +1,30 @@
+@layer components {
+  .cr-overview-card,
+  .cr-source {
+    min-width: 0;
+  }
+
+  .cr-overview-card,
+  .cr-about,
+  .cr-stat {
+    padding: var(--cr-gap);
+  }
+
+  .cr-overview h2 {
+    margin: 0;
+  }
+
+  .cr-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, calc(var(--form-width) / 2)), 1fr)
+    );
+    gap: var(--size-2);
+  }
+
+  .cr-stat {
+    display: grid;
+    gap: var(--size-2);
+  }
+}

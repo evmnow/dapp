@@ -1,0 +1,16 @@
+node_modules
+.DS_Store
+.output
+.nuxt
+.pnpm-store
+*.log
+
+# Local History
+.history
+
+# Editors
+.vscode/
+.idea/
+
+# Build output
+packages/contract-reader/dist

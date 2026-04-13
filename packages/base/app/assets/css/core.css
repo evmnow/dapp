@@ -1,0 +1,132 @@
+@layer components {
+  :root {
+    --cr-gap: var(--size-4);
+    --cr-radius: var(--border-radius);
+    --cr-border: var(
+      --border-color,
+      color-mix(in srgb, currentColor 16%, transparent)
+    );
+    --cr-surface: var(--surface-1, canvas);
+    --cr-surface-muted: var(
+      --surface-2,
+      color-mix(in srgb, canvas 92%, currentColor)
+    );
+    --cr-text: var(--color, canvastext);
+    --cr-muted: var(--muted, color-mix(in srgb, currentColor 56%, transparent));
+    --cr-primary: var(--primary, currentColor);
+    --cr-error: var(--error, currentColor);
+    --cr-active-surface: var(--cr-surface-muted);
+    --cr-font: var(--font-family, sans-serif);
+    --cr-mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    --cr-label-font-size: var(--font-xs);
+    --cr-label-font-weight: 700;
+    --cr-label-letter-spacing: 0;
+    --cr-label-text-transform: uppercase;
+    --cr-function-gap: var(--size-2);
+    --cr-function-section-gap: var(--size-4);
+    --cr-function-group-gap: var(--size-2);
+    --cr-function-form-gap: var(--size-2);
+    --cr-function-grid-gap: var(--size-3);
+    --cr-function-field-gap: var(--size-2);
+    --cr-function-item-padding-block: var(--size-2);
+    --cr-function-item-padding-inline: var(--size-3);
+    --cr-function-item-min-block-size: calc(var(--size-6) + var(--size-2));
+    --cr-function-card-header-padding-block: var(--size-2);
+    --cr-function-card-header-padding-inline: var(--size-3);
+    --cr-function-card-body-padding: var(--size-3);
+    --cr-function-detail-gap: var(--size-2);
+    --cr-function-detail-button-width: fit-content;
+    --cr-function-detail-button-justify: start;
+    --cr-input-help-margin-top: calc(
+      var(--size-1) - var(--cr-function-field-gap)
+    );
+    --cr-result-margin-top: 0;
+    --cr-result-padding: var(--size-4);
+    --cr-result-header-gap: var(--size-3);
+    --cr-result-header-margin-bottom: var(--size-2);
+    --cr-result-fields-margin-top: 0;
+    --cr-result-field-gap: var(--size-3);
+    --cr-result-field-padding-block: var(--size-3);
+    --cr-result-field-padding-inline: var(--size-4);
+    --cr-result-toggle-padding-block: var(--size-2);
+    --cr-result-toggle-padding-inline: var(--size-3);
+    --cr-result-toggle-surface: var(--cr-surface);
+    --cr-result-section-surface: var(--cr-surface-muted);
+    --cr-markdown-gap: var(--size-4);
+    --cr-markdown-heading-gap: var(--size-2);
+    --cr-markdown-list-padding-inline: var(--size-5);
+    --cr-markdown-code-padding-block: var(--size-0);
+    --cr-markdown-code-padding-inline: var(--size-1);
+    --cr-markdown-code-radius: calc(var(--cr-radius) * 0.65);
+    --cr-markdown-code-surface: var(--cr-surface-muted);
+    --cr-markdown-pre-padding: var(--size-3);
+    --cr-markdown-blockquote-padding-inline: var(--size-3);
+    --cr-markdown-blockquote-border-width: var(--border-width);
+    --cr-source-gap: var(--cr-gap);
+    --cr-source-header-padding: var(--cr-gap);
+    --cr-source-header-gap: var(--size-3);
+    --cr-source-scroll-padding-block: var(--size-2);
+    --cr-source-pre-padding-inline: var(--size-3);
+    --cr-source-row-active-surface: var(--cr-surface-muted);
+    --cr-line-number-min-inline-size: calc(var(--size-4) + var(--size-2));
+    --cr-line-number-padding-inline: var(--size-2);
+  }
+
+  .cr-playground {
+    font-family: var(--cr-font);
+    color: var(--cr-text);
+  }
+
+  .cr-panel {
+    border: var(--border-width) solid var(--cr-border);
+    border-radius: var(--cr-radius);
+    background: var(--cr-surface);
+  }
+
+  .cr-muted {
+    color: var(--cr-muted);
+  }
+
+  .cr-source-header,
+  .cr-result-header {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .cr-source-header {
+    gap: var(--cr-source-header-gap);
+  }
+
+  .cr-result-header {
+    gap: var(--cr-result-header-gap);
+  }
+
+  .cr-overview code,
+  .cr-function-item code {
+    display: block;
+    max-width: 100%;
+    color: var(--cr-muted);
+    line-height: var(--line-height-md);
+    overflow-wrap: anywhere;
+  }
+
+  .cr-group-title,
+  .cr-result-header,
+  .cr-stat span {
+    color: var(--cr-muted);
+    font-size: var(--cr-label-font-size);
+    font-weight: var(--cr-label-font-weight);
+    letter-spacing: var(--cr-label-letter-spacing);
+    text-transform: var(--cr-label-text-transform);
+  }
+
+  .cr-function-item code,
+  .cr-overview code,
+  .cr-field code,
+  .cr-result-value,
+  .cr-result-field-value,
+  .cr-source-table pre,
+  .cr-line-number {
+    font-family: var(--cr-mono);
+  }
+}

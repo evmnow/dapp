@@ -1,0 +1,78 @@
+@layer components {
+  .cr-markdown {
+    display: grid;
+    gap: var(--cr-markdown-gap);
+    color: var(--cr-text);
+    line-height: var(--line-height-lg);
+  }
+
+  .cr-markdown :where(h1, h2, h3, h4, h5, h6, p, ul, ol, pre, blockquote) {
+    margin: 0;
+  }
+
+  .cr-markdown :where(h1, h2, h3, h4, h5, h6) {
+    line-height: var(--line-height-sm);
+    letter-spacing: var(--letter-spacing-sm);
+  }
+
+  .cr-markdown :where(h1, h2, h3) {
+    margin-top: var(--cr-markdown-heading-gap);
+  }
+
+  .cr-markdown :where(h1) {
+    font-size: var(--font-xl);
+  }
+
+  .cr-markdown :where(h2) {
+    font-size: var(--font-lg);
+  }
+
+  .cr-markdown :where(h3, h4, h5, h6) {
+    font-size: var(--font-base);
+  }
+
+  .cr-markdown a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: from-font;
+    text-underline-offset: var(--size-1);
+  }
+
+  .cr-markdown :where(ul, ol) {
+    padding-left: var(--cr-markdown-list-padding-inline);
+  }
+
+  .cr-markdown li + li {
+    margin-top: var(--size-1);
+  }
+
+  .cr-markdown code {
+    border: var(--border-width) solid var(--cr-border);
+    border-radius: var(--cr-markdown-code-radius);
+    background: var(--cr-markdown-code-surface);
+    font-family: var(--cr-mono);
+    font-size: var(--font-sm);
+    padding: var(--cr-markdown-code-padding-block)
+      var(--cr-markdown-code-padding-inline);
+  }
+
+  .cr-markdown pre {
+    overflow: auto;
+    border-radius: var(--cr-radius);
+    background: var(--cr-markdown-code-surface);
+    padding: var(--cr-markdown-pre-padding);
+  }
+
+  .cr-markdown pre code {
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .cr-markdown blockquote {
+    border-left: var(--cr-markdown-blockquote-border-width) solid
+      var(--cr-border);
+    color: var(--cr-muted);
+    padding-left: var(--cr-markdown-blockquote-padding-inline);
+  }
+}
