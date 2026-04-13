@@ -103,7 +103,7 @@ defineProps<{
   contentClass?: string
 }>()
 
-const repositoryUrl = 'https://github.com/wildwhite-agent/contract-reader'
+const repositoryUrl = 'https://github.com/evmnow/dapp'
 const brandPopoverOpen = ref(false)
 let brandPopoverCloseTimeout: ReturnType<typeof setTimeout> | undefined
 
