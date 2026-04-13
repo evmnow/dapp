@@ -1,0 +1,22 @@
+{
+  "name": "@evm-now/contract-reader",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@evm-now/base": "workspace:*",
+    "@wagmi/core": "3.4.1",
+    "nuxt": "^4.4.2",
+    "viem": "2.47.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.2.6"
+  }
+}

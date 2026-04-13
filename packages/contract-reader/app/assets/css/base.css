@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap');
+
+:root {
+  color-scheme: light;
+
+  --font-family: 'DM Sans', sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+
+  --letter-spacing: 0;
+
+  --background: var(--gray-z-0);
+  --color: var(--gray-z-10);
+  --muted: var(--gray-z-5);
+  --primary: var(--color);
+
+  --surface-0: var(--gray-z-2);
+  --surface-1: var(--gray-z-1);
+  --surface-2: var(--gray-z-0);
+  --surface-3: var(--gray-z-1);
+  --surface-4: var(--gray-z-0);
+
+  --border-color: color-mix(in srgb, var(--gray-z-3) 72%, transparent);
+  --border-width: 1px;
+  --border: var(--border-width) solid var(--border-color);
+  --border-shadow: 0 0 0 var(--border-width) var(--border-color);
+  --border-shadow-highlight: 0 0 0 var(--border-width) var(--primary);
+  --border-radius: var(--size-2);
+  --border-radius-lg: var(--size-3);
+
+  --button-border-radius: var(--border-radius);
+  --button-background: var(--surface-2);
+  --button-background-highlight: var(--surface-3);
+  --button-primary-background: var(--color);
+  --button-primary-background-highlight: var(--gray-z-8);
+  --button-primary-color: var(--gray-z-0);
+
+  --card-background: var(--surface-1);
+  --card-background-highlight: var(--surface-2);
+  --dialog-border-radius: var(--border-radius-lg);
+  --dialog-header-background: var(--surface-1);
+  --input-background: var(--surface-2);
+  --input-background-highlight: var(--surface-1);
+
+  --ui-font-size: var(--font-sm);
+  --ui-font-weight: 500;
+  --ui-text-transform: none;
+  --ui-letter-spacing: 0;
+  --input-text-transform: none;
+  --ui-padding-block: var(--size-2);
+  --ui-padding-inline: var(--size-3);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #__nuxt {
+    min-height: 100%;
+    margin: 0;
+  }
+
+  html {
+    background: var(--surface-1);
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background: var(--surface-1);
+    color: var(--color);
+    font-family: var(--font-family);
+    font-size: var(--font-sm);
+    overflow-x: clip;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  code {
+    font-family: var(--font-mono);
+  }
+}
