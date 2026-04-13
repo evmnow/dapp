@@ -171,7 +171,6 @@
   .search-intro,
   .settings-intro {
     display: grid;
-    gap: var(--size-3);
   }
 
   .search-panel {
