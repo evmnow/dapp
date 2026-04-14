@@ -1,29 +1,27 @@
 <template>
   <section class="search-panel">
-    <!-- <header> -->
-    <!--   <h1 class="page-title">Contract Reader</h1> -->
-    <!--   <p class="page-copy">Search the worldcomputer.</p> -->
-    <!-- </header> -->
-
     <form @submit.prevent="openContract">
-      <FormInputGroup>
-        <input
-          v-model="addressOrEns"
-          placeholder="uniswap.eth or 0x..."
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <Button
-          type="submit"
-          class=""
-        >
-          <Icon
-            name="lucide:search"
-            aria-hidden="true"
+      <FormGroup>
+        <FormInputGroup>
+          <input
+            v-model="addressOrEns"
+            placeholder="uniswap.eth or 0x..."
+            autocomplete="off"
+            spellcheck="false"
           />
-          <span>Search</span>
-        </Button>
-      </FormInputGroup>
+          <Button
+            type="submit"
+            class=""
+          >
+            <Icon
+              name="lucide:search"
+              aria-hidden="true"
+            />
+            <span>Search</span>
+          </Button>
+        </FormInputGroup>
+        <p class="muted">Read and interact with smart contrats on Ethereum.</p>
+      </FormGroup>
     </form>
   </section>
 </template>
@@ -56,6 +54,10 @@ async function openContract() {
       max-inline-size: calc(var(--content-width-sm) - var(--size-10));
       width: 100%;
       margin-inline: auto;
+
+      p {
+        padding-inline: var(--size-3);
+      }
     }
 
     @media (max-width: 768px) {
