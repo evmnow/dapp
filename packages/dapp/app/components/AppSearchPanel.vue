@@ -6,22 +6,24 @@
     </header>
 
     <form @submit.prevent="openContract">
-      <label>
-        <span>Address or ENS</span>
+      <FormInputGroup>
         <input
           v-model="addressOrEns"
           placeholder="uniswap.eth or 0x..."
           autocomplete="off"
           spellcheck="false"
         />
-      </label>
-
-      <Button
-        type="submit"
-        class="primary"
-      >
-        Search
-      </Button>
+        <Button
+          type="submit"
+          class=""
+        >
+          <Icon
+            name="lucide:search"
+            aria-hidden="true"
+          />
+          <span>Search</span>
+        </Button>
+      </FormInputGroup>
     </form>
   </section>
 </template>
@@ -51,34 +53,7 @@ async function openContract() {
     }
 
     form {
-      display: grid;
-      grid-template-columns: repeat(
-        auto-fit,
-        minmax(min(100%, calc(var(--form-width) - var(--size-7))), 1fr)
-      );
-      gap: var(--size-3);
-      align-items: end;
       max-inline-size: calc(var(--content-width-sm) + var(--size-8));
-
-      label {
-        display: grid;
-        gap: var(--size-2);
-
-        span {
-          color: var(--muted);
-          font-size: var(--font-xs);
-          font-weight: 700;
-          text-transform: uppercase;
-        }
-
-        input {
-          inline-size: 100%;
-        }
-      }
-
-      button {
-        inline-size: fit-content;
-      }
     }
   }
 }
