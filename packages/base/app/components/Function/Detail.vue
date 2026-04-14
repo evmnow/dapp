@@ -70,7 +70,7 @@
           >
             <span>
               {{ input.label }}
-              <code>{{ input.type }}</code>
+              <span class="cr-field-type">({{ input.type }})</span>
             </span>
 
             <FunctionTupleInput
@@ -104,7 +104,7 @@
       >
         <span>
           value
-          <code>ETH</code>
+          <span class="cr-field-type">(ETH)</span>
         </span>
 
         <input

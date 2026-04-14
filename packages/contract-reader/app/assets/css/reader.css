@@ -309,7 +309,7 @@
     line-height: var(--line-height-md);
   }
 
-  .cr-field > span code {
+  .cr-field-type {
     color: var(--cr-muted);
     font-size: var(--font-sm);
     font-weight: 400;

@@ -2,7 +2,7 @@
   <div class="cr-field">
     <span>
       {{ label }}
-      <code>{{ input.type }}</code>
+      <span class="cr-field-type">({{ input.type }})</span>
     </span>
 
     <select

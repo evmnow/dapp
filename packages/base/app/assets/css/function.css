@@ -159,7 +159,7 @@
     text-transform: capitalize;
   }
 
-  .cr-field > span code {
+  .cr-field-type {
     text-transform: none;
   }
 
