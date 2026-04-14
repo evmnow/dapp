@@ -8,6 +8,8 @@
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
     background: var(--cr-surface);
+    display: grid;
+    gap: var(--spacer-sm);
   }
 
   .cr-muted {
