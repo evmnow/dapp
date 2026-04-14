@@ -3,35 +3,42 @@
     <AppSearchPanel v-if="!isReaderMode" />
 
     <template v-else>
-      <p
+      <Alert
         v-if="!hasRpc"
-        class="page-hint"
+        type="info"
       >
-        Repository and Sourcify metadata can load verified addresses without
-        RPC. Set an RPC URL in settings for ENS lookup and contractURI metadata,
-        or connect a wallet for provider-backed metadata and reads.
-      </p>
+        <p>
+          Repository and Sourcify metadata can load verified addresses without
+          RPC. Set an RPC URL in settings for ENS lookup and contractURI
+          metadata, or connect a wallet for provider-backed metadata and reads.
+        </p>
 
-      <p
-        v-if="pending"
-        class="page-hint"
-      >
-        Loading contract metadata...
-      </p>
+        <Actions>
+          <Button
+            to="/settings"
+            class="tertiary small"
+            >View Settings</Button
+          >
+        </Actions>
+      </Alert>
 
-      <p
+      <Alert v-if="pending"> Loading contract metadata... </Alert>
+
+      <Alert
         v-else-if="error"
-        class="page-hint error"
+        type="error"
+        dismissable
       >
         {{ error.message }}
-      </p>
+      </Alert>
 
-      <p
+      <Alert
         v-if="callError"
-        class="page-hint error"
+        type="error"
+        dismissable
       >
         {{ callError }}
-      </p>
+      </Alert>
 
       <section
         v-if="contractData"
@@ -287,21 +294,3 @@ function functionsForView(view: ContractView) {
     : contractData.value.functions.read
 }
 </script>
-
-<style scoped>
-@layer components {
-  .page-hint {
-    margin: 0;
-    padding: var(--size-4);
-    border: var(--border);
-    border-radius: var(--border-radius);
-    background: var(--surface-2);
-    color: var(--muted);
-    line-height: var(--line-height-lg);
-
-    &.error {
-      color: var(--error);
-    }
-  }
-}
-</style>

@@ -46,6 +46,8 @@
   --input-background: var(--surface-2);
   --input-background-highlight: var(--surface-1);
 
+  --alert-background: var(--surface-2);
+
   --ui-font-size: var(--font-sm);
   --ui-font-weight: 500;
   --ui-text-transform: none;
