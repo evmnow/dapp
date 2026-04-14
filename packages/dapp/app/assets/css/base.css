@@ -3,6 +3,9 @@
 :root {
   color-scheme: light;
 
+  --content-width-wide: 64rem;
+  --content-width: 45rem;
+
   --font-family: 'DM Sans', sans-serif;
   --font-weight-bold: 700;
   --font-mono:
