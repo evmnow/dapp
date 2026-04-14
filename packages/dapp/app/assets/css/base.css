@@ -4,6 +4,7 @@
   color-scheme: light;
 
   --font-family: 'DM Sans', sans-serif;
+  --font-weight-bold: 700;
   --font-mono:
     ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
 

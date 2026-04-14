@@ -10,43 +10,43 @@
     <template #trigger>
       <button
         type="button"
-        class="version-pill"
+        class="version-pill small"
         @mouseenter="open = true"
         @mouseleave="queueClose"
-        @focus="open = true"
       >
         v{{ version }}
       </button>
     </template>
 
-    <div
-      class="open-source-popover__body"
+    <section
       @mouseenter="clearClose"
       @mouseleave="queueClose"
     >
       <p>
         This is the open source version of
-        <a
-          href="https://evm.now"
-          target="_blank"
-          rel="noreferrer"
-        >
-          evm.now</a
-        >. Source code and project updates live on GitHub.
+        <span class="nowrap">
+          <a
+            href="https://evm.now"
+            target="_blank"
+            rel="noreferrer"
+          >
+            evm.now</a
+          >.
+        </span>
+        Source code and project updates live on GitHub.
       </p>
       <a
-        class="open-source-popover__link"
         :href="repositoryUrl"
         target="_blank"
         rel="noreferrer"
       >
-        <span>View the repo on GitHub</span>
         <Icon
           name="lucide:github"
           aria-hidden="true"
         />
+        <span>View the repo on GitHub</span>
       </a>
-    </div>
+    </section>
   </Popover>
 </template>
 
@@ -65,8 +65,67 @@ function clearClose() {
 function queueClose() {
   clearClose()
   closeTimeout = setTimeout(() => {
+    if (!open.value) return
     open.value = false
-    closeTimeout = undefined
-  }, 250)
+  }, 500)
 }
 </script>
+
+<style scoped>
+@layer components {
+  .version-pill {
+    --button-border-color-highlight: var(--muted);
+    --ui-color: var(--muted);
+    --border-shadow-highlight: var(--border-shadow);
+
+    position: relative;
+    top: calc(-1 * var(--size-3));
+    left: calc(-1 * var(--size-2));
+    align-items: center;
+    height: var(--size-4);
+    font-size: var(--font-xs);
+    font-weight: var(--font-weight-bold);
+    border-radius: var(--size-10);
+    padding: 0 var(--size-2) 0 calc(var(--size-2) - var(--size-0));
+    cursor: help;
+  }
+
+  .open-source-popover {
+    --popover-width: calc(var(--form-width) - var(--size-7));
+    --popover-min-width: calc(var(--content-width-sm) / 2);
+    --popover-padding: var(--size-4);
+
+    section {
+      display: grid;
+      gap: var(--size-3);
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--font-sm);
+        line-height: var(--line-height-lg);
+      }
+
+      a {
+        color: var(--color);
+        font-weight: var(--font-weight-bold);
+        text-decoration: underline;
+        text-underline-offset: 0.19em;
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: var(--size-2);
+        color: var(--color);
+        font-size: var(--font-sm);
+        font-weight: 700;
+        line-height: var(--line-height-md);
+
+        .iconify {
+          width: var(--size-4);
+          height: var(--size-4);
+        }
+      }
+    }
+  }
+}
+</style>
