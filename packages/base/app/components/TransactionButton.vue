@@ -8,7 +8,7 @@
     >
       <template #start="{ start, open }">
         <button
-          class="cr-button cr-button-primary"
+          :class="['cr-button cr-button-primary', props.buttonClass]"
           type="button"
           :disabled="props.disabled || open"
           @click="start"
@@ -30,6 +30,7 @@ const props = withDefaults(
     label?: string
     busyLabel?: string
     disabled?: boolean
+    buttonClass?: string
   }>(),
   {
     label: 'send',

@@ -19,8 +19,13 @@
               type="button"
               @click="toggleFunction(fn.slug)"
             >
-              <span>{{ fn.title }}</span>
-              <code v-if="fn.title !== fn.name">{{ fn.name }}()</code>
+              <span class="cr-function-card-title">{{ fn.title }}</span>
+              <span
+                v-if="fn.title !== fn.name"
+                class="cr-function-card-signature"
+              >
+                {{ fn.name }}()
+              </span>
             </button>
 
             <div

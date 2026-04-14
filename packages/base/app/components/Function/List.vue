@@ -43,8 +43,13 @@
                 :type="itemHref(fn) ? undefined : 'button'"
                 @click="selectFunction(fn.slug)"
               >
-                <span>{{ fn.title }}</span>
-                <code v-if="fn.title !== fn.name">{{ fn.name }}()</code>
+                <span class="cr-function-item-title">{{ fn.title }}</span>
+                <span
+                  v-if="fn.title !== fn.name"
+                  class="cr-function-item-signature"
+                >
+                  {{ fn.name }}()
+                </span>
               </component>
             </slot>
           </template>

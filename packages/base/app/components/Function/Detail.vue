@@ -29,7 +29,9 @@
         v-if="examples.length"
         class="cr-field"
       >
-        <span>{{ labels.examples }}</span>
+        <span class="cr-field-label">
+          {{ labels.examples }}
+        </span>
         <div class="cr-examples">
           <button
             v-for="example in examples"
@@ -68,7 +70,7 @@
             v-if="isTuple(input)"
             class="cr-field"
           >
-            <span>
+            <span class="cr-field-label">
               {{ input.label }}
               <span class="cr-field-type">({{ input.type }})</span>
             </span>
@@ -102,7 +104,7 @@
         v-if="fn.isPayable"
         class="cr-field cr-value-field"
       >
-        <span>
+        <span class="cr-field-label">
           value
           <span class="cr-field-type">(ETH)</span>
         </span>
@@ -132,7 +134,7 @@
       >
         <button
           v-if="fn.isRead && (fn.inputs.length || !autoRead)"
-          class="cr-button cr-button-primary"
+          class="cr-button cr-button-primary cr-function-action"
           type="submit"
           :disabled="pending || !readFunction || hasErrors"
         >
@@ -145,6 +147,7 @@
           :chain="chainId"
           :label="labels.send"
           :busy-label="labels.sending"
+          button-class="cr-function-action"
           :disabled="hasErrors"
         />
 

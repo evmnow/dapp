@@ -11,7 +11,7 @@
     padding: var(--cr-source-header-padding);
   }
 
-  .cr-source-header .cr-input {
+  .cr-source-control {
     display: block;
     margin: 0;
   }
@@ -39,15 +39,18 @@
     vertical-align: top;
   }
 
-  .cr-source-table td:first-child {
+  .cr-source-line-number-cell {
     width: 1%;
     white-space: nowrap;
   }
 
-  .cr-source-table pre {
+  .cr-source-code-cell {
+    min-width: 0;
+  }
+
+  .cr-source-code-block {
     margin: 0;
     padding: 0 var(--cr-source-pre-padding-inline);
-    overflow: visible;
     white-space: pre;
   }
 

@@ -13,7 +13,7 @@
         <select
           v-if="files.length > 1"
           :value="activeFileIndex"
-          class="cr-input"
+          class="cr-input cr-source-control"
           @change="
             selectFile(Number(($event.target as HTMLSelectElement).value))
           "
@@ -29,10 +29,16 @@
         <a
           v-else-if="activeFile && fileLink(activeFile, activeFileIndex)"
           :href="fileLink(activeFile, activeFileIndex) || undefined"
+          class="cr-source-control"
         >
           {{ activeFile.path }}
         </a>
-        <span v-else>{{ activeFile?.path || 'source' }}</span>
+        <span
+          v-else
+          class="cr-source-control"
+        >
+          {{ activeFile?.path || 'source' }}
+        </span>
       </slot>
     </header>
 
@@ -57,7 +63,7 @@
               :href="lineLink(activeFile, index + 1, line)"
               :select-line="selectLine"
             >
-              <td>
+              <td class="cr-source-line-number-cell">
                 <component
                   :is="lineLink(activeFile, index + 1, line) ? 'a' : 'button'"
                   class="cr-line-number"
@@ -70,8 +76,11 @@
                   {{ index + 1 }}
                 </component>
               </td>
-              <td>
-                <pre v-html="highlightedLines[index]" />
+              <td class="cr-source-code-cell">
+                <pre
+                  class="cr-source-code-block"
+                  v-html="highlightedLines[index]"
+                />
               </td>
             </slot>
           </tr>

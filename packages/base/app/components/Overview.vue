@@ -26,8 +26,8 @@
           :contract="contract"
           :stat="stat"
         >
-          <span>{{ stat.label }}</span>
-          <strong>{{ stat.value }}</strong>
+          <span class="cr-stat-label">{{ stat.label }}</span>
+          <strong class="cr-stat-value">{{ stat.value }}</strong>
         </slot>
       </div>
     </div>

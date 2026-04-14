@@ -2,15 +2,26 @@
   <section
     v-if="fields.length"
     class="cr-result-fields"
+    data-cr-result-fields
   >
     <div
       v-for="field in fields"
       :key="field.key"
       class="cr-result-field"
-      :style="fieldIndentStyle(field.depth)"
+      :data-depth="field.depth"
+      :data-kind="field.kind"
+      :style="fieldStyle(field.depth)"
     >
-      <span class="cr-result-field-label">{{ field.label }}</span>
-      <span class="cr-result-field-value">
+      <span
+        class="cr-result-field-label"
+        data-cr-result-field-label
+      >
+        {{ field.label }}
+      </span>
+      <span
+        class="cr-result-field-value"
+        data-cr-result-field-value
+      >
         <template v-if="field.kind === 'address'">
           <slot
             name="address"
@@ -128,15 +139,13 @@ function buildFields(
   })
 }
 
-function fieldIndentStyle(depth: number) {
-  if (depth <= 0) return {}
-
+function fieldStyle(depth: number) {
   const indent = Array.from({ length: depth }, () => 'var(--size-5)').join(
     ' + ',
   )
 
   return {
-    paddingInlineStart: `calc(var(--cr-result-field-padding-inline) + ${indent})`,
+    '--cr-result-field-indent': indent ? `calc(${indent})` : '0px',
   }
 }
 

@@ -1,7 +1,18 @@
 <template>
-  <div class="cr-result cr-panel">
-    <div class="cr-result-header">
-      <span class="cr-result-label">{{ label }}</span>
+  <div
+    class="cr-result cr-panel"
+    data-cr-result
+  >
+    <div
+      class="cr-result-header"
+      data-cr-result-header
+    >
+      <span
+        class="cr-result-label"
+        data-cr-result-label
+      >
+        {{ label }}
+      </span>
       <CopyButton
         v-if="value"
         :text="value"
@@ -10,6 +21,7 @@
     <div
       v-if="isError"
       class="cr-result-error"
+      data-cr-result-error
     >
       {{ value }}
     </div>
@@ -17,11 +29,13 @@
       <div
         class="cr-result-value"
         :class="{ 'cr-result-truncated': isLong && !expanded }"
+        data-cr-result-value
       >
         <a
           v-if="addressHref"
           :href="addressHref"
           class="cr-result-address"
+          data-cr-result-address
         >
           <slot
             name="address"
@@ -49,6 +63,7 @@
         v-if="isLong"
         class="cr-button cr-result-toggle"
         type="button"
+        data-cr-result-toggle
         @click="expanded = !expanded"
       >
         {{ expanded ? 'show less' : 'show more' }}

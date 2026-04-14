@@ -1,6 +1,6 @@
 <template>
   <div class="cr-field">
-    <span>
+    <span class="cr-field-label">
       {{ label }}
       <span class="cr-field-type">({{ input.type }})</span>
     </span>

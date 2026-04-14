@@ -14,7 +14,7 @@
           <div class="cr-group-title">
             <span>
               {{ group.label }}
-              <span>({{ group.functions.length }})</span>
+              <span class="cr-group-count">({{ group.functions.length }})</span>
             </span>
 
             <slot

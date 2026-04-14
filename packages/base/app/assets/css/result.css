@@ -5,7 +5,7 @@
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
     background: var(--cr-result-section-surface);
-    overflow: hidden;
+    overflow: var(--cr-result-overflow, hidden);
   }
 
   .cr-result-header {
@@ -35,20 +35,25 @@
     font-size: var(--font-sm);
     font-weight: 600;
     line-height: var(--line-height-lg);
-    overflow: auto;
+    overflow: var(--cr-result-value-overflow, auto);
     white-space: pre-wrap;
     word-break: break-word;
   }
 
   .cr-result-truncated {
-    max-height: calc(var(--size-10) + var(--size-4));
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      currentColor 65%,
-      transparent
+    max-height: var(
+      --cr-result-truncated-max-height,
+      calc(var(--size-10) + var(--size-4))
     );
-    mask-image: linear-gradient(to bottom, currentColor 65%, transparent);
+    overflow: var(--cr-result-truncated-overflow, hidden);
+    -webkit-mask-image: var(
+      --cr-result-truncated-mask-image,
+      linear-gradient(to bottom, currentColor 65%, transparent)
+    );
+    mask-image: var(
+      --cr-result-truncated-mask-image,
+      linear-gradient(to bottom, currentColor 65%, transparent)
+    );
   }
 
   .cr-result-toggle {
@@ -74,15 +79,19 @@
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
     background: var(--cr-result-section-surface);
-    overflow: hidden;
+    overflow: var(--cr-result-fields-overflow, hidden);
   }
 
   .cr-result-field {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: baseline;
     gap: var(--cr-result-field-gap);
-    padding: var(--cr-result-field-padding-block)
-      var(--cr-result-field-padding-inline);
+    padding-block: var(--cr-result-field-padding-block);
+    padding-inline-start: calc(
+      var(--cr-result-field-padding-inline) + var(--cr-result-field-indent, 0px)
+    );
+    padding-inline-end: var(--cr-result-field-padding-inline);
   }
 
   .cr-result-field + .cr-result-field {
@@ -90,10 +99,11 @@
   }
 
   .cr-result-field-label {
-    margin-right: auto;
+    min-width: 0;
   }
 
   .cr-result-field-value {
+    justify-self: end;
     color: var(--cr-text);
     font-size: var(--font-sm);
     font-weight: 600;
