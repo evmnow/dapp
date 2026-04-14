@@ -84,6 +84,7 @@
         <Overview
           v-if="currentView === 'overview'"
           :contract="contractData"
+          :link-resolver="resolveStatLink"
         />
 
         <ContractFunctions
@@ -123,6 +124,7 @@
 </template>
 
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
 import type {
   ContractView,
   ContractViewState,
@@ -138,7 +140,7 @@ const config = useRuntimeConfig()
 const mainnetEnsRpc = computed(() =>
   String(config.public.mainnetEnsRpc ?? '').trim(),
 )
-const { state } = useReaderQueryState()
+const { state, routeFor } = useReaderQueryState()
 const readerAddress = computed(() => state.value.address?.trim() || '')
 const isReaderMode = computed(() => Boolean(readerAddress.value))
 const { effectiveChainId, rpc } = useReaderRpc()
@@ -224,10 +226,35 @@ const allFunctionNames = computed(() => {
     ].map((fn) => fn.name),
   )
 })
+const STAT_VIEW_MAP: Record<string, ContractView> = {
+  read: 'read',
+  write: 'interact',
+  source: 'code',
+}
+
+function resolveStatLink(stat: {
+  key: string
+  value: string | number
+}): RouteLocationRaw | undefined {
+  const view = STAT_VIEW_MAP[stat.key]
+  if (!view || !stat.value) return undefined
+  return routeFor({ view })
+}
+
+const fallbackFileName = computed(() => {
+  const sources = contractData.value?.sources
+  if (!sources?.length) return undefined
+  const main = sources.find((source) => source.role === 'main') ?? sources[0]
+  const path = main?.entryFileName
+  if (!path) return undefined
+  const slash = path.lastIndexOf('/')
+  return slash === -1 ? path : path.slice(slash + 1)
+})
 const title = computed(
   () =>
     contractData.value?.metadata?.name ||
     contractData.value?.name ||
+    fallbackFileName.value ||
     'Contract',
 )
 const emptyFunctionText = computed(() =>
@@ -243,7 +270,9 @@ useHead({
   title: computed(() => {
     if (!isReaderMode.value) return undefined
     const name =
-      contractData.value?.metadata?.name || contractData.value?.name
+      contractData.value?.metadata?.name ||
+      contractData.value?.name ||
+      fallbackFileName.value
     return name || readerAddress.value
   }),
 })

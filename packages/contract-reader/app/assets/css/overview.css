@@ -4,12 +4,6 @@
     min-width: 0;
   }
 
-  .cr-overview-card,
-  .cr-about,
-  .cr-stat {
-    padding: var(--cr-gap);
-  }
-
   .cr-overview h2 {
     margin: 0;
   }
@@ -24,7 +18,6 @@
   }
 
   .cr-stat {
-    display: grid;
     gap: var(--size-2);
   }
 }

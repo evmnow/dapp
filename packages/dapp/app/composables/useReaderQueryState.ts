@@ -1,4 +1,4 @@
-import type { LocationQuery } from 'vue-router'
+import type { LocationQuery, RouteLocationRaw } from 'vue-router'
 import type { ReaderQueryState } from '~/types/reader-query'
 
 const DEFAULT_STATE: ReaderQueryState = {
@@ -179,7 +179,21 @@ export function useReaderQueryState(options: { path?: string } = {}) {
     },
   })
 
+  function routeFor(partial: Partial<ReaderQueryState>): RouteLocationRaw {
+    const nextState = normalizeReaderQueryState({
+      address: state.value.address,
+      view: DEFAULT_STATE.view,
+      args: [],
+      ...partial,
+    })
+    const nextQuery: LocationQuery = { ...route.query }
+    for (const key of READER_QUERY_KEYS) delete nextQuery[key]
+    Object.assign(nextQuery, serializeReaderQuery(nextState))
+    return { path: options.path ?? route.path, query: nextQuery }
+  }
+
   return {
     state,
+    routeFor,
   }
 }
