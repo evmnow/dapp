@@ -5,7 +5,7 @@
         <FormInputGroup>
           <input
             v-model="addressOrEns"
-            placeholder="uniswap.eth or 0x..."
+            placeholder="controller.ens.eth or 0x..."
             autocomplete="off"
             spellcheck="false"
           />
