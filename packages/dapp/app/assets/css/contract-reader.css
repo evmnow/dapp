@@ -2,5 +2,6 @@
 
 @import './base.css';
 @import './layout.css';
+@import './utils.css';
 @import './components.css';
 @import './reader.css';
