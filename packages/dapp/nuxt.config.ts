@@ -37,6 +37,11 @@ export default defineNuxtConfig({
           content: 'width=device-width, initial-scale=1',
         },
       ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg?v=1.0' },
+        { rel: 'icon', type: 'image/png', href: '/icon.png?v=1.0' },
+        { rel: 'apple-touch-icon', href: '/icon.png?v=1.0' },
+      ],
     },
   },
 })
