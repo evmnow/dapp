@@ -75,17 +75,17 @@ function queueClose() {
 @layer components {
   .version-pill {
     --button-border-color-highlight: var(--muted);
-    --ui-color: var(--muted);
+    --button-color: var(--muted);
     --border-shadow-highlight: var(--border-shadow);
     --button-border-radius: var(--size-10);
-    --ui-padding-block: 0;
-    --ui-padding-inline: var(--size-2);
 
     top: calc(-1 * var(--size-3));
     left: calc(-1 * var(--size-2));
     height: var(--size-4);
     font-size: var(--font-xs);
     font-weight: var(--font-weight-bold);
+    padding: var(--size-0) var(--size-1) var(--size-0)
+      calc(var(--size-2) - var(--size-0));
     cursor: help;
   }
 
