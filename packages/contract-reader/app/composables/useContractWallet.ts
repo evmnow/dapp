@@ -9,14 +9,7 @@ import {
 } from 'viem'
 import { readContract as readContractAction } from 'viem/actions'
 import type { ContractReadParams } from '@evm-now/base/types/actions'
-
-const PROVIDER_RPC_URL = 'evm-now:provider-rpc'
-
-interface JsonRpcRequest {
-  id?: string | number | null
-  method?: string
-  params?: unknown
-}
+import { createProviderRpcFetch, PROVIDER_RPC_URL } from '../utils/providerRpc'
 
 export interface ContractWriteParams {
   address: string
@@ -57,47 +50,6 @@ function normalizeWriteValue(
   }
 
   return undefined
-}
-
-function jsonRpcResponse(
-  body: JsonRpcRequest,
-  payload: Record<string, unknown>,
-) {
-  return new Response(
-    JSON.stringify({
-      jsonrpc: '2.0',
-      id: body.id ?? null,
-      ...payload,
-    }),
-    {
-      headers: { 'Content-Type': 'application/json' },
-    },
-  )
-}
-
-async function parseJsonRpcRequest(
-  init?: RequestInit,
-): Promise<JsonRpcRequest> {
-  if (typeof init?.body === 'string') {
-    return JSON.parse(init.body) as JsonRpcRequest
-  }
-
-  throw new Error('Unsupported provider RPC request body')
-}
-
-async function requestClient(
-  client: PublicClient,
-  method: string,
-  params: unknown,
-) {
-  return (
-    client as unknown as {
-      request(args: { method: string; params?: unknown }): Promise<unknown>
-    }
-  ).request({
-    method,
-    ...(Array.isArray(params) ? { params } : params ? { params } : {}),
-  })
 }
 
 export function useContractWallet(
@@ -181,44 +133,7 @@ export function useContractWallet(
     return publicClient.value
   }
 
-  const metadataFetch: typeof fetch = async (input, init) => {
-    const url =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.href
-          : input.url
-
-    if (url !== PROVIDER_RPC_URL) {
-      return fetch(input, init)
-    }
-
-    const body = await parseJsonRpcRequest(init)
-
-    if (!body.method) {
-      return jsonRpcResponse(body, {
-        error: { code: -32600, message: 'Invalid JSON-RPC request' },
-      })
-    }
-
-    const client = await resolveClient()
-
-    if (!client) {
-      return jsonRpcResponse(body, {
-        error: { code: -32000, message: 'Connect a wallet or set an RPC URL' },
-      })
-    }
-
-    try {
-      const result = await requestClient(client, body.method, body.params)
-      return jsonRpcResponse(body, { result })
-    } catch (cause) {
-      const message = cause instanceof Error ? cause.message : String(cause)
-      return jsonRpcResponse(body, {
-        error: { code: -32000, message },
-      })
-    }
-  }
+  const metadataFetch = createProviderRpcFetch(resolveClient)
 
   async function readContractFunction(params: ContractReadParams) {
     const client = await resolveClient()
