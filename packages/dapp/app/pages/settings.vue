@@ -17,6 +17,8 @@
 
 <script setup lang="ts">
 const { chainId, rpc } = useReaderRpc()
+
+useHead({ title: 'Settings' })
 </script>
 
 <style scoped>

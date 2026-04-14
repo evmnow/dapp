@@ -218,6 +218,15 @@ const contentClass = computed(() =>
   isReaderMode.value ? undefined : 'home-page',
 )
 
+useHead({
+  title: computed(() => {
+    if (!isReaderMode.value) return undefined
+    const name =
+      contractData.value?.metadata?.name || contractData.value?.name
+    return name || readerAddress.value
+  }),
+})
+
 watch(
   [readerAddress, wallet.metadataOptions],
   ([input]) => {
