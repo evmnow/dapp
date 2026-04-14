@@ -39,3 +39,12 @@
 .alert {
   padding: var(--spacer-sm) var(--spacer);
 }
+
+.wallet-options {
+  & button.choose-connector {
+    img,
+    .default-wallet-icon {
+      margin: -1rem 0 -1rem -0.2rem !important;
+    }
+  }
+}
