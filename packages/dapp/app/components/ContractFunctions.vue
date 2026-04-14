@@ -176,3 +176,38 @@ function updateArgs(nextArgs: string[]) {
   emit('update:args', nextArgs)
 }
 </script>
+
+<style scoped>
+@layer components {
+  .contract-functions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cr-gap);
+
+    &.is-card-view {
+      display: block;
+    }
+  }
+
+  .contract-functions__list {
+    flex: 0 1 calc(var(--form-width) - var(--size-7));
+    align-self: start;
+    overflow: auto;
+  }
+
+  .contract-functions__detail {
+    display: grid;
+    flex: 1 1 calc(var(--form-width) + var(--size-8));
+    align-content: start;
+    gap: var(--cr-contract-functions-detail-gap);
+  }
+
+  .contract-functions__cards {
+    flex: 1 1 100%;
+  }
+
+  .contract-functions__heading h2 {
+    font-size: var(--font-base);
+  }
+}
+</style>

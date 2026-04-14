@@ -1,10 +1,9 @@
 <template>
-  <div class="rpc-settings">
-    <label class="rpc-settings__field">
-      <span class="rpc-settings__label">Reader RPC</span>
+  <section class="rpc-settings">
+    <label>
+      <span>Reader RPC</span>
       <input
         v-model="rpc"
-        class="rpc-settings__input"
         inputmode="url"
         autocomplete="off"
         spellcheck="false"
@@ -12,11 +11,10 @@
       />
     </label>
 
-    <label class="rpc-settings__field">
-      <span class="rpc-settings__label">Chain ID</span>
+    <label>
+      <span>Chain ID</span>
       <input
         v-model="chainId"
-        class="rpc-settings__input"
         :aria-invalid="chainIdInvalid"
         inputmode="numeric"
         autocomplete="off"
@@ -27,11 +25,11 @@
 
     <p
       v-if="chainIdInvalid"
-      class="rpc-settings__help rpc-settings__help--error"
+      class="error"
     >
       Enter a positive integer chain ID.
     </p>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -43,3 +41,39 @@ const chainIdInvalid = computed(() => {
   return Boolean(value && !/^[1-9]\d*$/.test(value))
 })
 </script>
+
+<style scoped>
+@layer components {
+  .rpc-settings {
+    display: grid;
+    gap: var(--size-3);
+
+    label {
+      display: grid;
+      gap: var(--size-2);
+
+      span {
+        color: var(--muted);
+        font-size: var(--font-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      input {
+        inline-size: 100%;
+      }
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: var(--font-sm);
+      line-height: var(--line-height-lg);
+
+      &.error {
+        color: var(--error);
+      }
+    }
+  }
+}
+</style>

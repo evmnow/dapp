@@ -1,15 +1,12 @@
 <template>
   <section class="search-panel">
-    <div class="search-intro">
+    <header>
       <h1 class="page-title">Contract Reader</h1>
       <p class="page-copy">Search the worldcomputer.</p>
-    </div>
+    </header>
 
-    <form
-      class="search-form"
-      @submit.prevent="openContract"
-    >
-      <label class="search-field">
+    <form @submit.prevent="openContract">
+      <label>
         <span>Address or ENS</span>
         <input
           v-model="addressOrEns"
@@ -19,12 +16,12 @@
         />
       </label>
 
-      <button
-        class="search-button"
+      <Button
         type="submit"
+        class="primary"
       >
         Search
-      </button>
+      </Button>
     </form>
   </section>
 </template>
@@ -42,3 +39,47 @@ async function openContract() {
   })
 }
 </script>
+
+<style scoped>
+@layer components {
+  .search-panel {
+    display: grid;
+    gap: var(--size-5);
+
+    header {
+      display: grid;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(100%, calc(var(--form-width) - var(--size-7))), 1fr)
+      );
+      gap: var(--size-3);
+      align-items: end;
+      max-inline-size: calc(var(--content-width-sm) + var(--size-8));
+
+      label {
+        display: grid;
+        gap: var(--size-2);
+
+        span {
+          color: var(--muted);
+          font-size: var(--font-xs);
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        input {
+          inline-size: 100%;
+        }
+      }
+
+      button {
+        inline-size: fit-content;
+      }
+    }
+  }
+}
+</style>

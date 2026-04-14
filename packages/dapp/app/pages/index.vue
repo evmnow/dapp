@@ -21,14 +21,14 @@
 
       <p
         v-else-if="error"
-        class="page-hint page-hint--error"
+        class="page-hint error"
       >
         {{ error.message }}
       </p>
 
       <p
         v-if="callError"
-        class="page-hint page-hint--error"
+        class="page-hint error"
       >
         {{ callError }}
       </p>
@@ -285,3 +285,21 @@ function functionsForView(view: ContractView) {
     : contractData.value.functions.read
 }
 </script>
+
+<style scoped>
+@layer components {
+  .page-hint {
+    margin: 0;
+    padding: var(--size-4);
+    border: var(--border);
+    border-radius: var(--border-radius);
+    background: var(--surface-2);
+    color: var(--muted);
+    line-height: var(--line-height-lg);
+
+    &.error {
+      color: var(--error);
+    }
+  }
+}
+</style>
