@@ -54,8 +54,8 @@ defineProps<{
     inline-size: min(100%, var(--content-width-wide));
     min-block-size: var(--100vh);
     display: grid;
+    grid-template-rows: auto 1fr;
     gap: var(--size-5);
-    align-content: start;
     margin-inline: auto;
     padding: clamp(var(--size-5), 5vw, var(--size-6))
       clamp(var(--size-4), 4vw, var(--size-5));

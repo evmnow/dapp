@@ -20,7 +20,8 @@
   }
 
   .cr-function-detail {
-    display: block;
+    display: grid;
+    gap: var(--spacer-sm);
   }
 
   .cr-function-description,
@@ -151,6 +152,8 @@
 
   .cr-function-card-body {
     min-width: 0;
+    display: grid;
+    gap: var(--spacer);
   }
 
   .cr-field-label {

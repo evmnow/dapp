@@ -1,6 +1,13 @@
 .home-page,
 .settings-page {
-  max-width: calc(var(--content-width-sm) + var(--form-width) / 2);
+  width: 100%;
+  max-width: var(--content-width-sm);
+  margin-inline: auto;
+  padding-bottom: var(--size-10);
+}
+
+.page-shell > .home-page {
+  align-content: center;
 }
 
 .settings-page {
@@ -9,7 +16,7 @@
 
 .page-title {
   margin: 0;
-  font-size: clamp(var(--font-xl), 6vw, var(--font-2xl));
+  font-size: var(--font-lg);
   line-height: var(--line-height-md);
 }
 

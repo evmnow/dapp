@@ -23,18 +23,18 @@
       @mouseleave="queueClose"
     >
       <p>
-        This is the open source version of
-        <span class="nowrap">
-          <a
-            href="https://evm.now"
-            target="_blank"
-            rel="noreferrer"
-          >
-            evm.now</a
-          >.
-        </span>
-        Source code and project updates live on GitHub.
+        This is a simplified and open source version of
+        <a
+          href="https://evm.now"
+          target="_blank"
+          rel="noreferrer"
+        >
+          evm.now</a
+        >
+        designed for reading and interacting with smart contracts on Ethereum or
+        other EVM-compatible chains.
       </p>
+      <p>Source code and project updates live on GitHub.</p>
       <a
         :href="repositoryUrl"
         target="_blank"

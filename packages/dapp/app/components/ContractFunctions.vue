@@ -212,6 +212,7 @@ function updateArgs(nextArgs: string[]) {
 
   .contract-functions__heading h2 {
     font-size: var(--font-base);
+    min-width: 50%;
   }
 }
 </style>

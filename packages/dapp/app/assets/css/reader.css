@@ -12,7 +12,7 @@
     --cr-active-surface: var(--cr-surface-muted);
     --cr-font: var(--font-family);
     --cr-mono: var(--font-mono);
-    --cr-contract-functions-detail-gap: var(--size-1);
+    --cr-contract-functions-detail-gap: var(--spacer);
     --cr-input-padding-block: var(--ui-padding-block);
     --cr-input-padding-inline: var(--ui-padding-inline);
     --cr-warning-padding-block: var(--size-3);
@@ -130,7 +130,7 @@
     color: var(--cr-muted);
     font-family: var(--cr-mono);
     font-size: var(--font-xs);
-    line-height: var(--line-height-lg);
+    line-height: var(--line-height-md);
     overflow-wrap: anywhere;
   }
 

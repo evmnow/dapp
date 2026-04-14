@@ -1,9 +1,9 @@
 <template>
   <section class="search-panel">
-    <header>
-      <h1 class="page-title">Contract Reader</h1>
-      <p class="page-copy">Search the worldcomputer.</p>
-    </header>
+    <!-- <header> -->
+    <!--   <h1 class="page-title">Contract Reader</h1> -->
+    <!--   <p class="page-copy">Search the worldcomputer.</p> -->
+    <!-- </header> -->
 
     <form @submit.prevent="openContract">
       <FormInputGroup>
@@ -53,7 +53,9 @@ async function openContract() {
     }
 
     form {
-      max-inline-size: calc(var(--content-width-sm) + var(--size-8));
+      max-inline-size: calc(var(--content-width-sm) - var(--size-10));
+      width: 100%;
+      margin-inline: auto;
     }
 
     @media (max-width: 768px) {

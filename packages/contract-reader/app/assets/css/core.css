@@ -9,7 +9,7 @@
     border-radius: var(--cr-radius);
     background: var(--cr-surface);
     display: grid;
-    gap: var(--spacer-sm);
+    gap: var(--spacer);
   }
 
   .cr-muted {
