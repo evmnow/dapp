@@ -17,6 +17,7 @@
       :args="args"
       :read-function="readFunction"
       :write-function="writeFunction"
+      :resolve-metadata="resolveMetadata"
       :wallet-connected="walletConnected"
       :connected-address="connectedAddress"
       :title="functionTitle"
@@ -50,6 +51,7 @@
             :args="args"
             :read-function="readFunction"
             :write-function="writeFunction"
+            :resolve-metadata="resolveMetadata"
             :wallet-connected="walletConnected"
             :connected-address="connectedAddress"
             @update:args="updateArgs"
@@ -80,6 +82,7 @@ import type { ContractUIMetadata } from '@evmnow/contract-reader/types/metadata'
 import type {
   ContractReadFn,
   ContractWriteFn,
+  MetadataResolveFn,
 } from '@evmnow/contract-reader/types/actions'
 
 const props = withDefaults(
@@ -94,6 +97,7 @@ const props = withDefaults(
     args?: string[]
     readFunction?: ContractReadFn
     writeFunction?: ContractWriteFn
+    resolveMetadata?: MetadataResolveFn
     walletConnected?: boolean
     connectedAddress?: string
     emptyText?: string

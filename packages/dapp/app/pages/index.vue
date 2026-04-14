@@ -73,6 +73,7 @@
           :selected="viewState.fn"
           :args="viewState.args"
           :read-function="wallet.readContractFunction"
+          :resolve-metadata="resolveMetadata"
           :write-function="
             currentView === 'interact'
               ? wallet.writeContractFunction
@@ -120,6 +121,7 @@ const { effectiveChainId, rpc } = useReaderRpc()
 const wallet = useContractWallet({ chainId: effectiveChainId, rpc })
 const walletConnected = wallet.walletConnected
 const connectedAddress = wallet.walletAddress
+const { resolveMetadata } = useTokenMetadataResolver()
 const metadataRpc = computed(() => wallet.metadataOptions.value.rpc ?? '')
 const { contract, error, get, pending, clear } = useContractMetadataSdk({
   chainId: wallet.chainId,
