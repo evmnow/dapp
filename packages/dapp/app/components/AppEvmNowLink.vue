@@ -1,9 +1,8 @@
 <template>
   <Button
     v-if="href"
-    :href="href"
+    :to="href"
     target="_blank"
-    rel="noopener"
     class="wallet-button evmnow-link-button"
     aria-label="Open on evm.now"
     title="Open on evm.now"
