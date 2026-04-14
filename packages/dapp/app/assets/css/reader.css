@@ -24,7 +24,6 @@
     font-family: var(--cr-font);
   }
 
-  .cr-button,
   .cr-function-item {
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
@@ -36,17 +35,11 @@
     user-select: none;
   }
 
-  .cr-button {
-    padding: var(--ui-padding-block) var(--ui-padding-inline);
-  }
-
-  button.cr-button,
   button.cr-tab,
   button.cr-function-item,
   input.cr-input,
   select.cr-input,
   textarea.cr-input,
-  button.cr-button:is(:hover, :active, :focus, .active),
   button.cr-tab:is(:hover, :active, :focus, .active),
   button.cr-function-item:is(:hover, :active, :focus, .active),
   input.cr-input:is(:hover, :active, :focus, .active),
@@ -83,13 +76,11 @@
     height: var(--size-4);
   }
 
-  .cr-button-primary,
   .cr-function-item.active {
     border-color: var(--cr-primary);
     background: var(--cr-active-surface);
   }
 
-  .cr-button:disabled,
   .cr-function-item:disabled {
     opacity: 0.55;
   }

@@ -1,5 +1,4 @@
 @layer components {
-  .cr-button,
   .cr-copy,
   .cr-function-item {
     color: inherit;
@@ -7,7 +6,6 @@
     font: inherit;
   }
 
-  .cr-button,
   .cr-copy {
     display: inline-flex;
     align-items: center;
@@ -15,7 +13,6 @@
     line-height: var(--line-height-md);
   }
 
-  .cr-button:disabled,
   .cr-copy:disabled,
   .cr-function-item:disabled {
     cursor: not-allowed;

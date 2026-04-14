@@ -33,15 +33,14 @@
           {{ labels.examples }}
         </span>
         <div class="cr-examples">
-          <button
+          <Button
             v-for="example in examples"
             :key="example.label"
-            class="cr-button"
             type="button"
             @click="applyExample(example)"
           >
             {{ example.label }}
-          </button>
+          </Button>
         </div>
       </div>
     </slot>
@@ -133,14 +132,14 @@
         :labels="labels"
         :wallet-connected="walletConnected"
       >
-        <button
+        <Button
           v-if="fn.isRead && fn.inputs.length"
-          class="cr-button cr-button-primary cr-function-action"
+          class="primary cr-function-action"
           type="submit"
           :disabled="pending || !readFunction || hasErrors"
         >
           {{ pending ? labels.reading : labels.read }}
-        </button>
+        </Button>
 
         <TransactionButton
           v-else-if="writeRequest && walletConnected"

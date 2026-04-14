@@ -7,14 +7,14 @@
       :keep-open="true"
     >
       <template #start="{ start, open }">
-        <button
-          :class="['cr-button cr-button-primary', props.buttonClass]"
+        <Button
+          :class="['primary', props.buttonClass]"
           type="button"
           :disabled="props.disabled || open"
           @click="start"
         >
           {{ open ? props.busyLabel : props.label }}
-        </button>
+        </Button>
       </template>
     </EvmTransactionFlowDialog>
   </ClientOnly>
