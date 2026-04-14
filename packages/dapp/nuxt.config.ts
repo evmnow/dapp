@@ -30,7 +30,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/contract-reader.css'],
   app: {
     head: {
-      title: 'Contract Reader',
+      title: 'Contract Reader | evmnow.eth',
       meta: [
         {
           name: 'viewport',
