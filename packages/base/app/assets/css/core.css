@@ -34,7 +34,7 @@
     --cr-function-card-header-padding-block: var(--size-2);
     --cr-function-card-header-padding-inline: var(--size-3);
     --cr-function-card-body-padding: var(--size-3);
-    --cr-function-detail-gap: var(--size-4);
+    --cr-function-detail-gap: var(--size-5);
     --cr-function-detail-button-width: fit-content;
     --cr-function-detail-button-justify: start;
     --cr-input-help-margin-top: calc(
