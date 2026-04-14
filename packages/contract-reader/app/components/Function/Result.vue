@@ -59,15 +59,15 @@
           {{ value }}
         </template>
       </div>
-      <button
+      <Button
         v-if="isLong"
-        class="unstyled"
+        class="tertiary small"
         type="button"
         data-cr-result-toggle
         @click="expanded = !expanded"
       >
         {{ expanded ? 'show less' : 'show more' }}
-      </button>
+      </Button>
     </template>
   </div>
 </template>
@@ -100,26 +100,3 @@ watch(
   },
 )
 </script>
-
-<style scoped>
-@layer components {
-  .cr-result button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: fit-content;
-    block-size: auto;
-    min-block-size: 0;
-    margin-block-start: var(--size-2);
-    padding: var(--size-1);
-    border: var(--border-width) solid var(--cr-border);
-    border-radius: var(--cr-radius);
-    background: var(--cr-surface);
-    color: var(--cr-text);
-    cursor: pointer;
-    font: inherit;
-    font-size: var(--font-xs);
-    line-height: var(--line-height-sm);
-  }
-}
-</style>
