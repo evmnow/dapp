@@ -278,7 +278,7 @@ export function seedInputValues(
     if (!(key in values) || values[key] === '') {
       const autofill = resolveAutofillValue(inputMeta?.autofill, context)
       values[key] =
-        autofill !== undefined ? autofill : input.type === 'bool' ? 'false' : ''
+        autofill !== undefined ? autofill : input.type === 'bool' ? 'true' : ''
     }
   })
 
