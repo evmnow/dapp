@@ -56,22 +56,24 @@
     );
   }
 
-  .cr-result-toggle {
+  .cr-button.cr-result-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: fit-content;
+    block-size: auto;
+    min-block-size: 0;
     margin-top: var(--size-2);
-    padding: var(--cr-result-toggle-padding-block)
-      var(--cr-result-toggle-padding-inline);
+    padding: var(--cr-secondary-button-padding-block)
+      var(--cr-secondary-button-padding-inline);
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
     background: var(--cr-result-toggle-surface);
     color: var(--cr-text);
     cursor: pointer;
     font: inherit;
-    font-size: var(--font-sm);
-    line-height: var(--line-height-md);
+    font-size: var(--cr-secondary-button-font-size);
+    line-height: var(--cr-secondary-button-line-height);
   }
 
   .cr-result-fields {

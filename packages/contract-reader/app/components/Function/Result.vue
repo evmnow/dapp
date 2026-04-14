@@ -61,7 +61,7 @@
       </div>
       <button
         v-if="isLong"
-        class="cr-button cr-result-toggle"
+        class="unstyled cr-button cr-result-toggle"
         type="button"
         data-cr-result-toggle
         @click="expanded = !expanded"
