@@ -133,7 +133,7 @@
         :wallet-connected="walletConnected"
       >
         <button
-          v-if="fn.isRead && (fn.inputs.length || !autoRead)"
+          v-if="fn.isRead && fn.inputs.length"
           class="cr-button cr-button-primary cr-function-action"
           type="submit"
           :disabled="pending || !readFunction || hasErrors"
@@ -182,54 +182,91 @@
         :address-href="addressHref"
         :format-value="formatValue"
       >
-        <FunctionResult
-          v-if="pending && autoRead"
-          label="result"
-          value="loading..."
-          :address-href="addressHref"
-        >
-          <template #address="slotProps">
-            <slot
-              name="address"
-              v-bind="slotProps"
-            >
-              {{ slotProps.value }}
-            </slot>
-          </template>
-        </FunctionResult>
+        <template v-if="autoRead">
+          <FunctionResult
+            v-if="pending || !hasResult"
+            label="result"
+            value="loading..."
+            :address-href="addressHref"
+          >
+            <template #address="slotProps">
+              <slot
+                name="address"
+                v-bind="slotProps"
+              >
+                {{ slotProps.value }}
+              </slot>
+            </template>
+          </FunctionResult>
 
-        <FunctionResultFields
-          v-else-if="result !== null && hasResultFields"
-          :result="result"
-          :outputs="fn.outputs"
-          :returns-meta="fn.meta?.returns"
-          :address-href="addressHref"
-        >
-          <template #address="slotProps">
-            <slot
-              name="address"
-              v-bind="slotProps"
-            >
-              {{ slotProps.value }}
-            </slot>
-          </template>
-        </FunctionResultFields>
+          <FunctionResultFields
+            v-else-if="hasResultFields"
+            :result="result"
+            :outputs="fn.outputs"
+            :returns-meta="fn.meta?.returns"
+            :address-href="addressHref"
+          >
+            <template #address="slotProps">
+              <slot
+                name="address"
+                v-bind="slotProps"
+              >
+                {{ slotProps.value }}
+              </slot>
+            </template>
+          </FunctionResultFields>
 
-        <FunctionResult
-          v-else-if="result !== null"
-          label="result"
-          :value="formatValue(result)"
-          :address-href="addressHref"
-        >
-          <template #address="slotProps">
-            <slot
-              name="address"
-              v-bind="slotProps"
-            >
-              {{ slotProps.value }}
-            </slot>
-          </template>
-        </FunctionResult>
+          <FunctionResult
+            v-else
+            label="result"
+            :value="formatValue(result)"
+            :address-href="addressHref"
+          >
+            <template #address="slotProps">
+              <slot
+                name="address"
+                v-bind="slotProps"
+              >
+                {{ slotProps.value }}
+              </slot>
+            </template>
+          </FunctionResult>
+        </template>
+
+        <template v-else-if="result !== null">
+          <FunctionResultFields
+            v-if="hasResultFields"
+            :result="result"
+            :outputs="fn.outputs"
+            :returns-meta="fn.meta?.returns"
+            :address-href="addressHref"
+          >
+            <template #address="slotProps">
+              <slot
+                name="address"
+                v-bind="slotProps"
+              >
+                {{ slotProps.value }}
+              </slot>
+            </template>
+          </FunctionResultFields>
+
+          <FunctionResult
+            v-else
+            label="result"
+            :value="formatValue(result)"
+            :address-href="addressHref"
+          >
+            <template #address="slotProps">
+              <slot
+                name="address"
+                v-bind="slotProps"
+              >
+                {{ slotProps.value }}
+              </slot>
+            </template>
+          </FunctionResult>
+        </template>
 
         <FunctionResult
           v-if="error"
@@ -331,20 +368,25 @@ defineSlots<{
   }) => unknown
 }>()
 
-const props = defineProps<{
-  address: string
-  abi: Abi
-  chainId?: number
-  fn: ContractFunction
-  args?: string[]
-  readFunction?: ContractReadFn
-  writeFunction?: ContractWriteFn
-  walletConnected?: boolean
-  connectedAddress?: string
-  addressHref?: (address: string) => string | undefined | null
-  labels?: Partial<FunctionDetailLabels>
-  autoRead?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    address: string
+    abi: Abi
+    chainId?: number
+    fn: ContractFunction
+    args?: string[]
+    readFunction?: ContractReadFn
+    writeFunction?: ContractWriteFn
+    walletConnected?: boolean
+    connectedAddress?: string
+    addressHref?: (address: string) => string | undefined | null
+    labels?: Partial<FunctionDetailLabels>
+    autoRead?: boolean
+  }>(),
+  {
+    autoRead: true,
+  },
+)
 
 const emit = defineEmits<{
   'update:args': [args: string[]]
@@ -362,6 +404,7 @@ const txValue = ref('')
 const result = ref<unknown>(null)
 const error = ref('')
 const pending = ref(false)
+const hasResult = ref(false)
 
 const autoRead = computed(
   () =>
@@ -437,6 +480,10 @@ watch(
   { immediate: true },
 )
 
+onMounted(() => {
+  if (autoRead.value) read()
+})
+
 function isTuple(input: ContractFunction['inputs'][number]): boolean {
   return input.type === 'tuple' && !!input.components?.length
 }
@@ -462,6 +509,7 @@ function resetInputs() {
   result.value = null
   error.value = ''
   txValue.value = ''
+  hasResult.value = false
 
   for (const key of Object.keys(inputValues)) delete inputValues[key]
   seedInputValues(
@@ -482,11 +530,21 @@ function buildArgs() {
 }
 
 async function read() {
-  if (!props.readFunction || !props.fn.isRead || hasErrors.value) return
+  if (pending.value || !props.fn.isRead || hasErrors.value) {
+    return
+  }
+
+  if (!props.readFunction) {
+    error.value =
+      'Set an RPC URL or connect a wallet before reading this contract.'
+    hasResult.value = true
+    return
+  }
 
   pending.value = true
   error.value = ''
   result.value = null
+  hasResult.value = false
 
   try {
     result.value = await props.readFunction({
@@ -495,9 +553,11 @@ async function read() {
       functionName: props.fn.name,
       args: buildArgs(),
     })
+    hasResult.value = true
   } catch (err: any) {
     emit('error', err)
     error.value = normalizeReadError(err, { functionName: props.fn.name })
+    hasResult.value = true
   } finally {
     pending.value = false
   }
