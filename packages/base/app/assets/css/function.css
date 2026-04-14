@@ -23,13 +23,11 @@
     display: block;
   }
 
-  .cr-function-detail > * + *,
-  .cr-function-detail .cr-warning {
-    margin-top: var(--cr-function-detail-gap);
-  }
-
-  .cr-function-detail > .cr-warning:first-child {
-    margin-top: 0;
+  .cr-function-description,
+  .cr-function-detail > .cr-warning,
+  .cr-function-detail > .cr-field,
+  .cr-function-detail > .cr-form {
+    margin-bottom: var(--cr-function-detail-gap);
   }
 
   .cr-function-detail .cr-form .cr-button-primary {

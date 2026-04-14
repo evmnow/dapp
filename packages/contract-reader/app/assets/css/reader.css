@@ -187,7 +187,7 @@
     display: grid;
     flex: 1 1 calc(var(--form-width) + var(--size-8));
     align-content: start;
-    gap: var(--size-2);
+    gap: var(--size-1);
   }
 
   .contract-functions__cards {
