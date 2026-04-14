@@ -9,9 +9,14 @@
     --cr-muted: var(--muted);
     --cr-primary: var(--primary);
     --cr-error: var(--error);
-    --cr-active-surface: var(--surface-3);
+    --cr-active-surface: var(--cr-surface-muted);
     --cr-font: var(--font-family);
     --cr-mono: var(--font-mono);
+    --cr-contract-functions-detail-gap: var(--size-1);
+    --cr-input-padding-block: var(--ui-padding-block);
+    --cr-input-padding-inline: var(--ui-padding-inline);
+    --cr-warning-padding-block: var(--size-3);
+    --cr-warning-padding-inline: var(--size-4);
     --app-shadow: none;
     display: grid;
     gap: var(--cr-gap);
@@ -32,7 +37,7 @@
   }
 
   .cr-button {
-    padding: var(--size-2) var(--size-3);
+    padding: var(--ui-padding-block) var(--ui-padding-inline);
   }
 
   button.cr-button,
@@ -148,7 +153,7 @@
     display: flex;
     flex-shrink: 0;
     flex-wrap: wrap;
-    gap: var(--size-2);
+    gap: var(--cr-function-field-gap);
     margin-left: auto;
   }
 
@@ -156,7 +161,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: var(--size-2) var(--size-3);
+    padding: var(--cr-function-item-padding-block)
+      var(--cr-function-item-padding-inline);
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
     background: var(--cr-surface-muted);
@@ -187,7 +193,7 @@
     display: grid;
     flex: 1 1 calc(var(--form-width) + var(--size-8));
     align-content: start;
-    gap: var(--size-1);
+    gap: var(--cr-contract-functions-detail-gap);
   }
 
   .contract-functions__cards {
@@ -200,10 +206,10 @@
 
   .contract-functions__cards .cr-function-group,
   .contract-functions__cards .cr-function-card-grid {
-    gap: var(--size-2);
+    gap: var(--cr-function-group-gap);
   }
 
-  .cr-group-title span {
+  .cr-group-count {
     font-weight: 400;
     opacity: 0.65;
   }
@@ -216,16 +222,13 @@
     inline-size: 100%;
     min-inline-size: 0;
     block-size: auto;
-    column-gap: var(--size-3);
+    column-gap: var(--cr-function-grid-gap);
     row-gap: var(--size-0);
-    min-block-size: var(
-      --form-item-height,
-      calc(var(--size-6) + var(--size-2))
-    );
+    min-block-size: var(--cr-function-item-min-block-size);
     box-shadow: none;
     letter-spacing: 0;
     line-height: var(--line-height-md);
-    padding: var(--size-2) var(--size-3);
+    padding: var(--ui-padding-block) var(--ui-padding-inline);
     text-transform: none;
     user-select: none;
   }
@@ -235,13 +238,13 @@
     background: var(--cr-active-surface);
   }
 
-  .cr-function-item > span:first-child {
+  .cr-function-item-title {
     font-size: var(--font-sm);
     font-weight: 600;
     line-height: var(--line-height-md);
   }
 
-  .cr-function-item code {
+  .cr-function-item-signature {
     font-size: var(--font-xs);
     line-height: var(--line-height-md);
   }
@@ -262,8 +265,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--size-3);
-    padding: var(--size-2) var(--size-3);
+    gap: var(--cr-function-grid-gap);
+    padding: var(--cr-function-card-header-padding-block)
+      var(--cr-function-card-header-padding-inline);
     border-radius: 0;
     box-shadow: none;
     background: transparent;
@@ -274,7 +278,7 @@
     user-select: none;
   }
 
-  .contract-functions__cards .cr-function-card-header > span {
+  .contract-functions__cards .cr-function-card-title {
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -285,7 +289,7 @@
     line-height: var(--line-height-md);
   }
 
-  .contract-functions__cards .cr-function-card-header > code {
+  .contract-functions__cards .cr-function-card-signature {
     flex-shrink: 0;
     margin-left: auto;
     color: var(--cr-muted);
@@ -299,10 +303,11 @@
   }
 
   .contract-functions__cards .cr-function-card-body {
-    padding: 0 var(--size-3) var(--size-3);
+    padding: 0 var(--cr-function-card-body-padding)
+      var(--cr-function-card-body-padding);
   }
 
-  .cr-field > span {
+  .cr-field-label {
     color: var(--cr-text);
     font-size: var(--font-sm);
     font-weight: 600;
@@ -324,7 +329,7 @@
     font-size: var(--font-sm);
     line-height: var(--line-height-md);
     outline: none;
-    padding: var(--size-2) var(--size-3);
+    padding: var(--cr-input-padding-block) var(--cr-input-padding-inline);
   }
 
   .cr-input::placeholder {
@@ -343,7 +348,7 @@
     background: var(--cr-surface-muted);
     font-size: var(--font-sm);
     line-height: var(--line-height-lg);
-    padding: var(--size-3) var(--size-4);
+    padding: var(--cr-warning-padding-block) var(--cr-warning-padding-inline);
   }
 
   .cr-error {
@@ -358,19 +363,19 @@
 
   .cr-tuple-input {
     border-left: var(--border-width) solid var(--cr-border);
-    padding-left: var(--size-3);
+    padding-left: var(--cr-function-item-padding-inline);
   }
 
   .cr-panel {
     box-shadow: var(--app-shadow);
   }
 
-  .dialog.evm-profile .profile-actions {
-    gap: var(--size-3);
+  .cr-shell .dialog.evm-profile .profile-actions {
+    gap: var(--cr-function-grid-gap);
   }
 
-  .dialog.evm-profile .banner {
-    background-color: var(--surface-3);
+  .cr-shell .dialog.evm-profile .banner {
+    background-color: var(--cr-active-surface);
   }
 }
 
