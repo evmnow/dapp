@@ -59,6 +59,13 @@
     --cr-markdown-pre-padding: var(--size-3);
     --cr-markdown-blockquote-padding-inline: var(--size-3);
     --cr-markdown-blockquote-border-width: var(--border-width);
+    --cr-preview-margin-top: var(--size-4);
+    --cr-preview-padding: var(--size-4);
+    --cr-preview-border-width: 1px;
+    --cr-preview-media-max-block-size: 28rem;
+    --cr-preview-html-min-block-size: 18rem;
+    --cr-preview-json-max-block-size: 24rem;
+    --cr-preview-embed-aspect-ratio: 16 / 9;
     --cr-source-gap: var(--cr-gap);
     --cr-source-header-padding: var(--cr-gap);
     --cr-source-header-gap: var(--size-3);
