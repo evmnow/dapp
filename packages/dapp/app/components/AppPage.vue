@@ -20,6 +20,8 @@
       </nav>
 
       <div>
+        <AppEvmNowLink />
+
         <AppWalletButton />
 
         <Button

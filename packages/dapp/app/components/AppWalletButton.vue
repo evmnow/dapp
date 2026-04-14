@@ -4,7 +4,7 @@
       v-if="!isConnected"
       class-name="wallet-button"
     >
-      Connect wallet
+      Connect
     </EvmConnectDialog>
 
     <EvmProfile
