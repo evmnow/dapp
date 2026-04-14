@@ -1,4 +1,4 @@
-@layer components {
+@layer variables {
   :root {
     --cr-gap: var(--size-4);
     --cr-radius: var(--border-radius);
@@ -34,7 +34,7 @@
     --cr-function-card-header-padding-block: var(--size-2);
     --cr-function-card-header-padding-inline: var(--size-3);
     --cr-function-card-body-padding: var(--size-3);
-    --cr-function-detail-gap: var(--size-2);
+    --cr-function-detail-gap: var(--size-4);
     --cr-function-detail-button-width: fit-content;
     --cr-function-detail-button-justify: start;
     --cr-input-help-margin-top: calc(
@@ -71,7 +71,9 @@
     --cr-line-number-min-inline-size: calc(var(--size-4) + var(--size-2));
     --cr-line-number-padding-inline: var(--size-2);
   }
+}
 
+@layer components {
   .cr-playground {
     font-family: var(--cr-font);
     color: var(--cr-text);

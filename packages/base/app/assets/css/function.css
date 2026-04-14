@@ -20,8 +20,16 @@
   }
 
   .cr-function-detail {
-    display: grid;
-    gap: var(--cr-function-detail-gap);
+    display: block;
+  }
+
+  .cr-function-detail > * + *,
+  .cr-function-detail .cr-warning {
+    margin-top: var(--cr-function-detail-gap);
+  }
+
+  .cr-function-detail > .cr-warning:first-child {
+    margin-top: 0;
   }
 
   .cr-function-detail .cr-form .cr-button-primary {
@@ -148,6 +156,11 @@
     display: flex;
     align-items: baseline;
     gap: var(--size-2);
+    text-transform: capitalize;
+  }
+
+  .cr-field > span code {
+    text-transform: none;
   }
 
   .cr-input {
