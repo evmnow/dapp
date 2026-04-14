@@ -25,6 +25,24 @@
       <Alert v-if="pending"> Loading contract metadata... </Alert>
 
       <Alert
+        v-else-if="isMetadataNotFound"
+        type="error"
+      >
+        <p>
+          This contract is not verified on Sourcify. If you have the source
+          code, or if the contract is verified somewhere else, you can verify it
+          here:
+          <a
+            href="https://verify.sourcify.dev/"
+            class="app-link"
+            target="_blank"
+            rel="noreferrer"
+            >verify.sourcify.dev</a
+          >.
+        </p>
+      </Alert>
+
+      <Alert
         v-else-if="error"
         type="error"
         dismissable
@@ -141,6 +159,9 @@ const { contract, error, get, pending, clear } = useContractMetadataSdk({
 })
 const callError = shallowRef('')
 const hasRpc = computed(() => Boolean(wallet.metadataOptions.value.rpc))
+const isMetadataNotFound = computed(
+  () => error.value?.name === 'ContractMetadataNotFoundError',
+)
 
 const contractData = computed(() => {
   const normalized = toContractData(contract.value, readerAddress.value)

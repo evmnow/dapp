@@ -27,6 +27,15 @@
   line-height: var(--line-height-lg);
 }
 
+.app-link {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
 .wallet-button {
   display: inline-flex;
   align-items: center;
