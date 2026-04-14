@@ -1,22 +1,42 @@
 {
-  "name": "@evm-now/contract-reader",
-  "private": true,
+  "name": "@evmnow/contract-reader",
   "type": "module",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "./nuxt.config.ts",
+  "exports": {
+    ".": "./nuxt.config.ts",
+    "./components/*": "./app/components/*.vue",
+    "./types/*": "./app/types/*.ts",
+    "./utils/*": "./app/utils/*.ts",
+    "./composables/*": "./app/composables/*.ts"
+  },
+  "files": [
+    "app",
+    "nuxt.config.ts",
+    "app.config.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "dev": "nuxt dev",
-    "build": "nuxt build",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "typecheck": "nuxt typecheck"
+    "dev": "nuxi dev .playground",
+    "dev:prepare": "nuxt prepare .playground",
+    "build": "nuxt build .playground",
+    "generate": "nuxt generate .playground",
+    "preview": "nuxt preview .playground",
+    "typecheck": "nuxi typecheck .playground"
   },
   "dependencies": {
-    "@evm-now/base": "workspace:*",
-    "@wagmi/core": "3.4.1",
-    "nuxt": "^4.4.2",
+    "@1001-digital/layers.evm": "^2.6.10",
+    "@evmnow/sdk": "^0.1.1",
+    "shiki": "^4.0.2",
     "viem": "2.47.6"
   },
   "devDependencies": {
+    "nuxt": "^4.4.2",
     "typescript": "^5.9.3",
+    "vue": "^3.5.30",
     "vue-tsc": "^3.2.6"
   }
 }

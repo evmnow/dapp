@@ -8,7 +8,7 @@ import {
   type PublicClient,
 } from 'viem'
 import { readContract as readContractAction } from 'viem/actions'
-import type { ContractReadParams } from '@evm-now/base/types/actions'
+import type { ContractReadParams } from '@evmnow/contract-reader/types/actions'
 import { createProviderRpcFetch, PROVIDER_RPC_URL } from '../utils/providerRpc'
 
 export interface ContractWriteParams {

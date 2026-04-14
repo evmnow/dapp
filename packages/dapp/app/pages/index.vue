@@ -103,11 +103,11 @@ import type {
   ContractViewState,
   SourceSelection,
 } from '~/types/view'
-import { toContractData } from '@evm-now/base/utils/contract'
+import { toContractData } from '@evmnow/contract-reader/utils/contract'
 import {
   findFunctionSourceSelection,
   isSameSourceSelection,
-} from '@evm-now/base/utils/source'
+} from '@evmnow/contract-reader/utils/source'
 
 const config = useRuntimeConfig()
 const mainnetEnsRpc = computed(() =>

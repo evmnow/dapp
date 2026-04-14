@@ -69,18 +69,18 @@
 </template>
 
 <script setup lang="ts">
-import FunctionCards from '@evm-now/base/components/Function/Cards'
-import FunctionDetail from '@evm-now/base/components/Function/Detail'
-import FunctionList from '@evm-now/base/components/Function/List'
+import FunctionCards from '@evmnow/contract-reader/components/Function/Cards'
+import FunctionDetail from '@evmnow/contract-reader/components/Function/Detail'
+import FunctionList from '@evmnow/contract-reader/components/Function/List'
 import type {
   ContractData,
   ContractFunction,
-} from '@evm-now/base/types/contract'
-import type { ContractUIMetadata } from '@evm-now/base/types/metadata'
+} from '@evmnow/contract-reader/types/contract'
+import type { ContractUIMetadata } from '@evmnow/contract-reader/types/metadata'
 import type {
   ContractReadFn,
   ContractWriteFn,
-} from '@evm-now/base/types/actions'
+} from '@evmnow/contract-reader/types/actions'
 
 const props = withDefaults(
   defineProps<{

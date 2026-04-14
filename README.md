@@ -34,5 +34,5 @@ NUXT_PUBLIC_DEFAULT_RPC=https://rpc.example.org
 
 ## Repo
 
-- `packages/contract-reader` is the Nuxt app.
-- `packages/base` contains shared contract UI components.
+- `packages/dapp` is the Nuxt app (published as versioned releases, not to npm).
+- `packages/contract-reader` is the publishable library of shared contract UI components (`@evmnow/contract-reader` on npm).

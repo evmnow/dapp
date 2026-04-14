@@ -1,18 +1,24 @@
 {
-  "name": "dapp",
-  "private": true,
+  "name": "@evmnow/monorepo",
+  "version": "0.0.1",
+  "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.30.0",
   "scripts": {
-    "dev": "pnpm --filter @evm-now/contract-reader dev",
+    "dev": "pnpm --filter @evmnow/dapp dev",
     "build": "pnpm -r --if-present build",
-    "generate": "pnpm --filter @evm-now/contract-reader generate",
-    "preview": "pnpm --filter @evm-now/contract-reader preview",
+    "generate": "pnpm --filter @evmnow/dapp generate",
+    "preview": "pnpm --filter @evmnow/dapp preview",
     "typecheck": "pnpm -r --if-present typecheck",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "changelog": "node scripts/generate-changelog.ts",
+    "changeset": "changeset",
+    "version-packages": "changeset version && node scripts/generate-changelog.ts"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
     "@types/luxon": "^3.7.0",
     "prettier": "^3.8.1"
   }

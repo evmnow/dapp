@@ -13,4 +13,5 @@ node_modules
 .idea/
 
 # Build output
+packages/dapp/dist
 packages/contract-reader/dist
