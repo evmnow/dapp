@@ -75,7 +75,7 @@
   }
 
   body {
-    background: var(--surface-1);
+    background: var(--surface-0);
     color: var(--color);
     font-family: var(--font-family);
     font-size: var(--font-sm);

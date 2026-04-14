@@ -59,7 +59,6 @@ defineProps<{
     margin-inline: auto;
     padding: clamp(var(--size-5), 5vw, var(--size-6))
       clamp(var(--size-4), 4vw, var(--size-5));
-    background: var(--surface-0);
 
     > header {
       display: flex;
