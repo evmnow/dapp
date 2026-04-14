@@ -2,6 +2,7 @@
   "name": "@evmnow/contract-reader",
   "type": "module",
   "version": "0.0.1",
+  "description": "Components, composables and utilities for inspecting and interacting with verified EVM smart contracts.",
   "license": "MIT",
   "main": "./nuxt.config.ts",
   "exports": {
