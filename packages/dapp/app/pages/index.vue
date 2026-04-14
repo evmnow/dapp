@@ -51,16 +51,15 @@
           </div>
 
           <nav class="cr-tabs">
-            <button
+            <Button
               v-for="tab in tabs"
               :key="tab.value"
-              class="cr-tab"
               :class="{ active: currentView === tab.value }"
               type="button"
               @click="setView(tab.value)"
             >
               {{ tab.label }}
-            </button>
+            </Button>
           </nav>
         </header>
 

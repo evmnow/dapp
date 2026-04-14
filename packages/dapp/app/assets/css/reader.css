@@ -35,12 +35,10 @@
     user-select: none;
   }
 
-  button.cr-tab,
   button.cr-function-item,
   input.cr-input,
   select.cr-input,
   textarea.cr-input,
-  button.cr-tab:is(:hover, :active, :focus, .active),
   button.cr-function-item:is(:hover, :active, :focus, .active),
   input.cr-input:is(:hover, :active, :focus, .active),
   select.cr-input:is(:hover, :active, :focus, .active),
@@ -142,26 +140,6 @@
     flex-wrap: wrap;
     gap: var(--cr-function-field-gap);
     margin-left: auto;
-  }
-
-  .cr-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--cr-function-item-padding-block)
-      var(--cr-function-item-padding-inline);
-    border: var(--border-width) solid var(--cr-border);
-    border-radius: var(--cr-radius);
-    background: var(--cr-surface-muted);
-    color: var(--cr-text);
-    cursor: pointer;
-    font: inherit;
-    line-height: var(--line-height-md);
-  }
-
-  .cr-tab.active {
-    border-color: var(--cr-primary);
-    background: var(--cr-active-surface);
   }
 
   .contract-functions__cards .cr-function-group,

@@ -25,22 +25,22 @@
           v-if="rawJson"
           class="cr-metadata-preview__switch"
         >
-          <button
+          <Button
             type="button"
             class="cr-metadata-preview__toggle"
-            :class="{ 'is-active': !showRaw }"
+            :class="{ active: !showRaw }"
             @click="showRaw = false"
           >
             Preview
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             class="cr-metadata-preview__toggle"
-            :class="{ 'is-active': showRaw }"
+            :class="{ active: showRaw }"
             @click="showRaw = true"
           >
             JSON
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -85,22 +85,22 @@
             v-if="imageUrl && animationUrl"
             class="cr-metadata-preview__switch cr-metadata-preview__switch--media"
           >
-            <button
+            <Button
               type="button"
               class="cr-metadata-preview__toggle"
-              :class="{ 'is-active': !showAnimation }"
+              :class="{ active: !showAnimation }"
               @click="showAnimation = false"
             >
               Image
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               class="cr-metadata-preview__toggle"
-              :class="{ 'is-active': showAnimation }"
+              :class="{ active: showAnimation }"
               @click="showAnimation = true"
             >
               Animation
-            </button>
+            </Button>
           </div>
         </div>
 

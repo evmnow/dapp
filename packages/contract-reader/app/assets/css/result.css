@@ -17,6 +17,7 @@
 
   .cr-result-label,
   .cr-result-field-label {
+    white-space: nowrap;
     color: var(--cr-muted);
     font-size: var(--cr-label-font-size);
     font-weight: var(--cr-label-font-weight);
@@ -65,7 +66,7 @@
 
   .cr-result-field {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr auto;
     align-items: baseline;
     gap: var(--cr-result-field-gap);
     padding-block: var(--cr-result-field-padding-block);
@@ -77,10 +78,6 @@
 
   .cr-result-field + .cr-result-field {
     border-top: var(--border-width) solid var(--cr-border);
-  }
-
-  .cr-result-field-label {
-    min-width: 0;
   }
 
   .cr-result-field-value {
