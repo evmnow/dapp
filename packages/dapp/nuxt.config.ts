@@ -1,3 +1,5 @@
+import { version } from './package.json'
+
 export default defineNuxtConfig({
   ssr: false,
   srcDir: 'app/',
@@ -11,6 +13,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
+      appVersion: version,
       defaultChainId: 1,
       defaultRpc: '',
       mainnetEnsRpc: '',

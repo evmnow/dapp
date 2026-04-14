@@ -15,7 +15,7 @@
         @mouseleave="queueClose"
         @focus="open = true"
       >
-        v.0.1
+        v{{ version }}
       </button>
     </template>
 
@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 const repositoryUrl = 'https://github.com/evmnow/dapp'
+const { appVersion: version } = useRuntimeConfig().public
 const open = ref(false)
 let closeTimeout: ReturnType<typeof setTimeout> | undefined
 
