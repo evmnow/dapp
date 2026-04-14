@@ -9,12 +9,6 @@ export default defineNuxtConfig({
     '/': { prerender: true },
     '/settings': { prerender: true },
   },
-  nitro: {
-    prerender: {
-      crawlLinks: true,
-      routes: ['/', '/settings'],
-    },
-  },
   runtimeConfig: {
     public: {
       defaultChainId: 1,

@@ -158,7 +158,7 @@ function serializeReaderQuery(state: ReaderQueryState): LocationQuery {
   return query
 }
 
-export function useReaderQueryState() {
+export function useReaderQueryState(options: { path?: string } = {}) {
   const route = useRoute()
   const router = useRouter()
 
@@ -173,7 +173,7 @@ export function useReaderQueryState() {
       Object.assign(nextQuery, serializeReaderQuery(normalizedState))
 
       router.replace({
-        path: '/',
+        path: options.path ?? route.path,
         query: nextQuery,
       })
     },
