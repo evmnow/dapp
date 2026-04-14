@@ -60,7 +60,7 @@ defineProps<{
     gap: var(--size-5);
     margin-inline: auto;
     padding: clamp(var(--size-5), 5vw, var(--size-6))
-      clamp(var(--size-4), 4vw, var(--size-5));
+      clamp(var(--size-4), 4vw, var(--size-5)) var(--size-8);
 
     > header {
       display: flex;
