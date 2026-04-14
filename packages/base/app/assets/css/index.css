@@ -1,4 +1,12 @@
+@layer variables, components;
+
+/* Token defaults */
+@import './tokens.css';
+
+/* Shared base rules */
 @import './core.css';
+
+/* Component styles */
 @import './markdown.css';
 @import './overview.css';
 @import './controls.css';
