@@ -325,6 +325,8 @@ export function hydrateInputValues(
     const key = buildInputKey(prefix, input.name, index)
     const arg = args[index]
 
+    if (arg === undefined) return
+
     if (isTupleInput(input)) {
       if (Array.isArray(arg)) {
         hydrateInputValues(input.components!, values, arg, key)
