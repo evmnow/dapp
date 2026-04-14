@@ -47,6 +47,7 @@
     </slot>
 
     <form
+      v-if="hasForm"
       class="cr-form"
       @submit.prevent="submit"
     >
@@ -409,6 +410,9 @@ const hasResult = ref(false)
 const autoRead = computed(
   () =>
     props.autoRead !== false && props.fn.isRead && props.fn.inputs.length === 0,
+)
+const hasForm = computed(
+  () => props.fn.inputs.length > 0 || props.fn.isPayable || !props.fn.isRead,
 )
 const hasResultFields = computed(() => props.fn.outputs.length > 1)
 const examples = computed(() => props.fn.meta?.examples || [])
