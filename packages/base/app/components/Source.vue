@@ -90,18 +90,11 @@
 
 <script setup lang="ts">
 import type { SourceFile } from '../types/contract'
-import { findFunctionInSource } from '../utils/source'
+import type { SourceSelection } from '../utils/source'
 import { highlightSolidity } from '../utils/syntax'
-
-interface SourceSelection {
-  file?: number
-  line?: number
-  end?: number
-}
 
 const props = defineProps<{
   files: SourceFile[]
-  selectedFunctionSlug?: string
   selectedSource?: SourceSelection
   fileHref?: (file: SourceFile, index: number) => string | undefined | null
   lineHref?: (
@@ -162,26 +155,6 @@ function lineLink(
   return props.lineHref?.(file, lineNumber, line) ?? null
 }
 
-watch(
-  () => [props.selectedFunctionSlug, props.files] as const,
-  ([slug]) => {
-    if (!slug) return
-
-    const loc = findFunctionInSource(props.files, slug)
-    if (!loc) return
-
-    const nextSource = {
-      file: loc.fileIndex,
-      line: loc.startLine + 1,
-      end: loc.endLine + 1,
-    }
-
-    if (isSameSource(props.selectedSource, nextSource)) return
-    emit('update:source', nextSource)
-  },
-  { immediate: true },
-)
-
 function isActive(line: number) {
   const source = props.selectedSource
   if (!source?.line) return false
@@ -194,16 +167,5 @@ function selectFile(file: number) {
 
 function selectLine(line: number) {
   emit('update:source', { file: activeFileIndex.value, line })
-}
-
-function isSameSource(
-  current: SourceSelection | undefined,
-  next: SourceSelection,
-) {
-  return (
-    current?.file === next.file &&
-    current?.line === next.line &&
-    current?.end === next.end
-  )
 }
 </script>

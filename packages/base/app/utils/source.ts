@@ -6,6 +6,12 @@ export interface FunctionLocation {
   endLine: number
 }
 
+export interface SourceSelection {
+  file?: number
+  line?: number
+  end?: number
+}
+
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -173,6 +179,33 @@ export function findFunctionInSource(
   }
 
   return null
+}
+
+export function findFunctionSourceSelection(
+  files: SourceFile[],
+  functionTarget: string | undefined,
+): SourceSelection | null {
+  if (!functionTarget) return null
+
+  const location = findFunctionInSource(files, functionTarget)
+  if (!location) return null
+
+  return {
+    file: location.fileIndex,
+    line: location.startLine + 1,
+    end: location.endLine + 1,
+  }
+}
+
+export function isSameSourceSelection(
+  current: SourceSelection | undefined,
+  next: SourceSelection | undefined | null,
+) {
+  return (
+    current?.file === next?.file &&
+    current?.line === next?.line &&
+    current?.end === next?.end
+  )
 }
 
 function extractBody(

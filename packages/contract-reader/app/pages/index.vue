@@ -89,7 +89,6 @@
         <Source
           v-else-if="currentView === 'code'"
           :files="contractData.sourceFiles"
-          :selected-function-slug="selectedFunctionSlug"
           :selected-source="selectedSource"
           @update:source="updateSource"
         />
@@ -105,6 +104,10 @@ import type {
   SourceSelection,
 } from '~/types/view'
 import { toContractData } from '@evm-now/base/utils/contract'
+import {
+  findFunctionSourceSelection,
+  isSameSourceSelection,
+} from '@evm-now/base/utils/source'
 
 const config = useRuntimeConfig()
 const mainnetEnsRpc = computed(() =>
@@ -218,6 +221,22 @@ watch(
     }
 
     void get(input)
+  },
+  { immediate: true },
+)
+
+watch(
+  [selectedFunctionSlug, () => contractData.value?.sourceFiles],
+  ([slug, files]) => {
+    if (!slug || !files?.length) return
+
+    const source = findFunctionSourceSelection(files, slug)
+    if (!source || isSameSourceSelection(state.value.source, source)) return
+
+    viewState.value = {
+      ...viewState.value,
+      source,
+    }
   },
   { immediate: true },
 )
