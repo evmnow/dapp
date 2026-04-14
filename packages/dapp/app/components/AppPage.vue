@@ -18,55 +18,7 @@
             />
           </NuxtLink>
 
-          <Popover
-            v-model:open="brandPopoverOpen"
-            class="open-source-popover"
-            side="bottom"
-            align="center"
-            :side-offset="8"
-            arrow
-          >
-            <template #trigger>
-              <button
-                type="button"
-                class="version-pill"
-                @mouseenter="brandPopoverOpen = true"
-                @mouseleave="queueBrandPopoverClose"
-                @focus="brandPopoverOpen = true"
-              >
-                v.0.1
-              </button>
-            </template>
-
-            <div
-              class="open-source-popover__body"
-              @mouseenter="clearBrandPopoverClose"
-              @mouseleave="queueBrandPopoverClose"
-            >
-              <p>
-                This is the open source version of
-                <a
-                  href="https://evm.now"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  evm.now</a
-                >. Source code and project updates live on GitHub.
-              </p>
-              <a
-                class="open-source-popover__link"
-                :href="repositoryUrl"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span>View the repo on GitHub</span>
-                <Icon
-                  name="lucide:github"
-                  aria-hidden="true"
-                />
-              </a>
-            </div>
-          </Popover>
+          <AppVersionPill />
         </div>
 
         <slot name="nav" />
@@ -102,22 +54,4 @@
 defineProps<{
   contentClass?: string
 }>()
-
-const repositoryUrl = 'https://github.com/evmnow/dapp'
-const brandPopoverOpen = ref(false)
-let brandPopoverCloseTimeout: ReturnType<typeof setTimeout> | undefined
-
-function clearBrandPopoverClose() {
-  if (!brandPopoverCloseTimeout) return
-  clearTimeout(brandPopoverCloseTimeout)
-  brandPopoverCloseTimeout = undefined
-}
-
-function queueBrandPopoverClose() {
-  clearBrandPopoverClose()
-  brandPopoverCloseTimeout = setTimeout(() => {
-    brandPopoverOpen.value = false
-    brandPopoverCloseTimeout = undefined
-  }, 250)
-}
 </script>
