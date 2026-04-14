@@ -279,6 +279,28 @@
     </slot>
 
     <slot
+      name="preview"
+      :fn="fn"
+      :result="result"
+      :error="error"
+      :artifact-result="artifactResult"
+      :metadata="metadataPreview"
+      :metadata-raw-json="metadataRawJson"
+      :metadata-resolving="metadataResolving"
+      :metadata-error="metadataError"
+    >
+      <FunctionArtifactPreview :value="artifactResult" />
+
+      <FunctionMetadataPreview
+        v-if="showMetadataPreview"
+        :metadata="metadataPreview"
+        :raw-json="metadataRawJson"
+        :resolving="metadataResolving"
+        :error="metadataError"
+      />
+    </slot>
+
+    <slot
       name="footer"
       :fn="fn"
       :result="result"
@@ -291,7 +313,11 @@
 import type { Abi, Hash } from 'viem'
 import { parseEther } from 'viem'
 import type { ContractFunction } from '../../types/contract'
-import type { ContractReadFn, ContractWriteFn } from '../../types/actions'
+import type {
+  ContractReadFn,
+  ContractWriteFn,
+  MetadataResolveFn,
+} from '../../types/actions'
 import type { FunctionExample } from '../../types/metadata'
 import { normalizeReadError } from '../../utils/errors'
 import {
@@ -304,10 +330,17 @@ import {
   serializeInputArgs,
 } from '../../utils/inputs'
 import FunctionInput from './Input.vue'
+import FunctionArtifactPreview from './ArtifactPreview.client.vue'
+import FunctionMetadataPreview from './MetadataPreview.client.vue'
 import FunctionResult from './Result.vue'
 import FunctionResultFields from './ResultFields.vue'
 import FunctionTupleInput from './TupleInput.vue'
 import { formatArgValue } from '../../utils/format'
+import { detectPreviewMarkupKind } from '../../utils/markup-preview'
+import {
+  isResolvableMetadataUri,
+  type PreviewMetadata,
+} from '../../utils/metadata-display'
 
 defineSlots<{
   intro?: (props: { fn: ContractFunction }) => unknown
@@ -367,6 +400,16 @@ defineSlots<{
     result: unknown
     error: string
   }) => unknown
+  preview?: (props: {
+    fn: ContractFunction
+    result: unknown
+    error: string
+    artifactResult: string | null
+    metadata: PreviewMetadata | null
+    metadataRawJson: Record<string, unknown> | null
+    metadataResolving: boolean
+    metadataError: string | null
+  }) => unknown
 }>()
 
 const props = withDefaults(
@@ -381,6 +424,7 @@ const props = withDefaults(
     walletConnected?: boolean
     connectedAddress?: string
     addressHref?: (address: string) => string | undefined | null
+    resolveMetadata?: MetadataResolveFn
     labels?: Partial<FunctionDetailLabels>
     autoRead?: boolean
   }>(),
@@ -406,6 +450,10 @@ const result = ref<unknown>(null)
 const error = ref('')
 const pending = ref(false)
 const hasResult = ref(false)
+const metadataPreview = ref<PreviewMetadata | null>(null)
+const metadataRawJson = ref<Record<string, unknown> | null>(null)
+const metadataResolving = ref(false)
+const metadataError = ref<string | null>(null)
 
 const autoRead = computed(
   () =>
@@ -415,6 +463,18 @@ const hasForm = computed(
   () => props.fn.inputs.length > 0 || props.fn.isPayable || !props.fn.isRead,
 )
 const hasResultFields = computed(() => props.fn.outputs.length > 1)
+const artifactResult = computed(() => {
+  if (typeof result.value !== 'string') return null
+  return detectPreviewMarkupKind(result.value) ? result.value : null
+})
+const metadataUri = computed(() =>
+  isResolvableMetadataUri(result.value) ? result.value : null,
+)
+const showMetadataPreview = computed(
+  () =>
+    metadataResolving.value ||
+    Boolean(metadataPreview.value || metadataError.value),
+)
 const examples = computed(() => props.fn.meta?.examples || [])
 const labels = computed<FunctionDetailLabels>(() => ({
   examples: 'examples',
@@ -488,6 +548,18 @@ onMounted(() => {
   if (autoRead.value) read()
 })
 
+watch(
+  [metadataUri, () => props.resolveMetadata],
+  ([uri, resolveMetadata]) => {
+    if (!uri || !resolveMetadata) {
+      resetMetadataPreview()
+      return
+    }
+
+    void resolveMetadataPreview(uri, resolveMetadata)
+  },
+)
+
 function isTuple(input: ContractFunction['inputs'][number]): boolean {
   return input.type === 'tuple' && !!input.components?.length
 }
@@ -514,6 +586,7 @@ function resetInputs() {
   error.value = ''
   txValue.value = ''
   hasResult.value = false
+  resetMetadataPreview()
 
   for (const key of Object.keys(inputValues)) delete inputValues[key]
   seedInputValues(
@@ -531,6 +604,41 @@ function resetInputs() {
 
 function buildArgs() {
   return buildInputArgs(props.fn.inputs, inputValues)
+}
+
+function resetMetadataPreview() {
+  metadataPreview.value = null
+  metadataRawJson.value = null
+  metadataResolving.value = false
+  metadataError.value = null
+}
+
+async function resolveMetadataPreview(
+  uri: string,
+  resolveMetadata: MetadataResolveFn,
+) {
+  metadataResolving.value = true
+  metadataPreview.value = null
+  metadataRawJson.value = null
+  metadataError.value = null
+
+  try {
+    const resolved = await resolveMetadata(uri)
+    if (metadataUri.value !== uri) return
+
+    metadataPreview.value = resolved?.metadata ?? null
+    metadataRawJson.value = resolved?.rawJson ?? null
+    if (!resolved?.metadata) {
+      metadataError.value = 'Response is not token metadata'
+    }
+  } catch (err: any) {
+    if (metadataUri.value !== uri) return
+
+    metadataError.value =
+      err?.data?.message || err?.message || 'Failed to resolve metadata'
+  } finally {
+    if (metadataUri.value === uri) metadataResolving.value = false
+  }
 }
 
 async function read() {

@@ -1,4 +1,5 @@
 import type { Abi, Hash } from 'viem'
+import type { PreviewMetadata } from '../utils/metadata-display'
 
 export interface ContractReadParams {
   address: string
@@ -18,3 +19,12 @@ export interface ContractWriteParams {
 }
 
 export type ContractWriteFn = (params: ContractWriteParams) => Promise<Hash>
+
+export interface MetadataResolveResult {
+  metadata: PreviewMetadata | null
+  rawJson?: Record<string, unknown> | null
+}
+
+export type MetadataResolveFn = (
+  uri: string,
+) => Promise<MetadataResolveResult | null>

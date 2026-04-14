@@ -43,6 +43,7 @@
                     :args="selected === fn.slug ? args : undefined"
                     :read-function="readFunction"
                     :write-function="writeFunction"
+                    :resolve-metadata="resolveMetadata"
                     :wallet-connected="walletConnected"
                     :connected-address="connectedAddress"
                     @update:args="updateArgs(fn.slug, $event)"
@@ -63,7 +64,11 @@ import type { Abi } from 'viem'
 import FunctionDetail from './Detail.vue'
 import FunctionGroups from './Groups.vue'
 import type { ContractFunction } from '../../types/contract'
-import type { ContractReadFn, ContractWriteFn } from '../../types/actions'
+import type {
+  ContractReadFn,
+  ContractWriteFn,
+  MetadataResolveFn,
+} from '../../types/actions'
 import type { ContractUIMetadata } from '../../types/metadata'
 
 const props = withDefaults(
@@ -78,6 +83,7 @@ const props = withDefaults(
     args?: string[]
     readFunction?: ContractReadFn
     writeFunction?: ContractWriteFn
+    resolveMetadata?: MetadataResolveFn
     walletConnected?: boolean
     connectedAddress?: string
     title?: string
