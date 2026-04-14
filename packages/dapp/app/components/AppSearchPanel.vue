@@ -55,6 +55,12 @@ async function openContract() {
     form {
       max-inline-size: calc(var(--content-width-sm) + var(--size-8));
     }
+
+    @media (max-width: 768px) {
+      button span {
+        display: none;
+      }
+    }
   }
 }
 </style>
