@@ -70,6 +70,9 @@ export interface ContractData {
   name?: string
   metadata?: ContractUIMetadata
   contractType: ContractType
+  deployer?: string
+  deploymentTxHash?: string
+  deployedAt?: string
   functions: {
     read: ContractFunction[]
     write: ContractFunction[]

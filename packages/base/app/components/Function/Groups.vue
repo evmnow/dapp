@@ -39,14 +39,14 @@
     v-else
     class="cr-empty cr-muted"
   >
-    no functions found
+    {{ labels.empty }}
   </p>
 </template>
 
 <script setup lang="ts">
 import type { ContractFunction } from '../../types/contract'
 import type { ContractUIMetadata } from '../../types/metadata'
-import { groupFunctions } from '../../utils/abi'
+import { groupFunctions, type ContractFunctionGroup } from '../../utils/abi'
 
 const props = withDefaults(
   defineProps<{
@@ -54,17 +54,34 @@ const props = withDefaults(
     metadata?: ContractUIMetadata
     allFunctionNames?: Set<string>
     title?: string
+    groups?: ContractFunctionGroup[]
+    labels?: Partial<FunctionGroupLabels>
   }>(),
   {
     title: 'functions',
   },
 )
 
+interface FunctionGroupLabels {
+  empty: string
+  other: string
+  constants: string
+}
+
+const labels = computed<FunctionGroupLabels>(() => ({
+  empty: 'no functions found',
+  other: 'Other',
+  constants: 'Constants',
+  ...props.labels,
+}))
+
 const groups = computed(() =>
   groupFunctions(props.functions, props.metadata, props.allFunctionNames),
 )
 
-const allGroups = computed(() => {
+const allGroups = computed<ContractFunctionGroup[]>(() => {
+  if (props.groups) return props.groups
+
   const { grouped, ungrouped, constants } = groups.value
   const result = [...grouped]
 
@@ -72,13 +89,17 @@ const allGroups = computed(() => {
     const hasOtherGroups = grouped.length || constants.length
     result.push({
       key: '_ungrouped',
-      label: hasOtherGroups ? 'Other' : props.title,
+      label: hasOtherGroups ? labels.value.other : props.title,
       functions: ungrouped,
     })
   }
 
   if (constants.length) {
-    result.push({ key: '_constants', label: 'Constants', functions: constants })
+    result.push({
+      key: '_constants',
+      label: labels.value.constants,
+      functions: constants,
+    })
   }
 
   return result

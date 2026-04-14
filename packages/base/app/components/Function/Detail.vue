@@ -19,23 +19,30 @@
       :fn="fn"
     />
 
-    <div
-      v-if="examples.length"
-      class="cr-field"
+    <slot
+      name="examples"
+      :fn="fn"
+      :examples="examples"
+      :apply-example="applyExample"
     >
-      <span>{{ labels.examples }}</span>
-      <div class="cr-examples">
-        <button
-          v-for="example in examples"
-          :key="example.label"
-          class="cr-button"
-          type="button"
-          @click="applyExample(example)"
-        >
-          {{ example.label }}
-        </button>
+      <div
+        v-if="examples.length"
+        class="cr-field"
+      >
+        <span>{{ labels.examples }}</span>
+        <div class="cr-examples">
+          <button
+            v-for="example in examples"
+            :key="example.label"
+            class="cr-button"
+            type="button"
+            @click="applyExample(example)"
+          >
+            {{ example.label }}
+          </button>
+        </div>
       </div>
-    </div>
+    </slot>
 
     <form
       class="cr-form"
@@ -45,37 +52,50 @@
         v-for="(input, index) in fn.inputs"
         :key="fieldKey(input, index)"
       >
-        <div
-          v-if="isTuple(input)"
-          class="cr-field"
-        >
-          <span>
-            {{ input.label }}
-            <code>{{ input.type }}</code>
-          </span>
-
-          <FunctionTupleInput
-            :components="tupleComponents(input)"
-            :prefix="fieldKey(input, index)"
-            :values="inputValues"
-            :errors="inputErrors"
-          />
-
-          <small
-            v-if="input.description"
-            class="cr-input-help cr-muted"
-          >
-            <InlineMarkdown :text="input.description" />
-          </small>
-        </div>
-
-        <FunctionInput
-          v-else
+        <slot
+          name="field"
+          :fn="fn"
           :input="input"
-          :meta="input.meta"
+          :index="index"
+          :field-key="fieldKey(input, index)"
+          :value="inputValues[fieldKey(input, index)] ?? ''"
           :error="inputErrors[fieldKey(input, index)]"
-          v-model="inputValues[fieldKey(input, index)]"
-        />
+          :update-value="
+            (value) => setInputValue(fieldKey(input, index), value)
+          "
+        >
+          <div
+            v-if="isTuple(input)"
+            class="cr-field"
+          >
+            <span>
+              {{ input.label }}
+              <code>{{ input.type }}</code>
+            </span>
+
+            <FunctionTupleInput
+              :components="tupleComponents(input)"
+              :prefix="fieldKey(input, index)"
+              :values="inputValues"
+              :errors="inputErrors"
+            />
+
+            <small
+              v-if="input.description"
+              class="cr-input-help cr-muted"
+            >
+              <InlineMarkdown :text="input.description" />
+            </small>
+          </div>
+
+          <FunctionInput
+            v-else
+            :input="input"
+            :meta="input.meta"
+            :error="inputErrors[fieldKey(input, index)]"
+            v-model="inputValues[fieldKey(input, index)]"
+          />
+        </slot>
       </template>
 
       <label
@@ -97,30 +117,44 @@
         />
       </label>
 
-      <button
-        v-if="fn.isRead && (fn.inputs.length || !autoRead)"
-        class="cr-button cr-button-primary"
-        type="submit"
-        :disabled="pending || !readFunction || hasErrors"
+      <slot
+        name="actions"
+        :fn="fn"
+        :pending="pending"
+        :has-errors="hasErrors"
+        :auto-read="autoRead"
+        :read="read"
+        :submit="submit"
+        :write-request="writeRequest"
+        :write-hint="writeHint"
+        :labels="labels"
+        :wallet-connected="walletConnected"
       >
-        {{ pending ? labels.reading : labels.read }}
-      </button>
+        <button
+          v-if="fn.isRead && (fn.inputs.length || !autoRead)"
+          class="cr-button cr-button-primary"
+          type="submit"
+          :disabled="pending || !readFunction || hasErrors"
+        >
+          {{ pending ? labels.reading : labels.read }}
+        </button>
 
-      <TransactionButton
-        v-else-if="writeRequest && walletConnected"
-        :request="writeRequest"
-        :chain="chainId"
-        :label="labels.send"
-        :busy-label="labels.sending"
-        :disabled="hasErrors"
-      />
+        <TransactionButton
+          v-else-if="writeRequest && walletConnected"
+          :request="writeRequest"
+          :chain="chainId"
+          :label="labels.send"
+          :busy-label="labels.sending"
+          :disabled="hasErrors"
+        />
 
-      <p
-        v-else-if="!fn.isRead"
-        class="cr-hint cr-muted"
-      >
-        {{ writeHint }}
-      </p>
+        <p
+          v-else-if="!fn.isRead"
+          class="cr-hint cr-muted"
+        >
+          {{ writeHint }}
+        </p>
+      </slot>
     </form>
 
     <slot
@@ -217,6 +251,7 @@ import type { Abi, Hash } from 'viem'
 import { parseEther } from 'viem'
 import type { ContractFunction } from '../../types/contract'
 import type { ContractReadFn, ContractWriteFn } from '../../types/actions'
+import type { FunctionExample } from '../../types/metadata'
 import { normalizeReadError } from '../../utils/errors'
 import {
   applyInputExample,
@@ -235,6 +270,32 @@ import { formatArgValue } from '../../utils/format'
 
 defineSlots<{
   intro?: (props: { fn: ContractFunction }) => unknown
+  examples?: (props: {
+    fn: ContractFunction
+    examples: FunctionExample[]
+    applyExample: (example: FunctionExample) => void
+  }) => unknown
+  field?: (props: {
+    fn: ContractFunction
+    input: ContractFunction['inputs'][number]
+    index: number
+    fieldKey: string
+    value: string
+    error?: string | null
+    updateValue: (value: string) => void
+  }) => unknown
+  actions?: (props: {
+    fn: ContractFunction
+    pending: boolean
+    hasErrors: boolean
+    autoRead: boolean
+    read: () => Promise<void>
+    submit: () => void
+    writeRequest?: () => Promise<Hash>
+    writeHint: string
+    labels: FunctionDetailLabels
+    walletConnected?: boolean
+  }) => unknown
   result?: (props: {
     pending: boolean
     result: unknown
@@ -279,6 +340,7 @@ const props = defineProps<{
   connectedAddress?: string
   addressHref?: (address: string) => string | undefined | null
   labels?: Partial<FunctionDetailLabels>
+  autoRead?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -298,7 +360,10 @@ const result = ref<unknown>(null)
 const error = ref('')
 const pending = ref(false)
 
-const autoRead = computed(() => props.fn.isRead && props.fn.inputs.length === 0)
+const autoRead = computed(
+  () =>
+    props.autoRead !== false && props.fn.isRead && props.fn.inputs.length === 0,
+)
 const hasResultFields = computed(() => props.fn.outputs.length > 1)
 const examples = computed(() => props.fn.meta?.examples || [])
 const labels = computed<FunctionDetailLabels>(() => ({
@@ -386,6 +451,10 @@ function fieldKey(
   return buildInputKey(undefined, input.name, index)
 }
 
+function setInputValue(key: string, value: string) {
+  inputValues[key] = value
+}
+
 function resetInputs() {
   result.value = null
   error.value = ''
@@ -435,10 +504,7 @@ function submit() {
   if (props.fn.isRead) read()
 }
 
-function applyExample(example: {
-  label: string
-  params: Record<string, string>
-}) {
+function applyExample(example: FunctionExample) {
   resetInputs()
   applyInputExample(inputValues, example.params)
 

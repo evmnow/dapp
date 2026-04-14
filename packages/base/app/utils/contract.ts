@@ -314,6 +314,9 @@ export function toContractData(
     normalizeSourceFiles(raw.sourceFiles) ||
     normalizeSourceFiles(raw.sources) ||
     parseSourcesIntoFiles(sources)
+  const deployer = stringValue(raw.deployer)
+  const deploymentTxHash = stringValue(raw.deploymentTxHash)
+  const deployedAt = stringValue(raw.deployedAt)
 
   return {
     address,
@@ -322,6 +325,9 @@ export function toContractData(
     name,
     metadata,
     contractType: normalizeContractType(raw.contractType, proxy),
+    ...(deployer ? { deployer } : {}),
+    ...(deploymentTxHash ? { deploymentTxHash } : {}),
+    ...(deployedAt ? { deployedAt } : {}),
     functions:
       normalizeFunctions(raw.functions) ||
       parseAbiFunctions(abi, metadata, sources),

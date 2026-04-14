@@ -265,6 +265,18 @@ function isConstant(fn: ContractFunction): boolean {
   )
 }
 
+export interface ContractFunctionGroup {
+  key: string
+  label: string
+  functions: ContractFunction[]
+}
+
+export interface GroupedContractFunctions {
+  grouped: ContractFunctionGroup[]
+  ungrouped: ContractFunction[]
+  constants: ContractFunction[]
+}
+
 function addToGroup(
   map: Map<string, ContractFunction[]>,
   key: string,
@@ -279,11 +291,7 @@ export function groupFunctions(
   functions: ContractFunction[],
   metadata?: ContractUIMetadata,
   allFunctionNames?: Set<string>,
-): {
-  grouped: { key: string; label: string; functions: ContractFunction[] }[]
-  ungrouped: ContractFunction[]
-  constants: ContractFunction[]
-} {
+): GroupedContractFunctions {
   const metadataGroups = metadata?.groups || {}
   const hasMetadataGroups = Object.keys(metadataGroups).length > 0
   const facetNames = new Set(

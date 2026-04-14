@@ -95,7 +95,7 @@ function buildFields(
 
   return outputs.flatMap((output, index) => {
     const value = getResultValue(result, output, index)
-    const meta = props.returnsMeta?.[output.name]
+    const meta = output.meta || props.returnsMeta?.[output.name]
     const semanticType = resolveSemanticType(meta?.type)
     const key = `${prefix}${output.name || 'field'}-${index}`
     const kind = resultFieldKind(output, semanticType)
