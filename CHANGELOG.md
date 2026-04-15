@@ -5,6 +5,9 @@ Generated from individual package changelogs — do not edit manually.
 
 ## 2026-04-15
 
+- Apply semantic type formatting to single-output function results. Previously, a read function returning a single value (e.g. `balanceOf`) ignored the `eth` / `percentage` / `basis-points` / `timestamp` types from metadata and rendered the raw value. Multi-output results were already handled correctly. [`da7aa28`](https://github.com/evmnow/dapp/commit/da7aa28)
+  _`contract-reader`_
+
 - Add AccountName component for automatic ENS resolution. [`cd55d0c`](https://github.com/evmnow/dapp/commit/cd55d0c)
   _`contract-reader`_
 

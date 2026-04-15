@@ -1,5 +1,11 @@
 # @evmnow/contract-reader
 
+## 0.1.2
+
+### Patch Changes
+
+- [`da7aa28`](https://github.com/evmnow/dapp/commit/da7aa2868ebdb0511032c9ae2095053a15146544) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Apply semantic type formatting to single-output function results. Previously, a read function returning a single value (e.g. `balanceOf`) ignored the `eth` / `percentage` / `basis-points` / `timestamp` types from metadata and rendered the raw value. Multi-output results were already handled correctly.
+
 ## 0.1.1
 
 ### Patch Changes
