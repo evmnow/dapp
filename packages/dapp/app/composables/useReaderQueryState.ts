@@ -9,7 +9,7 @@ const READER_QUERY_KEYS = [
   'address',
   'view',
   'fn',
-  'args',
+  'args[]',
   'file',
   'line',
   'end',
@@ -23,25 +23,16 @@ function firstQueryValue(value: LocationQuery[string] | undefined) {
   return value
 }
 
-function parseArgs(value: LocationQuery[string] | undefined) {
-  const raw = firstQueryValue(value)
-  if (typeof raw !== 'string' || !raw.trim()) {
-    return []
-  }
+function queryValues(value: LocationQuery[string] | undefined) {
+  const values = Array.isArray(value) ? value : [value]
+  return values
+    .filter((entry): entry is string => typeof entry === 'string')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
 
-  try {
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) {
-      return parsed.map((entry) => String(entry))
-    }
-  } catch {
-    return raw
-      .split(',')
-      .map((entry) => entry.trim())
-      .filter(Boolean)
-  }
-
-  return []
+function parseArgs(query: LocationQuery) {
+  return queryValues(query['args[]'])
 }
 
 function parsePositiveInteger(value: LocationQuery[string] | undefined) {
@@ -74,7 +65,7 @@ function parseReaderQuery(query: LocationQuery): ReaderQueryState {
     address,
     view: normalizedView,
     fn: firstQueryValue(query.fn)?.trim() || undefined,
-    args: parseArgs(query.args),
+    args: parseArgs(query),
     source: hasSource ? source : undefined,
   })
 }
@@ -138,7 +129,7 @@ function serializeReaderQuery(state: ReaderQueryState): LocationQuery {
   }
 
   if (state.args.length > 0) {
-    query.args = JSON.stringify(state.args)
+    query['args[]'] = state.args
   }
 
   if (state.source) {
