@@ -104,7 +104,18 @@ async function openContract() {
     }
 
     aside {
+      display: grid;
+      gap: var(--spacer-xs);
       padding-inline: var(--size-1);
+      margin-block: var(--spacer);
+
+      h1 {
+        font-size: var(--font-sm);
+      }
+
+      p {
+        font-size: var(--font-xs);
+      }
 
       a {
         color: var(--primary);
