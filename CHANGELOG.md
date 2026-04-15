@@ -3,6 +3,17 @@
 All notable changes across all packages in this monorepo.
 Generated from individual package changelogs — do not edit manually.
 
+## 2026-04-15
+
+- Add AccountName component for automatic ENS resolution. [`cd55d0c`](https://github.com/evmnow/dapp/commit/cd55d0c)
+  _`contract-reader`_
+
+- Encode contract function arguments as repeated `args[]` query parameters instead of a JSON string, making shared reader URLs safer for values that include reserved URL characters. [`8c906be`](https://github.com/evmnow/dapp/commit/8c906be)
+  _`dapp`_
+
+- Add contract example links to home page. [`31a9d97`](https://github.com/evmnow/dapp/commit/31a9d97)
+  _`dapp`_
+
 ## 2026-04-14
 
 - **Minor** Initial public release. [`d48c3c0`](https://github.com/evmnow/dapp/commit/d48c3c0)
