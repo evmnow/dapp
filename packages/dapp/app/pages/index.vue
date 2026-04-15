@@ -135,6 +135,7 @@ import {
   findFunctionSourceSelection,
   isSameSourceSelection,
 } from '@evmnow/contract-reader/utils/source'
+import { normalizeReadError } from '@evmnow/contract-reader/utils/errors'
 
 const config = useRuntimeConfig()
 const mainnetEnsRpc = computed(() =>
@@ -309,8 +310,7 @@ watch(
 )
 
 function onReadError(cause: unknown) {
-  callError.value =
-    cause instanceof Error ? cause.message : String(cause || 'Read failed')
+  callError.value = normalizeReadError(cause)
 }
 
 function setView(view: ContractView) {

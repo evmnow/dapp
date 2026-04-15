@@ -46,7 +46,10 @@
 }
 
 .alert {
+  max-inline-size: 100%;
+  min-inline-size: 0;
   padding: var(--spacer-sm) var(--spacer);
+  overflow-wrap: anywhere;
 }
 
 .wallet-options {
