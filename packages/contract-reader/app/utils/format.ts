@@ -1,5 +1,5 @@
 import { formatEther } from 'viem'
-import type { ContractFunctionParam } from '../types/contract'
+import type { ContractActionParam } from '../types/contract'
 import type { SemanticType } from '../types/metadata'
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -73,7 +73,7 @@ export function formatSemanticValue(
 }
 
 export function resultFieldKind(
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   semanticType?: string,
 ):
   | 'default'
@@ -94,7 +94,7 @@ export function resultFieldKind(
 
 export function getResultValue(
   result: unknown,
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   index: number,
 ): unknown {
   if (Array.isArray(result)) {
@@ -119,13 +119,13 @@ export function getResultValue(
 }
 
 export function getResultFieldLabel(
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   index: number,
 ): string {
   return output.label || output.name || `result ${index + 1}`
 }
 
-export function isTupleType(output: ContractFunctionParam): boolean {
+export function isTupleType(output: ContractActionParam): boolean {
   return output.type === 'tuple' && Boolean(output.components?.length)
 }
 

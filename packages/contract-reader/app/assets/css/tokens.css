@@ -22,22 +22,22 @@
     --cr-label-font-weight: 700;
     --cr-label-letter-spacing: 0;
     --cr-label-text-transform: uppercase;
-    --cr-function-gap: var(--size-2);
-    --cr-function-section-gap: var(--size-4);
-    --cr-function-group-gap: var(--size-2);
-    --cr-function-form-gap: var(--size-5);
-    --cr-function-grid-gap: var(--size-3);
-    --cr-function-field-gap: var(--size-2);
-    --cr-function-item-padding-block: var(--size-2);
-    --cr-function-item-padding-inline: var(--size-3);
-    --cr-function-item-min-block-size: calc(var(--size-6) + var(--size-2));
-    --cr-function-card-header-padding-block: var(--size-2);
-    --cr-function-card-header-padding-inline: var(--size-3);
-    --cr-function-card-body-padding: var(--size-3);
-    --cr-function-detail-gap: var(--size-4);
-    --cr-function-detail-button-justify: start;
+    --cr-action-gap: var(--size-2);
+    --cr-action-section-gap: var(--size-4);
+    --cr-action-group-gap: var(--size-2);
+    --cr-action-form-gap: var(--size-5);
+    --cr-action-grid-gap: var(--size-3);
+    --cr-action-field-gap: var(--size-2);
+    --cr-action-item-padding-block: var(--size-2);
+    --cr-action-item-padding-inline: var(--size-3);
+    --cr-action-item-min-block-size: calc(var(--size-6) + var(--size-2));
+    --cr-action-card-header-padding-block: var(--size-2);
+    --cr-action-card-header-padding-inline: var(--size-3);
+    --cr-action-card-body-padding: var(--size-3);
+    --cr-action-detail-gap: var(--size-4);
+    --cr-action-detail-button-justify: start;
     --cr-input-help-margin-top: calc(
-      var(--size-1) - var(--cr-function-field-gap)
+      var(--size-1) - var(--cr-action-field-gap)
     );
     --cr-result-margin-top: 0;
     --cr-result-padding: var(--size-4);

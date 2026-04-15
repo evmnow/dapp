@@ -47,9 +47,20 @@ export interface ParamMeta {
   validation?: ValidationRule
   preview?: ParamPreview
   components?: Record<string, ParamMeta>
+  /**
+   * Input-side: don't render an input for this parameter; inject the autofill
+   * value at call time. REQUIRES `autofill`. Orthogonal to `type: "hidden"`
+   * which is display-side.
+   */
+  hidden?: boolean
+  /**
+   * Input-side: render the input but non-editable. REQUIRES `autofill`.
+   * Mutually exclusive with `hidden: true`.
+   */
+  disabled?: boolean
 }
 
-export interface FunctionExample {
+export interface ActionExample {
   label: string
   params: Record<string, string>
 }
@@ -104,7 +115,16 @@ export interface ContractMeta {
   theme?: ContractTheme
 }
 
-export interface FunctionMeta {
+export interface ActionMeta {
+  /**
+   * Reference to the ABI function this action invokes. Accepts a bare name,
+   * full Solidity signature (for overloads), or 4-byte selector.
+   *
+   * Optional — when omitted, the action's id is used as the reference.
+   * Variants whose id differs from the underlying function name MUST set
+   * this explicitly.
+   */
+  function?: string
   order?: number
   title?: string
   description?: string
@@ -113,7 +133,8 @@ export interface FunctionMeta {
   stateMutability?: 'view' | 'pure' | 'nonpayable' | 'payable'
   params?: Record<string, ParamMeta>
   returns?: Record<string, ParamMeta>
-  examples?: FunctionExample[]
+  examples?: ActionExample[]
+  /** Identifiers of related actions (keys in the top-level `actions` object). */
   related?: string[]
   intent?: string
   featured?: boolean
@@ -160,7 +181,7 @@ export interface ContractUIMetadata extends ContractMeta {
     string,
     { label: string; description?: string; order?: number }
   >
-  functions?: Record<string, FunctionMeta>
+  actions?: Record<string, ActionMeta>
   events?: Record<string, EventMeta>
   errors?: Record<string, ErrorMeta>
   messages?: Record<string, MessageMeta>

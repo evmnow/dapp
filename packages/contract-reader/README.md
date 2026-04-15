@@ -2,7 +2,7 @@
 
 A [Nuxt 4](https://nuxt.com) layer of Vue 3 components, composables and utilities for inspecting and interacting with verified EVM smart contracts. It powers [evm.now](https://evm.now) and is published so you can drop the same UI into your own dApp.
 
-The layer covers the contract-explorer surface end to end: contract overview, grouped read/interact function panels with form generation, source-file viewer with Solidity syntax highlighting, and a composable that fetches verified metadata, ABI and source through [`@evmnow/sdk`](https://www.npmjs.com/package/@evmnow/sdk).
+The layer covers the contract-explorer surface end to end: contract overview, grouped read/interact action panels with form generation, source-file viewer with Solidity syntax highlighting, and a composable that fetches verified metadata, ABI and source through [`@evmnow/sdk`](https://www.npmjs.com/package/@evmnow/sdk).
 
 ## Install
 
@@ -35,9 +35,9 @@ Each surface is also exported under its own subpath for projects that don't want
 // components
 import Overview from '@evmnow/contract-reader/components/Overview'
 import Source from '@evmnow/contract-reader/components/Source'
-import FunctionList from '@evmnow/contract-reader/components/Function/List'
-import FunctionCards from '@evmnow/contract-reader/components/Function/Cards'
-import FunctionDetail from '@evmnow/contract-reader/components/Function/Detail'
+import ActionList from '@evmnow/contract-reader/components/Action/List'
+import ActionCards from '@evmnow/contract-reader/components/Action/Cards'
+import ActionDetail from '@evmnow/contract-reader/components/Action/Detail'
 
 // composable
 import { useContractMetadataSdk } from '@evmnow/contract-reader/composables/useContractMetadataSdk'
@@ -45,7 +45,7 @@ import { useContractMetadataSdk } from '@evmnow/contract-reader/composables/useC
 // types
 import type {
   ContractData,
-  ContractFunction,
+  ContractAction,
   SourceFile,
 } from '@evmnow/contract-reader/types/contract'
 import type { ContractUIMetadata } from '@evmnow/contract-reader/types/metadata'
@@ -55,7 +55,7 @@ import type {
 } from '@evmnow/contract-reader/types/actions'
 
 // utils
-import { groupFunctions } from '@evmnow/contract-reader/utils/abi'
+import { groupActions } from '@evmnow/contract-reader/utils/abi'
 import { highlightSolidity } from '@evmnow/contract-reader/utils/syntax'
 ```
 
@@ -91,21 +91,21 @@ Stale responses from older `get()` calls are dropped, so it's safe to react to i
 <template>
   <Overview :contract="contract" />
 
-  <FunctionList
-    :functions="contract.functions.read"
+  <ActionList
+    :actions="contract.actions.read"
     :metadata="contract.metadata"
     :selected="selected?.slug"
-    @select="selectFn"
+    @select="selectAction"
   />
 
-  <FunctionDetail
+  <ActionDetail
     v-if="selected"
     :address="contract.address"
     :abi="contract.abi"
     :chain-id="contract.chainId"
-    :fn="selected"
-    :read-function="readContractFunction"
-    :write-function="writeContractFunction"
+    :action="selected"
+    :read-function="readContract"
+    :write-function="writeContract"
     :wallet-connected="walletConnected"
     :connected-address="connectedAddress"
   />
@@ -116,7 +116,7 @@ Stale responses from older `get()` calls are dropped, so it's safe to react to i
 
 `readFunction` / `writeFunction` take `ContractReadFn` / `ContractWriteFn` callbacks (`{ address, abi, functionName, args, value? }`) so you can wire them to viem, ethers, or the wallet implementation of your choice. The bundled wallet layer ships ready-made versions you can use directly.
 
-`FunctionDetail` builds inputs from the ABI plus the metadata schema (semantic input types, autofill, validation, examples, tuple support) and renders the call result back into the matching field shape.
+`ActionDetail` builds inputs from the ABI plus the metadata schema (semantic input types, autofill, validation, examples, tuple support, hidden/disabled preset params for variants like "Revoke Approval") and renders the call result back into the matching field shape.
 
 ### Components
 
@@ -124,18 +124,18 @@ Stale responses from older `get()` calls are dropped, so it's safe to react to i
 | --- | --- |
 | `Overview` | Description, stat tiles, long-form `about` markdown — slot-driven for full overrides. |
 | `Source` | Multi-file Solidity viewer with Shiki highlighting, line-level deep-linking, file/line `href` builders. |
-| `FunctionList` | Sidebar list of grouped functions with selection and optional `href` per item. |
-| `FunctionCards` | Card grid alternative — each function expands inline into `FunctionDetail`. |
-| `FunctionGroups` | Headless grouping primitive used by `List`/`Cards`; expose your own layout via slots. |
-| `FunctionDetail` | Form generation, validation, examples, read-call execution, write-call submission. |
-| `FunctionResult` / `FunctionResultFields` | Output rendering with semantic-type formatting. |
+| `ActionList` | Sidebar list of grouped actions with selection and optional `href` per item. |
+| `ActionCards` | Card grid alternative — each action expands inline into `ActionDetail`. |
+| `ActionGroups` | Headless grouping primitive used by `List`/`Cards`; expose your own layout via slots. |
+| `ActionDetail` | Form generation, validation, examples, read-call execution, write-call submission. Respects `hidden`/`disabled` param flags for variant actions. |
+| `ActionResult` / `ActionResultFields` | Output rendering with semantic-type formatting. |
 | `Markdown` / `InlineMarkdown` | Lightweight markdown renderers for descriptions and `about`. |
 | `CopyButton` | Copy-to-clipboard helper. |
 | `TransactionButton` | Shared submit-button styling for write actions. |
 
 ### Utilities
 
-- `utils/abi` — `groupFunctions`, ABI grouping helpers, slug generation.
+- `utils/abi` — `parseActions`, `groupActions`, ABI-to-action resolution helpers.
 - `utils/contract` — derive `ContractData` from raw SDK output, proxy/diamond handling.
 - `utils/inputs` — parse, validate and serialize human-entered values against ABI types and `SemanticType`s (eth, gwei, timestamp, basis points, enums, sliders…).
 - `utils/format` — display formatters for addresses, amounts, durations, etc.
@@ -146,7 +146,7 @@ Stale responses from older `get()` calls are dropped, so it's safe to react to i
 
 ## Styling
 
-The layer registers `app/assets/css/index.css`, which pulls in design tokens, base controls, and per-component stylesheets (`overview.css`, `function.css`, `source.css`, `markdown.css`, `result.css`). All selectors are namespaced under `.cr-*` and built on CSS variables, so you can theme the UI by overriding the tokens in your own stylesheet — no preprocessor required.
+The layer registers `app/assets/css/index.css`, which pulls in design tokens, base controls, and per-component stylesheets (`overview.css`, `action.css`, `source.css`, `markdown.css`, `result.css`). All selectors are namespaced under `.cr-*` and built on CSS variables, so you can theme the UI by overriding the tokens in your own stylesheet — no preprocessor required.
 
 ## License
 

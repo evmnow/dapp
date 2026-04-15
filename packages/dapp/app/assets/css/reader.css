@@ -12,7 +12,7 @@
     --cr-active-surface: var(--cr-surface-muted);
     --cr-font: var(--font-family);
     --cr-mono: var(--font-mono);
-    --cr-contract-functions-detail-gap: var(--spacer);
+    --cr-contract-actions-detail-gap: var(--spacer);
     --cr-input-padding-block: var(--ui-padding-block);
     --cr-input-padding-inline: var(--ui-padding-inline);
     --cr-warning-padding-block: var(--size-3);
@@ -24,7 +24,7 @@
     font-family: var(--cr-font);
   }
 
-  .cr-function-item {
+  .cr-action-item {
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
     background: var(--cr-surface-muted);
@@ -35,11 +35,11 @@
     user-select: none;
   }
 
-  button.cr-function-item,
+  button.cr-action-item,
   input.cr-input,
   select.cr-input,
   textarea.cr-input,
-  button.cr-function-item:is(:hover, :active, :focus, .active),
+  button.cr-action-item:is(:hover, :active, :focus, .active),
   input.cr-input:is(:hover, :active, :focus, .active),
   select.cr-input:is(:hover, :active, :focus, .active),
   textarea.cr-input:is(:hover, :active, :focus, .active) {
@@ -74,17 +74,17 @@
     height: var(--size-4);
   }
 
-  .cr-function-item.active {
+  .cr-action-item.active {
     border-color: var(--cr-primary);
     background: var(--cr-active-surface);
   }
 
-  .cr-function-item:disabled {
+  .cr-action-item:disabled {
     opacity: 0.55;
   }
 
   .cr-header,
-  .contract-functions__heading {
+  .contract-actions__heading {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -101,20 +101,20 @@
   }
 
   .cr-header > *,
-  .contract-functions__heading > *,
-  .contract-functions__list,
-  .contract-functions__detail {
+  .contract-actions__heading > *,
+  .contract-actions__list,
+  .contract-actions__detail {
     min-width: 0;
   }
 
   .cr-header,
-  .contract-functions__list,
-  .contract-functions__detail {
+  .contract-actions__list,
+  .contract-actions__detail {
     padding: var(--cr-gap);
   }
 
   .cr-header h1,
-  .contract-functions__heading h2 {
+  .contract-actions__heading h2 {
     margin: 0;
     line-height: var(--line-height-md);
   }
@@ -124,7 +124,7 @@
   }
 
   .cr-header code,
-  .contract-functions__heading code {
+  .contract-actions__heading code {
     display: block;
     max-width: 100%;
     color: var(--cr-muted);
@@ -138,13 +138,13 @@
     display: flex;
     flex-shrink: 0;
     flex-wrap: wrap;
-    gap: var(--cr-function-field-gap);
+    gap: var(--cr-action-field-gap);
     margin-left: auto;
   }
 
-  .contract-functions__cards .cr-function-group,
-  .contract-functions__cards .cr-function-card-grid {
-    gap: var(--cr-function-group-gap);
+  .contract-actions__cards .cr-action-group,
+  .contract-actions__cards .cr-action-card-grid {
+    gap: var(--cr-action-group-gap);
   }
 
   .cr-group-count {
@@ -152,7 +152,7 @@
     opacity: 0.65;
   }
 
-  .cr-function-item {
+  .cr-action-item {
     appearance: none;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -160,9 +160,9 @@
     inline-size: 100%;
     min-inline-size: 0;
     block-size: auto;
-    column-gap: var(--cr-function-grid-gap);
+    column-gap: var(--cr-action-grid-gap);
     row-gap: var(--size-0);
-    min-block-size: var(--cr-function-item-min-block-size);
+    min-block-size: var(--cr-action-item-min-block-size);
     box-shadow: none;
     letter-spacing: 0;
     line-height: var(--line-height-md);
@@ -171,23 +171,23 @@
     user-select: none;
   }
 
-  .cr-function-item:is(:hover, :focus-visible) {
+  .cr-action-item:is(:hover, :focus-visible) {
     outline: none;
     background: var(--cr-active-surface);
   }
 
-  .cr-function-item-title {
+  .cr-action-item-title {
     font-size: var(--font-sm);
     font-weight: 600;
     line-height: var(--line-height-md);
   }
 
-  .cr-function-item-signature {
+  .cr-action-item-signature {
     font-size: var(--font-xs);
     line-height: var(--line-height-md);
   }
 
-  .contract-functions__cards .cr-function-card {
+  .contract-actions__cards .cr-action-card {
     border: var(--border-width) solid var(--cr-border);
     border-radius: var(--cr-radius);
     background: var(--cr-surface);
@@ -195,17 +195,17 @@
     transition: border-color var(--speed);
   }
 
-  .contract-functions__cards .cr-function-card.expanded {
+  .contract-actions__cards .cr-action-card.expanded {
     border-color: var(--cr-primary);
   }
 
-  .contract-functions__cards .cr-function-card-header {
+  .contract-actions__cards .cr-action-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--cr-function-grid-gap);
-    padding: var(--cr-function-card-header-padding-block)
-      var(--cr-function-card-header-padding-inline);
+    gap: var(--cr-action-grid-gap);
+    padding: var(--cr-action-card-header-padding-block)
+      var(--cr-action-card-header-padding-inline);
     border-radius: 0;
     box-shadow: none;
     background: transparent;
@@ -216,7 +216,7 @@
     user-select: none;
   }
 
-  .contract-functions__cards .cr-function-card-title {
+  .contract-actions__cards .cr-action-card-title {
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -227,7 +227,7 @@
     line-height: var(--line-height-md);
   }
 
-  .contract-functions__cards .cr-function-card-signature {
+  .contract-actions__cards .cr-action-card-signature {
     flex-shrink: 0;
     margin-left: auto;
     color: var(--cr-muted);
@@ -236,13 +236,13 @@
     line-height: var(--line-height-md);
   }
 
-  .contract-functions__cards .cr-function-card-expand:not(.open) {
+  .contract-actions__cards .cr-action-card-expand:not(.open) {
     pointer-events: none;
   }
 
-  .contract-functions__cards .cr-function-card-body {
-    padding: 0 var(--cr-function-card-body-padding)
-      var(--cr-function-card-body-padding);
+  .contract-actions__cards .cr-action-card-body {
+    padding: 0 var(--cr-action-card-body-padding)
+      var(--cr-action-card-body-padding);
   }
 
   .cr-field-label {
@@ -301,7 +301,7 @@
 
   .cr-tuple-input {
     border-left: var(--border-width) solid var(--cr-border);
-    padding-left: var(--cr-function-item-padding-inline);
+    padding-left: var(--cr-action-item-padding-inline);
   }
 
   .cr-panel {
@@ -309,7 +309,7 @@
   }
 
   .cr-shell .dialog.evm-profile .profile-actions {
-    gap: var(--cr-function-grid-gap);
+    gap: var(--cr-action-grid-gap);
   }
 
   .cr-shell .dialog.evm-profile .banner {

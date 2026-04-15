@@ -1,8 +1,8 @@
 @layer components {
-  .cr-functions,
-  .cr-function-cards {
+  .cr-actions,
+  .cr-action-cards {
     display: grid;
-    gap: var(--cr-function-section-gap);
+    gap: var(--cr-action-section-gap);
     align-content: start;
   }
 
@@ -12,72 +12,72 @@
   }
 
   .cr-form {
-    gap: var(--cr-function-form-gap);
+    gap: var(--cr-action-form-gap);
   }
 
   .cr-overview {
-    gap: var(--cr-function-grid-gap);
+    gap: var(--cr-action-grid-gap);
   }
 
-  .cr-function-detail {
+  .cr-action-detail {
     display: grid;
     gap: var(--spacer-sm);
   }
 
-  .cr-function-description,
-  .cr-function-detail > .cr-warning,
-  .cr-function-detail > .cr-field,
-  .cr-function-detail > .cr-form {
-    margin-bottom: var(--cr-function-detail-gap);
+  .cr-action-description,
+  .cr-action-detail > .cr-warning,
+  .cr-action-detail > .cr-field,
+  .cr-action-detail > .cr-form {
+    margin-bottom: var(--cr-action-detail-gap);
   }
 
-  .cr-function-action {
-    justify-self: var(--cr-function-detail-button-justify);
+  .cr-action-action {
+    justify-self: var(--cr-action-detail-button-justify);
   }
 
-  .cr-function-cards,
-  .cr-function-group,
-  .cr-function-group-body {
+  .cr-action-cards,
+  .cr-action-group,
+  .cr-action-group-body {
     min-width: 0;
   }
 
-  .cr-function-group,
-  .cr-function-group-body,
-  .cr-function-card-grid,
+  .cr-action-group,
+  .cr-action-group-body,
+  .cr-action-card-grid,
   .cr-field,
   .cr-tuple-input {
     display: grid;
   }
 
-  .cr-function-group {
-    gap: var(--cr-function-group-gap);
+  .cr-action-group {
+    gap: var(--cr-action-group-gap);
   }
 
-  .cr-function-group-body,
-  .cr-function-card-grid {
-    gap: var(--cr-function-gap);
+  .cr-action-group-body,
+  .cr-action-card-grid {
+    gap: var(--cr-action-gap);
   }
 
   .cr-field,
   .cr-tuple-input {
-    gap: var(--cr-function-field-gap);
+    gap: var(--cr-action-field-gap);
   }
 
   .cr-examples {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--cr-function-gap);
+    gap: var(--cr-action-gap);
   }
 
   .cr-group-title {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--cr-function-grid-gap);
+    gap: var(--cr-action-grid-gap);
     margin: 0;
   }
 
-  .cr-function-item {
+  .cr-action-item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
@@ -86,39 +86,39 @@
     text-align: left;
   }
 
-  .cr-function-item-title,
-  .cr-function-item-signature,
-  .cr-function-card-title,
-  .cr-function-card-signature {
+  .cr-action-item-title,
+  .cr-action-item-signature,
+  .cr-action-card-title,
+  .cr-action-card-signature {
     min-width: 0;
   }
 
-  .cr-function-item-signature,
-  .cr-function-card-signature {
+  .cr-action-item-signature,
+  .cr-action-card-signature {
     font-family: var(--cr-mono);
   }
 
-  .cr-function-item-title,
-  .cr-function-card-title {
+  .cr-action-item-title,
+  .cr-action-card-title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .cr-function-item-signature {
+  .cr-action-item-signature {
     grid-column: 1 / -1;
   }
 
-  .cr-function-card {
+  .cr-action-card {
     display: grid;
     min-width: 0;
   }
 
-  .cr-function-card-header {
+  .cr-action-card-header {
     display: grid;
     width: 100%;
-    padding: var(--cr-function-card-header-padding-block)
-      var(--cr-function-card-header-padding-inline);
+    padding: var(--cr-action-card-header-padding-block)
+      var(--cr-action-card-header-padding-inline);
     border: 0;
     background: transparent;
     color: inherit;
@@ -127,11 +127,11 @@
     text-align: left;
   }
 
-  .cr-function-card-signature {
+  .cr-action-card-signature {
     overflow-wrap: anywhere;
   }
 
-  .cr-function-card-expand {
+  .cr-action-card-expand {
     display: grid;
     grid-template-rows: 0fr;
     opacity: 0;
@@ -140,17 +140,17 @@
       opacity var(--speed);
   }
 
-  .cr-function-card-expand.open {
+  .cr-action-card-expand.open {
     grid-template-rows: 1fr;
     opacity: 1;
   }
 
-  .cr-function-card-collapse {
+  .cr-action-card-collapse {
     min-height: 0;
     overflow: hidden;
   }
 
-  .cr-function-card-body {
+  .cr-action-card-body {
     min-width: 0;
     display: grid;
     gap: var(--spacer);
