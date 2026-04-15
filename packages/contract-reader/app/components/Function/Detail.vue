@@ -334,7 +334,11 @@ import FunctionMetadataPreview from './MetadataPreview.client.vue'
 import FunctionResult from './Result.vue'
 import FunctionResultFields from './ResultFields.vue'
 import FunctionTupleInput from './TupleInput.vue'
-import { formatArgValue } from '../../utils/format'
+import {
+  formatArgValue,
+  formatSemanticValue,
+  resolveOutputSemanticType,
+} from '../../utils/format'
 import { detectPreviewMarkupKind } from '../../utils/markup-preview'
 import {
   isResolvableMetadataUri,
@@ -690,7 +694,10 @@ function applyExample(example: FunctionExample) {
 }
 
 function formatValue(value: unknown) {
-  return formatArgValue(value)
+  const output = props.fn.outputs[0]
+  if (!output) return formatArgValue(value)
+  const semanticType = resolveOutputSemanticType(output, props.fn.meta?.returns)
+  return formatSemanticValue(value, semanticType)
 }
 
 interface FunctionDetailLabels {

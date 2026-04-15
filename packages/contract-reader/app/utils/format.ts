@@ -1,6 +1,6 @@
 import { formatEther } from 'viem'
 import type { ContractFunctionParam } from '../types/contract'
-import type { SemanticType } from '../types/metadata'
+import type { ParamMeta, SemanticType } from '../types/metadata'
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -12,6 +12,14 @@ export function resolveSemanticType(
   if (!semanticType) return undefined
   if (typeof semanticType === 'string') return semanticType
   return semanticType.type
+}
+
+export function resolveOutputSemanticType(
+  output: ContractFunctionParam,
+  returnsMeta?: Record<string, ParamMeta>,
+): string | undefined {
+  const meta = output.meta || (output.name ? returnsMeta?.[output.name] : undefined)
+  return resolveSemanticType(meta?.type)
 }
 
 export function formatArgValue(value: unknown): string {

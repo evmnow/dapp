@@ -67,8 +67,8 @@ import {
   getResultFieldLabel,
   getResultValue,
   isTupleType,
+  resolveOutputSemanticType,
   resultFieldKind,
-  resolveSemanticType,
 } from '../../utils/format'
 
 const props = defineProps<{
@@ -106,8 +106,7 @@ function buildFields(
 
   return outputs.flatMap((output, index) => {
     const value = getResultValue(result, output, index)
-    const meta = output.meta || props.returnsMeta?.[output.name]
-    const semanticType = resolveSemanticType(meta?.type)
+    const semanticType = resolveOutputSemanticType(output, props.returnsMeta)
     const key = `${prefix}${output.name || 'field'}-${index}`
     const kind = resultFieldKind(output, semanticType)
     const label = getResultFieldLabel(output, index)
