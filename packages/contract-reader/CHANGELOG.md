@@ -1,5 +1,11 @@
 # @evmnow/contract-reader
 
+## 0.1.1
+
+### Patch Changes
+
+- [`cd55d0c`](https://github.com/evmnow/dapp/commit/cd55d0cf0bfef06614be219f4b78ff4a18793893) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Add AccountName component for automatic ENS resolution.
+
 ## 0.1.0
 
 ### Minor Changes
