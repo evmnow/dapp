@@ -27,8 +27,8 @@ importers:
         specifier: ^2.6.13
         version: 2.6.13(7fe2c3fde7b3fbcc23665dd706d6b811)
       '@evmnow/sdk':
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.1.3
+        version: 0.1.3
       shiki:
         specifier: ^4.0.2
         version: 4.0.2
@@ -101,8 +101,8 @@ packages:
   '@1001-digital/natspec@0.1.0':
     resolution: {integrity: sha512-ryf+rjlmPPGoOMNktj4vrIvKmE3DNd7Un/0M9yKgtyB3oPC4vYhRoYhowX4uXep5iyBlB6zpOm73zSBsNX+PKg==}
 
-  '@1001-digital/proxies@0.1.0':
-    resolution: {integrity: sha512-y9lsswLMY7rWnMUGrKKsJu7NTKk7IGg2qCmKWXw5HkUl2ZJk+3019GAEAy1FRRt4M9KtRvUeweBcidr4Vwjuaw==}
+  '@1001-digital/proxies@0.1.1':
+    resolution: {integrity: sha512-T1GAOvFIV+ao7saTmYA4oNNWoXNemooaoBveAOq3J6rX3THsViQUo1jVNikeaD1VP0hmQj3yMFtMW1BGJFuSag==}
 
   '@1001-digital/styles@2.5.0':
     resolution: {integrity: sha512-s7/xNJTx6Sp5DVC7FHCqSRuK4xntcHYL86LiGJX1XjAnuTd6IXOeXBuNQfIY9Fky5+xREhqNj4o1Qjs1xfzseA==}
@@ -676,8 +676,8 @@ packages:
   '@ethersproject/wordlists@5.8.0':
     resolution: {integrity: sha512-2df9bbXicZws2Sb5S6ET493uJ0Z84Fjr3pC4tu/qlnZERibZCeUVuqdtt+7Tv9xxhUxHoIekIA7avrKUWHrezg==}
 
-  '@evmnow/sdk@0.1.1':
-    resolution: {integrity: sha512-sv4p5x+QUpIPp7ukidNlXT86Qb63GznVYI241pjlfTwUE3e9yTtRXHUlWiYB8AKpnVNuFiky2OxuAOl4vKAP/Q==}
+  '@evmnow/sdk@0.1.3':
+    resolution: {integrity: sha512-cJYdh3Mn0WdBjei50zUcmQftjLvN+pZWA5DswOk20wzakHqmDTk6oLXixe/57Y4x/QZH6R44qcYib0lUU2MT0Q==}
 
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
@@ -7549,7 +7549,7 @@ snapshots:
 
   '@1001-digital/natspec@0.1.0': {}
 
-  '@1001-digital/proxies@0.1.0':
+  '@1001-digital/proxies@0.1.1':
     dependencies:
       '@noble/hashes': 1.8.0
 
@@ -8493,10 +8493,10 @@ snapshots:
       '@ethersproject/properties': 5.8.0
       '@ethersproject/strings': 5.8.0
 
-  '@evmnow/sdk@0.1.1':
+  '@evmnow/sdk@0.1.3':
     dependencies:
       '@1001-digital/natspec': 0.1.0
-      '@1001-digital/proxies': 0.1.0
+      '@1001-digital/proxies': 0.1.1
       '@noble/hashes': 1.8.0
 
   '@fastify/busboy@2.1.1': {}
