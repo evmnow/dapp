@@ -29,7 +29,7 @@
     "typecheck": "nuxi typecheck .playground"
   },
   "dependencies": {
-    "@1001-digital/layers.evm": "^2.6.12",
+    "@1001-digital/layers.evm": "^2.6.13",
     "@evmnow/sdk": "^0.1.1",
     "shiki": "^4.0.2",
     "viem": "2.47.6"

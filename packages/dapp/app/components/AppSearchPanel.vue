@@ -20,6 +20,16 @@
             <span>Search</span>
           </Button>
         </FormInputGroup>
+        <Tags class="examples">
+          <span class="examples-label muted">Examples:</span>
+          <NuxtLink
+            v-for="example in examples"
+            :key="example.address"
+            :to="{ path: '/', query: { address: example.address } }"
+          >
+            <Tag small>{{ example.label }}</Tag>
+          </NuxtLink>
+        </Tags>
       </FormGroup>
       <aside>
         <h1>Smart Contract Reader</h1>
@@ -50,6 +60,21 @@
 
 <script setup lang="ts">
 const addressOrEns = ref('')
+
+const examples = [
+  {
+    label: 'WETH',
+    address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  },
+  {
+    label: 'CryptoPunks',
+    address: '0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb',
+  },
+  {
+    label: 'ENS Registrar Controller',
+    address: '0x59e16fccd424cc24e280be16e11bcd56fb0ce547',
+  },
+]
 
 async function openContract() {
   const value = addressOrEns.value.trim()
@@ -90,6 +115,17 @@ async function openContract() {
           text-decoration: none;
         }
       }
+    }
+
+    .examples {
+      align-items: center;
+      padding-inline: var(--size-1);
+      padding-block: var(--size-1);
+      overflow-x: auto;
+    }
+
+    .examples-label {
+      font-size: var(--font-xs);
     }
 
     @media (max-width: 768px) {
