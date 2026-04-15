@@ -87,9 +87,9 @@
           :link-resolver="resolveStatLink"
         />
 
-        <ContractFunctions
+        <ContractActions
           v-else-if="currentView === 'read' || currentView === 'interact'"
-          :functions="visibleFunctions"
+          :actions="visibleActions"
           :contract-address="contractData.address"
           :abi="contractData.abi"
           :chain-id="contractData.chainId"
@@ -106,8 +106,8 @@
           "
           :wallet-connected="walletConnected"
           :connected-address="connectedAddress"
-          :empty-text="emptyFunctionText"
-          @select="selectFunction"
+          :empty-text="emptyActionText"
+          @select="selectAction"
           @update:args="updateArgs"
           @read-error="onReadError"
         />
@@ -209,22 +209,22 @@ const currentView = computed<ContractView>(() => {
 
   return viewState.value.view
 })
-const selectedFunctionSlug = computed(() =>
+const selectedActionSlug = computed(() =>
   currentView.value === 'code' ? viewState.value.fn : undefined,
 )
 const selectedSource = computed(() => {
   return state.value.source
 })
-const visibleFunctions = computed(() => {
-  return functionsForView(currentView.value)
+const visibleActions = computed(() => {
+  return actionsForView(currentView.value)
 })
 const allFunctionNames = computed(() => {
   if (!contractData.value) return undefined
   return new Set(
     [
-      ...contractData.value.functions.read,
-      ...contractData.value.functions.write,
-    ].map((fn) => fn.name),
+      ...contractData.value.actions.read,
+      ...contractData.value.actions.write,
+    ].map((action) => action.name),
   )
 })
 const STAT_VIEW_MAP: Record<string, ContractView> = {
@@ -258,10 +258,10 @@ const title = computed(
     fallbackFileName.value ||
     'Contract',
 )
-const emptyFunctionText = computed(() =>
+const emptyActionText = computed(() =>
   currentView.value === 'interact'
-    ? 'select an interaction function'
-    : 'select a read function',
+    ? 'select an interaction'
+    : 'select a read action',
 )
 const contentClass = computed(() =>
   isReaderMode.value ? undefined : 'home-page',
@@ -294,7 +294,7 @@ watch(
 )
 
 watch(
-  [selectedFunctionSlug, () => contractData.value?.sourceFiles],
+  [selectedActionSlug, () => contractData.value?.sourceFiles],
   ([slug, files]) => {
     if (!slug || !files?.length) return
 
@@ -315,12 +315,12 @@ function onReadError(cause: unknown) {
 
 function setView(view: ContractView) {
   const nextState = { ...viewState.value, view }
-  const functions = functionsForView(view)
+  const actions = actionsForView(view)
 
   if (
     (view === 'read' || view === 'interact') &&
     nextState.fn &&
-    !functions.some((fn) => fn.slug === nextState.fn)
+    !actions.some((action) => action.slug === nextState.fn)
   ) {
     nextState.fn = undefined
     nextState.args = []
@@ -329,7 +329,7 @@ function setView(view: ContractView) {
   viewState.value = nextState
 }
 
-function selectFunction(fn: string | undefined) {
+function selectAction(fn: string | undefined) {
   viewState.value = { ...viewState.value, fn, args: [] }
 }
 
@@ -345,10 +345,10 @@ function updateSource(source: SourceSelection) {
   }
 }
 
-function functionsForView(view: ContractView) {
+function actionsForView(view: ContractView) {
   if (!contractData.value) return []
   return view === 'interact'
-    ? contractData.value.functions.write
-    : contractData.value.functions.read
+    ? contractData.value.actions.write
+    : contractData.value.actions.read
 }
 </script>

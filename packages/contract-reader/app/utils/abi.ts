@@ -1,13 +1,13 @@
 import type { Abi, AbiFunction } from 'viem'
 import { toFunctionSelector } from 'viem'
+import { resolveActions, type ResolvedAction } from '@evmnow/sdk'
 import type {
-  ContractFunction,
-  ContractFunctionParam,
+  ContractAction,
+  ContractActionParam,
   ContractSourceUnit,
 } from '../types/contract'
 import type {
   ContractUIMetadata,
-  FunctionMeta,
   ParamMeta,
 } from '../types/metadata'
 
@@ -28,7 +28,7 @@ function buildParam(
   input: AbiParam,
   index: number,
   paramsMeta?: Record<string, ParamMeta>,
-): ContractFunctionParam {
+): ContractActionParam {
   const key = input.name || `_${index}`
   const meta = getParamMeta(paramsMeta, key, index)
 
@@ -53,21 +53,6 @@ function getParamMeta(
   return paramsMeta[key] || paramsMeta[String(index)]
 }
 
-function buildFunctionSignature(fn: AbiFunction): string {
-  return `${fn.name}(${fn.inputs.map(formatAbiType).join(',')})`
-}
-
-function formatAbiType(input: AbiParam): string {
-  if (!input.type.startsWith('tuple')) return input.type
-
-  const suffix = input.type.slice('tuple'.length)
-  const inner = input.components?.length
-    ? input.components.map(formatAbiType).join(',')
-    : ''
-
-  return `(${inner})${suffix}`
-}
-
 function buildFacetMap(sources: ContractSourceUnit[]): Map<string, string> {
   const map = new Map<string, string>()
 
@@ -88,72 +73,64 @@ function buildFacetMap(sources: ContractSourceUnit[]): Map<string, string> {
   return map
 }
 
-export function parseAbiFunctions(
+function buildAction(
+  resolved: ResolvedAction,
+  facetMap: Map<string, string> | null,
+): ContractAction {
+  const fn = resolved.abi as unknown as AbiFunction
+  const meta = resolved.meta
+  const raw = fn as any
+  const inferred =
+    fn.stateMutability ??
+    (raw.payable ? 'payable' : raw.constant ? 'view' : 'nonpayable')
+  const stateMutability = meta.stateMutability || inferred
+  const isRead = stateMutability === 'view' || stateMutability === 'pure'
+
+  const facet = facetMap?.get(resolved.selector.toLowerCase())
+
+  return {
+    id: resolved.id,
+    abi: fn,
+    name: fn.name,
+    slug: resolved.id,
+    signature: resolved.signature,
+    selector: resolved.selector,
+    title: meta.title || prettifyName(fn.name),
+    description: meta.description,
+    inputs: fn.inputs.map((input, i) => buildParam(input, i, meta.params)),
+    outputs: (fn.outputs || []).map((output, i) =>
+      buildParam(output, i, meta.returns),
+    ),
+    stateMutability,
+    isRead,
+    isPayable: stateMutability === 'payable',
+    group: meta.group || facet,
+    warning: meta.warning || meta.deprecated,
+    meta,
+    facet,
+    synthesized: resolved.synthesized,
+    isVariant: resolved.isVariant,
+  }
+}
+
+export function parseActions(
   abi: Abi,
   metadata?: ContractUIMetadata,
   sources?: ContractSourceUnit[],
-): { read: ContractFunction[]; write: ContractFunction[] } {
-  const functions = abi.filter(
-    (item): item is AbiFunction => item.type === 'function',
-  )
+): { read: ContractAction[]; write: ContractAction[] } {
   const facetMap = sources ? buildFacetMap(sources) : null
-  const read: ContractFunction[] = []
-  const write: ContractFunction[] = []
+  const { actions } = resolveActions(abi, metadata ?? {})
 
-  for (const fn of functions) {
-    const meta: FunctionMeta | undefined = metadata?.functions?.[fn.name]
-    const raw = fn as any
-    const inferred =
-      fn.stateMutability ??
-      (raw.payable ? 'payable' : raw.constant ? 'view' : 'nonpayable')
-    const stateMutability = meta?.stateMutability || inferred
-    const isRead = stateMutability === 'view' || stateMutability === 'pure'
+  const read: ContractAction[] = []
+  const write: ContractAction[] = []
 
-    let facet: string | undefined
-    if (facetMap) {
-      try {
-        facet = facetMap.get(toFunctionSelector(fn).toLowerCase())
-      } catch {}
-    }
-
-    const contractFunction: ContractFunction = {
-      abi: fn,
-      name: fn.name,
-      slug: fn.name,
-      signature: buildFunctionSignature(fn),
-      title: meta?.title || prettifyName(fn.name),
-      description: meta?.description,
-      inputs: fn.inputs.map((input, i) => buildParam(input, i, meta?.params)),
-      outputs: (fn.outputs || []).map((output, i) =>
-        buildParam(output, i, meta?.returns),
-      ),
-      stateMutability,
-      isRead,
-      isPayable: stateMutability === 'payable',
-      group: meta?.group || facet,
-      warning: meta?.warning || meta?.deprecated,
-      meta,
-      facet,
-    }
-
-    if (isRead) read.push(contractFunction)
-    else write.push(contractFunction)
+  for (const resolved of actions) {
+    const action = buildAction(resolved, facetMap)
+    if (action.isRead) read.push(action)
+    else write.push(action)
   }
 
-  assignOverloadSlugs([...read, ...write])
   return { read, write }
-}
-
-function assignOverloadSlugs(functions: ContractFunction[]) {
-  const counts = new Map<string, number>()
-  for (const fn of functions)
-    counts.set(fn.name, (counts.get(fn.name) || 0) + 1)
-
-  for (const fn of functions) {
-    if ((counts.get(fn.name) || 0) <= 1) continue
-    const types = fn.abi.inputs.map((input) => input.type).join('-')
-    fn.slug = types ? `${fn.name}-${types}` : fn.name
-  }
 }
 
 const STANDARDS = [
@@ -257,66 +234,66 @@ function buildStandardMap(names: Set<string>): Map<string, string> {
   return map
 }
 
-function isConstant(fn: ContractFunction): boolean {
+function isConstant(action: ContractAction): boolean {
   return (
-    fn.isRead &&
-    fn.abi.inputs.length === 0 &&
-    (fn.abi.outputs?.length || 0) <= 1
+    action.isRead &&
+    action.abi.inputs.length === 0 &&
+    (action.abi.outputs?.length || 0) <= 1
   )
 }
 
-export interface ContractFunctionGroup {
+export interface ContractActionGroup {
   key: string
   label: string
-  functions: ContractFunction[]
+  actions: ContractAction[]
 }
 
-export interface GroupedContractFunctions {
-  grouped: ContractFunctionGroup[]
-  ungrouped: ContractFunction[]
-  constants: ContractFunction[]
+export interface GroupedContractActions {
+  grouped: ContractActionGroup[]
+  ungrouped: ContractAction[]
+  constants: ContractAction[]
 }
 
 function addToGroup(
-  map: Map<string, ContractFunction[]>,
+  map: Map<string, ContractAction[]>,
   key: string,
-  fn: ContractFunction,
+  action: ContractAction,
 ) {
   const group = map.get(key) || []
-  group.push(fn)
+  group.push(action)
   map.set(key, group)
 }
 
-export function groupFunctions(
-  functions: ContractFunction[],
+export function groupActions(
+  actions: ContractAction[],
   metadata?: ContractUIMetadata,
   allFunctionNames?: Set<string>,
-): GroupedContractFunctions {
+): GroupedContractActions {
   const metadataGroups = metadata?.groups || {}
   const hasMetadataGroups = Object.keys(metadataGroups).length > 0
   const facetNames = new Set(
-    functions.map((fn) => fn.facet).filter(Boolean) as string[],
+    actions.map((a) => a.facet).filter(Boolean) as string[],
   )
   const standardMap =
     !hasMetadataGroups && !facetNames.size
       ? buildStandardMap(
-          allFunctionNames || new Set(functions.map((fn) => fn.name)),
+          allFunctionNames || new Set(actions.map((a) => a.name)),
         )
       : null
 
-  const groupMap = new Map<string, ContractFunction[]>()
-  const constants: ContractFunction[] = []
-  const ungrouped: ContractFunction[] = []
+  const groupMap = new Map<string, ContractAction[]>()
+  const constants: ContractAction[] = []
+  const ungrouped: ContractAction[] = []
 
-  for (const fn of functions) {
-    if (fn.group && (metadataGroups[fn.group] || facetNames.has(fn.group))) {
-      addToGroup(groupMap, fn.group, fn)
-    } else if (standardMap?.has(fn.name)) {
-      addToGroup(groupMap, standardMap.get(fn.name)!, fn)
-    } else if (standardMap && isConstant(fn)) {
-      constants.push(fn)
+  for (const action of actions) {
+    if (action.group && (metadataGroups[action.group] || facetNames.has(action.group))) {
+      addToGroup(groupMap, action.group, action)
+    } else if (standardMap?.has(action.name)) {
+      addToGroup(groupMap, standardMap.get(action.name)!, action)
+    } else if (standardMap && isConstant(action)) {
+      constants.push(action)
     } else {
-      ungrouped.push(fn)
+      ungrouped.push(action)
     }
   }
 
@@ -330,10 +307,10 @@ export function groupFunctions(
       const orderB = STANDARD_ORDER.get(b) ?? Infinity
       return orderA !== orderB ? orderA - orderB : a.localeCompare(b)
     })
-    .map(([key, groupFunctions]) => ({
+    .map(([key, groupActions]) => ({
       key,
       label: metadataGroups[key]?.label || key,
-      functions: groupFunctions.sort(
+      actions: groupActions.sort(
         (a, b) => (a.meta?.order ?? Infinity) - (b.meta?.order ?? Infinity),
       ),
     }))

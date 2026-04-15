@@ -1,27 +1,27 @@
 <template>
-  <article class="cr-function-detail">
+  <article class="cr-action-detail">
     <div
-      v-if="fn.description"
-      class="cr-function-description cr-muted"
+      v-if="action.description"
+      class="cr-action-description cr-muted"
     >
-      <InlineMarkdown :text="fn.description" />
+      <InlineMarkdown :text="action.description" />
     </div>
 
     <div
-      v-if="fn.warning"
+      v-if="action.warning"
       class="cr-warning"
     >
-      {{ fn.warning }}
+      {{ action.warning }}
     </div>
 
     <slot
       name="intro"
-      :fn="fn"
+      :action="action"
     />
 
     <slot
       name="examples"
-      :fn="fn"
+      :action="action"
       :examples="examples"
       :apply-example="applyExample"
     >
@@ -51,12 +51,13 @@
       @submit.prevent="submit"
     >
       <template
-        v-for="(input, index) in fn.inputs"
+        v-for="(input, index) in action.inputs"
         :key="fieldKey(input, index)"
       >
         <slot
+          v-if="!isHidden(input)"
           name="field"
-          :fn="fn"
+          :action="action"
           :input="input"
           :index="index"
           :field-key="fieldKey(input, index)"
@@ -75,7 +76,7 @@
               <span class="cr-field-type">({{ input.type }})</span>
             </span>
 
-            <FunctionTupleInput
+            <ActionTupleInput
               :components="tupleComponents(input)"
               :prefix="fieldKey(input, index)"
               :values="inputValues"
@@ -90,7 +91,7 @@
             </small>
           </div>
 
-          <FunctionInput
+          <ActionInput
             v-else
             :input="input"
             :meta="input.meta"
@@ -101,7 +102,7 @@
       </template>
 
       <label
-        v-if="fn.isPayable"
+        v-if="action.isPayable"
         class="cr-field cr-value-field"
       >
         <span class="cr-field-label">
@@ -121,7 +122,7 @@
 
       <slot
         name="actions"
-        :fn="fn"
+        :action="action"
         :pending="pending"
         :has-errors="hasErrors"
         :auto-read="autoRead"
@@ -133,8 +134,8 @@
         :wallet-connected="walletConnected"
       >
         <Button
-          v-if="fn.isRead && fn.inputs.length"
-          class="primary cr-function-action"
+          v-if="action.isRead && visibleInputCount"
+          class="primary cr-action-submit"
           type="submit"
           :disabled="pending || !readFunction || hasErrors"
         >
@@ -147,12 +148,12 @@
           :chain="chainId"
           :label="labels.send"
           :busy-label="labels.sending"
-          button-class="cr-function-action"
+          button-class="cr-action-submit"
           :disabled="hasErrors"
         />
 
         <p
-          v-else-if="!fn.isRead"
+          v-else-if="!action.isRead"
           class="cr-hint cr-muted"
         >
           {{ writeHint }}
@@ -165,8 +166,8 @@
       :pending="pending"
       :result="result"
       :error="error"
-      :fn="fn"
-      :outputs="fn.outputs"
+      :action="action"
+      :outputs="action.outputs"
       :has-result-fields="hasResultFields"
       :address-href="addressHref"
       :format-value="formatValue"
@@ -176,34 +177,26 @@
         :pending="pending"
         :result="result"
         :error="error"
-        :fn="fn"
-        :outputs="fn.outputs"
+        :action="action"
+        :outputs="action.outputs"
         :has-result-fields="hasResultFields"
         :address-href="addressHref"
         :format-value="formatValue"
       >
         <template v-if="autoRead">
-          <FunctionResult
+          <ActionResult
             v-if="pending || !hasResult"
             label="result"
             value="loading..."
             :address-href="addressHref"
           >
-            <template #address="slotProps">
-              <slot
-                name="address"
-                v-bind="slotProps"
-              >
-                {{ slotProps.value }}
-              </slot>
-            </template>
-          </FunctionResult>
+          </ActionResult>
 
-          <FunctionResultFields
+          <ActionResultFields
             v-else-if="hasResultFields"
             :result="result"
-            :outputs="fn.outputs"
-            :returns-meta="fn.meta?.returns"
+            :outputs="action.outputs"
+            :returns-meta="action.meta?.returns"
             :address-href="addressHref"
           >
             <template #address="slotProps">
@@ -214,9 +207,9 @@
                 {{ slotProps.value }}
               </slot>
             </template>
-          </FunctionResultFields>
+          </ActionResultFields>
 
-          <FunctionResult
+          <ActionResult
             v-else
             label="result"
             :value="formatValue(result)"
@@ -230,15 +223,15 @@
                 {{ slotProps.value }}
               </slot>
             </template>
-          </FunctionResult>
+          </ActionResult>
         </template>
 
         <template v-else-if="result !== null">
-          <FunctionResultFields
+          <ActionResultFields
             v-if="hasResultFields"
             :result="result"
-            :outputs="fn.outputs"
-            :returns-meta="fn.meta?.returns"
+            :outputs="action.outputs"
+            :returns-meta="action.meta?.returns"
             :address-href="addressHref"
           >
             <template #address="slotProps">
@@ -249,9 +242,9 @@
                 {{ slotProps.value }}
               </slot>
             </template>
-          </FunctionResultFields>
+          </ActionResultFields>
 
-          <FunctionResult
+          <ActionResult
             v-else
             label="result"
             :value="formatValue(result)"
@@ -265,10 +258,10 @@
                 {{ slotProps.value }}
               </slot>
             </template>
-          </FunctionResult>
+          </ActionResult>
         </template>
 
-        <FunctionResult
+        <ActionResult
           v-if="error"
           label="error"
           :value="error"
@@ -279,7 +272,7 @@
 
     <slot
       name="preview"
-      :fn="fn"
+      :action="action"
       :result="result"
       :error="error"
       :artifact-result="artifactResult"
@@ -288,9 +281,9 @@
       :metadata-resolving="metadataResolving"
       :metadata-error="metadataError"
     >
-      <FunctionArtifactPreview :value="artifactResult" />
+      <ActionArtifactPreview :value="artifactResult" />
 
-      <FunctionMetadataPreview
+      <ActionMetadataPreview
         v-if="showMetadataPreview"
         :metadata="metadataPreview"
         :raw-json="metadataRawJson"
@@ -301,7 +294,7 @@
 
     <slot
       name="footer"
-      :fn="fn"
+      :action="action"
       :result="result"
       :error="error"
     />
@@ -311,13 +304,13 @@
 <script setup lang="ts">
 import type { Abi, Hash } from 'viem'
 import { parseEther } from 'viem'
-import type { ContractFunction } from '../../types/contract'
+import type { ContractAction } from '../../types/contract'
 import type {
   ContractReadFn,
   ContractWriteFn,
   MetadataResolveFn,
 } from '../../types/actions'
-import type { FunctionExample } from '../../types/metadata'
+import type { ActionExample } from '../../types/metadata'
 import { normalizeReadError } from '../../utils/errors'
 import {
   applyInputExample,
@@ -328,12 +321,12 @@ import {
   seedInputValues,
   serializeInputArgs,
 } from '../../utils/inputs'
-import FunctionInput from './Input.vue'
-import FunctionArtifactPreview from './ArtifactPreview.client.vue'
-import FunctionMetadataPreview from './MetadataPreview.client.vue'
-import FunctionResult from './Result.vue'
-import FunctionResultFields from './ResultFields.vue'
-import FunctionTupleInput from './TupleInput.vue'
+import ActionInput from './Input.vue'
+import ActionArtifactPreview from './ArtifactPreview.client.vue'
+import ActionMetadataPreview from './MetadataPreview.client.vue'
+import ActionResult from './Result.vue'
+import ActionResultFields from './ResultFields.vue'
+import ActionTupleInput from './TupleInput.vue'
 import { formatArgValue } from '../../utils/format'
 import { detectPreviewMarkupKind } from '../../utils/markup-preview'
 import {
@@ -342,15 +335,15 @@ import {
 } from '../../utils/metadata-display'
 
 defineSlots<{
-  intro?: (props: { fn: ContractFunction }) => unknown
+  intro?: (props: { action: ContractAction }) => unknown
   examples?: (props: {
-    fn: ContractFunction
-    examples: FunctionExample[]
-    applyExample: (example: FunctionExample) => void
+    action: ContractAction
+    examples: ActionExample[]
+    applyExample: (example: ActionExample) => void
   }) => unknown
   field?: (props: {
-    fn: ContractFunction
-    input: ContractFunction['inputs'][number]
+    action: ContractAction
+    input: ContractAction['inputs'][number]
     index: number
     fieldKey: string
     value: string
@@ -358,7 +351,7 @@ defineSlots<{
     updateValue: (value: string) => void
   }) => unknown
   actions?: (props: {
-    fn: ContractFunction
+    action: ContractAction
     pending: boolean
     hasErrors: boolean
     autoRead: boolean
@@ -366,15 +359,15 @@ defineSlots<{
     submit: () => void
     writeRequest?: () => Promise<Hash>
     writeHint: string
-    labels: FunctionDetailLabels
+    labels: ActionDetailLabels
     walletConnected?: boolean
   }) => unknown
   result?: (props: {
     pending: boolean
     result: unknown
     error: string
-    fn: ContractFunction
-    outputs: ContractFunction['outputs']
+    action: ContractAction
+    outputs: ContractAction['outputs']
     hasResultFields: boolean
     addressHref?: (address: string) => string | undefined | null
     formatValue: (value: unknown) => string
@@ -383,8 +376,8 @@ defineSlots<{
     pending: boolean
     result: unknown
     error: string
-    fn: ContractFunction
-    outputs: ContractFunction['outputs']
+    action: ContractAction
+    outputs: ContractAction['outputs']
     hasResultFields: boolean
     addressHref?: (address: string) => string | undefined | null
     formatValue: (value: unknown) => string
@@ -395,12 +388,12 @@ defineSlots<{
     href: string | null
   }) => unknown
   footer?: (props: {
-    fn: ContractFunction
+    action: ContractAction
     result: unknown
     error: string
   }) => unknown
   preview?: (props: {
-    fn: ContractFunction
+    action: ContractAction
     result: unknown
     error: string
     artifactResult: string | null
@@ -416,7 +409,7 @@ const props = withDefaults(
     address: string
     abi: Abi
     chainId?: number
-    fn: ContractFunction
+    action: ContractAction
     args?: string[]
     readFunction?: ContractReadFn
     writeFunction?: ContractWriteFn
@@ -424,7 +417,7 @@ const props = withDefaults(
     connectedAddress?: string
     addressHref?: (address: string) => string | undefined | null
     resolveMetadata?: MetadataResolveFn
-    labels?: Partial<FunctionDetailLabels>
+    labels?: Partial<ActionDetailLabels>
     autoRead?: boolean
   }>(),
   {
@@ -439,7 +432,7 @@ const emit = defineEmits<{
 
 const inputValues = reactive<Record<string, string>>({})
 const inputErrors = computed(() =>
-  buildInputErrors(props.fn.inputs, inputValues, props.fn.meta?.params),
+  buildInputErrors(props.action.inputs, inputValues, props.action.meta?.params),
 )
 const hasErrors = computed(() =>
   Object.values(inputErrors.value).some((error) => !!error),
@@ -454,14 +447,22 @@ const metadataRawJson = ref<Record<string, unknown> | null>(null)
 const metadataResolving = ref(false)
 const metadataError = ref<string | null>(null)
 
+const visibleInputCount = computed(
+  () => props.action.inputs.filter((input) => !isHidden(input)).length,
+)
 const autoRead = computed(
   () =>
-    props.autoRead !== false && props.fn.isRead && props.fn.inputs.length === 0,
+    props.autoRead !== false &&
+    props.action.isRead &&
+    visibleInputCount.value === 0,
 )
 const hasForm = computed(
-  () => props.fn.inputs.length > 0 || props.fn.isPayable || !props.fn.isRead,
+  () =>
+    visibleInputCount.value > 0 ||
+    props.action.isPayable ||
+    !props.action.isRead,
 )
-const hasResultFields = computed(() => props.fn.outputs.length > 1)
+const hasResultFields = computed(() => props.action.outputs.length > 1)
 const artifactResult = computed(() => {
   if (typeof result.value !== 'string') return null
   return detectPreviewMarkupKind(result.value) ? result.value : null
@@ -474,8 +475,8 @@ const showMetadataPreview = computed(
     metadataResolving.value ||
     Boolean(metadataPreview.value || metadataError.value),
 )
-const examples = computed(() => props.fn.meta?.examples || [])
-const labels = computed<FunctionDetailLabels>(() => ({
+const examples = computed(() => props.action.meta?.examples || [])
+const labels = computed<ActionDetailLabels>(() => ({
   examples: 'examples',
   read: 'read',
   reading: 'reading...',
@@ -493,19 +494,19 @@ const writeHint = computed(() => {
   return labels.value.invalidInputs
 })
 const writeRequest = computed<(() => Promise<Hash>) | undefined>(() => {
-  if (!props.writeFunction || props.fn.isRead || !props.walletConnected) {
+  if (!props.writeFunction || props.action.isRead || !props.walletConnected) {
     return
   }
 
   const writeFunction = props.writeFunction!
 
   return async () => {
-    const value = props.fn.isPayable ? txValue.value.trim() : ''
+    const value = props.action.isPayable ? txValue.value.trim() : ''
 
     return writeFunction({
       address: props.address,
       abi: props.abi,
-      functionName: props.fn.name,
+      functionName: props.action.name,
       args: buildArgs(),
       ...(value ? { value: parseEther(value) } : {}),
     })
@@ -513,7 +514,7 @@ const writeRequest = computed<(() => Promise<Hash>) | undefined>(() => {
 })
 
 watch(
-  () => [props.address, props.fn.slug] as const,
+  () => [props.address, props.action.slug] as const,
   () => resetInputs(),
   { immediate: true },
 )
@@ -522,7 +523,7 @@ watch(
   () => props.args,
   (args) => {
     if (!args) return
-    hydrateInputValues(props.fn.inputs, inputValues, args)
+    hydrateInputValues(props.action.inputs, inputValues, args)
   },
   { immediate: true },
 )
@@ -530,13 +531,13 @@ watch(
 watch(
   inputValues,
   () => {
-    emit('update:args', serializeInputArgs(props.fn.inputs, inputValues))
+    emit('update:args', serializeInputArgs(props.action.inputs, inputValues))
   },
   { deep: true },
 )
 
 watch(
-  () => [props.fn.slug, props.readFunction] as const,
+  () => [props.action.slug, props.readFunction] as const,
   () => {
     if (autoRead.value) read()
   },
@@ -547,30 +548,31 @@ onMounted(() => {
   if (autoRead.value) read()
 })
 
-watch(
-  [metadataUri, () => props.resolveMetadata],
-  ([uri, resolveMetadata]) => {
-    if (!uri || !resolveMetadata) {
-      resetMetadataPreview()
-      return
-    }
+watch([metadataUri, () => props.resolveMetadata], ([uri, resolveMetadata]) => {
+  if (!uri || !resolveMetadata) {
+    resetMetadataPreview()
+    return
+  }
 
-    void resolveMetadataPreview(uri, resolveMetadata)
-  },
-)
+  void resolveMetadataPreview(uri, resolveMetadata)
+})
 
-function isTuple(input: ContractFunction['inputs'][number]): boolean {
+function isTuple(input: ContractAction['inputs'][number]): boolean {
   return input.type === 'tuple' && !!input.components?.length
 }
 
+function isHidden(input: ContractAction['inputs'][number]): boolean {
+  return Boolean(input.meta?.hidden)
+}
+
 function tupleComponents(
-  input: ContractFunction['inputs'][number],
-): ContractFunction['inputs'][number][] {
+  input: ContractAction['inputs'][number],
+): ContractAction['inputs'][number][] {
   return input.components || []
 }
 
 function fieldKey(
-  input: ContractFunction['inputs'][number],
+  input: ContractAction['inputs'][number],
   index: number,
 ): string {
   return buildInputKey(undefined, input.name, index)
@@ -589,10 +591,10 @@ function resetInputs() {
 
   for (const key of Object.keys(inputValues)) delete inputValues[key]
   seedInputValues(
-    props.fn.inputs,
+    props.action.inputs,
     inputValues,
     undefined,
-    props.fn.meta?.params,
+    props.action.meta?.params,
     {
       contractAddress: props.address,
       connectedAddress: props.connectedAddress,
@@ -602,7 +604,7 @@ function resetInputs() {
 }
 
 function buildArgs() {
-  return buildInputArgs(props.fn.inputs, inputValues)
+  return buildInputArgs(props.action.inputs, inputValues)
 }
 
 function resetMetadataPreview() {
@@ -641,7 +643,7 @@ async function resolveMetadataPreview(
 }
 
 async function read() {
-  if (pending.value || !props.fn.isRead || hasErrors.value) {
+  if (pending.value || !props.action.isRead || hasErrors.value) {
     return
   }
 
@@ -661,13 +663,13 @@ async function read() {
     result.value = await props.readFunction({
       address: props.address,
       abi: props.abi,
-      functionName: props.fn.name,
+      functionName: props.action.name,
       args: buildArgs(),
     })
     hasResult.value = true
   } catch (err: any) {
     emit('error', err)
-    error.value = normalizeReadError(err, { functionName: props.fn.name })
+    error.value = normalizeReadError(err, { functionName: props.action.name })
     hasResult.value = true
   } finally {
     pending.value = false
@@ -675,14 +677,14 @@ async function read() {
 }
 
 function submit() {
-  if (props.fn.isRead) read()
+  if (props.action.isRead) read()
 }
 
-function applyExample(example: FunctionExample) {
+function applyExample(example: ActionExample) {
   resetInputs()
   applyInputExample(inputValues, example.params)
 
-  if (props.fn.isRead) {
+  if (props.action.isRead) {
     nextTick(() => {
       if (!hasErrors.value) read()
     })
@@ -693,7 +695,7 @@ function formatValue(value: unknown) {
   return formatArgValue(value)
 }
 
-interface FunctionDetailLabels {
+interface ActionDetailLabels {
   examples: string
   read: string
   reading: string

@@ -31,7 +31,7 @@
   }
 
   .cr-overview code,
-  .cr-function-item-signature {
+  .cr-action-item-signature {
     display: block;
     max-width: 100%;
     color: var(--cr-muted);
@@ -49,8 +49,8 @@
     text-transform: var(--cr-label-text-transform);
   }
 
-  .cr-function-item-signature,
-  .cr-function-card-signature,
+  .cr-action-item-signature,
+  .cr-action-card-signature,
   .cr-overview code,
   .cr-field-type,
   .cr-result-value,

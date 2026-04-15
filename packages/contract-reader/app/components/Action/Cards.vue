@@ -1,52 +1,52 @@
 <template>
-  <nav class="cr-function-cards">
-    <FunctionGroups
-      :functions="functions"
+  <nav class="cr-action-cards">
+    <ActionGroups
+      :actions="actions"
       :metadata="metadata"
       :all-function-names="allFunctionNames"
       :title="title"
     >
-      <template #group="{ functions: fns }">
-        <div class="cr-function-card-grid">
+      <template #group="{ actions: items }">
+        <div class="cr-action-card-grid">
           <article
-            v-for="fn in fns"
-            :key="fn.slug"
-            class="cr-function-card"
-            :class="{ expanded: isExpanded(fn.slug) }"
+            v-for="action in items"
+            :key="action.slug"
+            class="cr-action-card"
+            :class="{ expanded: isExpanded(action.slug) }"
           >
             <button
-              class="cr-function-card-header"
+              class="cr-action-card-header"
               type="button"
-              @click="toggleFunction(fn.slug)"
+              @click="toggleAction(action.slug)"
             >
-              <span class="cr-function-card-title">{{ fn.title }}</span>
+              <span class="cr-action-card-title">{{ action.title }}</span>
               <span
-                v-if="fn.title !== fn.name"
-                class="cr-function-card-signature"
+                v-if="action.title !== action.name"
+                class="cr-action-card-signature"
               >
-                {{ fn.name }}()
+                {{ action.name }}()
               </span>
             </button>
 
             <div
-              class="cr-function-card-expand"
-              :class="{ open: isExpanded(fn.slug) }"
+              class="cr-action-card-expand"
+              :class="{ open: isExpanded(action.slug) }"
             >
-              <div class="cr-function-card-collapse">
-                <div class="cr-function-card-body">
-                  <FunctionDetail
-                    v-if="rendered.has(fn.slug)"
+              <div class="cr-action-card-collapse">
+                <div class="cr-action-card-body">
+                  <ActionDetail
+                    v-if="rendered.has(action.slug)"
                     :address="address"
                     :abi="abi"
                     :chain-id="chainId"
-                    :fn="fn"
-                    :args="selected === fn.slug ? args : undefined"
+                    :action="action"
+                    :args="selected === action.slug ? args : undefined"
                     :read-function="readFunction"
                     :write-function="writeFunction"
                     :resolve-metadata="resolveMetadata"
                     :wallet-connected="walletConnected"
                     :connected-address="connectedAddress"
-                    @update:args="updateArgs(fn.slug, $event)"
+                    @update:args="updateArgs(action.slug, $event)"
                     @error="emit('error', $event)"
                   />
                 </div>
@@ -55,15 +55,15 @@
           </article>
         </div>
       </template>
-    </FunctionGroups>
+    </ActionGroups>
   </nav>
 </template>
 
 <script setup lang="ts">
 import type { Abi } from 'viem'
-import FunctionDetail from './Detail.vue'
-import FunctionGroups from './Groups.vue'
-import type { ContractFunction } from '../../types/contract'
+import ActionDetail from './Detail.vue'
+import ActionGroups from './Groups.vue'
+import type { ContractAction } from '../../types/contract'
 import type {
   ContractReadFn,
   ContractWriteFn,
@@ -73,7 +73,7 @@ import type { ContractUIMetadata } from '../../types/metadata'
 
 const props = withDefaults(
   defineProps<{
-    functions: ContractFunction[]
+    actions: ContractAction[]
     address: string
     abi: Abi
     chainId?: number
@@ -90,7 +90,7 @@ const props = withDefaults(
   }>(),
   {
     selected: null,
-    title: 'functions',
+    title: 'actions',
     walletConnected: false,
   },
 )
@@ -107,7 +107,7 @@ function isExpanded(slug: string): boolean {
   return props.selected === slug
 }
 
-function toggleFunction(slug: string) {
+function toggleAction(slug: string) {
   emit('select', props.selected === slug ? undefined : slug)
 }
 

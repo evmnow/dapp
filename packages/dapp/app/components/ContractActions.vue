@@ -1,13 +1,13 @@
 <template>
   <section
     ref="root"
-    class="contract-functions"
+    class="contract-actions"
     :class="{ 'is-card-view': isCardView }"
   >
-    <FunctionCards
+    <ActionCards
       v-if="isCardView"
-      class="contract-functions__cards"
-      :functions="functions"
+      class="contract-actions__cards"
+      :actions="actions"
       :address="contractAddress"
       :abi="abi"
       :chain-id="chainId"
@@ -20,34 +20,34 @@
       :resolve-metadata="resolveMetadata"
       :wallet-connected="walletConnected"
       :connected-address="connectedAddress"
-      :title="functionTitle"
-      @select="selectFunction"
+      :title="actionTitle"
+      @select="selectAction"
       @update:args="updateArgs"
       @error="emit('read-error', $event)"
     />
 
     <template v-else>
-      <FunctionList
-        class="contract-functions__list cr-panel"
-        :functions="functions"
+      <ActionList
+        class="contract-actions__list cr-panel"
+        :actions="actions"
         :metadata="metadata"
         :all-function-names="allFunctionNames"
-        :selected="selectedFunction?.slug"
-        @select="selectFunction"
+        :selected="selectedAction?.slug"
+        @select="selectAction"
       />
 
-      <div class="contract-functions__detail cr-panel">
-        <template v-if="selectedFunction">
-          <header class="contract-functions__heading">
-            <h2>{{ selectedFunction.title }}</h2>
+      <div class="contract-actions__detail cr-panel">
+        <template v-if="selectedAction">
+          <header class="contract-actions__heading">
+            <h2>{{ selectedAction.title }}</h2>
             <code>{{ signature }}</code>
           </header>
 
-          <FunctionDetail
+          <ActionDetail
             :address="contractAddress"
             :abi="abi"
             :chain-id="chainId"
-            :fn="selectedFunction"
+            :action="selectedAction"
             :args="args"
             :read-function="readFunction"
             :write-function="writeFunction"
@@ -71,12 +71,12 @@
 </template>
 
 <script setup lang="ts">
-import FunctionCards from '@evmnow/contract-reader/components/Function/Cards'
-import FunctionDetail from '@evmnow/contract-reader/components/Function/Detail'
-import FunctionList from '@evmnow/contract-reader/components/Function/List'
+import ActionCards from '@evmnow/contract-reader/components/Action/Cards'
+import ActionDetail from '@evmnow/contract-reader/components/Action/Detail'
+import ActionList from '@evmnow/contract-reader/components/Action/List'
 import type {
   ContractData,
-  ContractFunction,
+  ContractAction,
 } from '@evmnow/contract-reader/types/contract'
 import type { ContractUIMetadata } from '@evmnow/contract-reader/types/metadata'
 import type {
@@ -87,7 +87,7 @@ import type {
 
 const props = withDefaults(
   defineProps<{
-    functions: ContractFunction[]
+    actions: ContractAction[]
     contractAddress: string
     abi: ContractData['abi']
     chainId?: number
@@ -103,7 +103,7 @@ const props = withDefaults(
     emptyText?: string
   }>(),
   {
-    emptyText: 'select a function',
+    emptyText: 'select an action',
     walletConnected: false,
   },
 )
@@ -117,25 +117,25 @@ const emit = defineEmits<{
 const root = ref<HTMLElement | null>(null)
 const isCardView = ref(false)
 
-const selectedFunction = computed(
+const selectedAction = computed(
   () =>
-    props.functions.find((fn) => fn.slug === props.selected) ||
-    props.functions[0] ||
+    props.actions.find((action) => action.slug === props.selected) ||
+    props.actions[0] ||
     null,
 )
 
 const signature = computed(() => {
-  if (!selectedFunction.value) return ''
+  if (!selectedAction.value) return ''
 
-  return `${selectedFunction.value.name}(${selectedFunction.value.inputs
+  return `${selectedAction.value.name}(${selectedAction.value.inputs
     .map((input) => input.type)
     .join(', ')})`
 })
 
-const functionTitle = computed(() =>
+const actionTitle = computed(() =>
   props.emptyText.includes('interaction')
-    ? 'interaction functions'
-    : 'read functions',
+    ? 'interaction actions'
+    : 'read actions',
 )
 
 function readSizeVariable(name: string): number {
@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
   resizeObserver?.disconnect()
 })
 
-function selectFunction(slug: string | undefined) {
+function selectAction(slug: string | undefined) {
   emit('select', slug)
 }
 
@@ -183,7 +183,7 @@ function updateArgs(nextArgs: string[]) {
 
 <style scoped>
 @layer components {
-  .contract-functions {
+  .contract-actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--cr-gap);
@@ -193,24 +193,24 @@ function updateArgs(nextArgs: string[]) {
     }
   }
 
-  .contract-functions__list {
+  .contract-actions__list {
     flex: 0 1 calc(var(--form-width) - var(--size-7));
     align-self: start;
     overflow: auto;
   }
 
-  .contract-functions__detail {
+  .contract-actions__detail {
     display: grid;
     flex: 1 1 calc(var(--form-width) + var(--size-8));
     align-content: start;
-    gap: var(--cr-contract-functions-detail-gap);
+    gap: var(--cr-contract-actions-detail-gap);
   }
 
-  .contract-functions__cards {
+  .contract-actions__cards {
     flex: 1 1 100%;
   }
 
-  .contract-functions__heading h2 {
+  .contract-actions__heading h2 {
     font-size: var(--font-base);
     min-width: 50%;
   }
