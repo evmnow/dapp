@@ -46,6 +46,7 @@
                     :resolve-metadata="resolveMetadata"
                     :wallet-connected="walletConnected"
                     :connected-address="connectedAddress"
+                    :source-route="sourceRoute?.(fn)"
                     @update:args="updateArgs(fn.slug, $event)"
                     @error="emit('error', $event)"
                   />
@@ -61,6 +62,7 @@
 
 <script setup lang="ts">
 import type { Abi } from 'viem'
+import type { RouteLocationRaw } from 'vue-router'
 import FunctionDetail from './Detail.vue'
 import FunctionGroups from './Groups.vue'
 import type { ContractFunction } from '../../types/contract'
@@ -87,6 +89,7 @@ const props = withDefaults(
     walletConnected?: boolean
     connectedAddress?: string
     title?: string
+    sourceRoute?: (fn: ContractFunction) => RouteLocationRaw | undefined
   }>(),
   {
     selected: null,

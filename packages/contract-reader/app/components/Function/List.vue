@@ -32,15 +32,12 @@
               name="item"
               :fn="fn"
               :selected="selected === fn.slug"
-              :href="itemHref(fn)"
               :select="selectFunction"
             >
-              <component
-                :is="itemHref(fn) ? 'a' : 'button'"
+              <button
                 class="cr-function-item"
                 :class="{ active: selected === fn.slug }"
-                :href="itemHref(fn) || undefined"
-                :type="itemHref(fn) ? undefined : 'button'"
+                type="button"
                 @click="selectFunction(fn.slug)"
               >
                 <span class="cr-function-item-title">{{ fn.title }}</span>
@@ -50,7 +47,7 @@
                 >
                   {{ fn.name }}()
                 </span>
-              </component>
+              </button>
             </slot>
           </template>
         </slot>
@@ -75,7 +72,6 @@ const slots = defineSlots<{
   item?: (props: {
     fn: ContractFunction
     selected: boolean
-    href: string | null
     select: (slug: string) => void
   }) => unknown
 }>()
@@ -87,7 +83,6 @@ const props = withDefaults(
     allFunctionNames?: Set<string>
     selected?: string | null
     title?: string
-    itemHref?: (fn: ContractFunction) => string | undefined | null
   }>(),
   {
     selected: null,
@@ -98,10 +93,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   select: [slug: string]
 }>()
-
-function itemHref(fn: ContractFunction) {
-  return props.itemHref?.(fn) ?? null
-}
 
 function selectFunction(slug: string) {
   emit('select', slug)
