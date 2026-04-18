@@ -34,8 +34,8 @@
               :selected="selected === fn.slug"
               :select="selectFunction"
             >
-              <button
-                class="cr-function-item"
+              <Button
+                class="unstyled cr-function-item"
                 :class="{ active: selected === fn.slug }"
                 type="button"
                 @click="selectFunction(fn.slug)"
@@ -47,7 +47,7 @@
                 >
                   {{ fn.name }}()
                 </span>
-              </button>
+              </Button>
             </slot>
           </template>
         </slot>

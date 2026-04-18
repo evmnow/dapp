@@ -37,9 +37,9 @@
         @select="selectFunction"
       >
         <template #item="{ fn, selected: isSelected }">
-          <NuxtLink
+          <Button
             :to="functionSelectionRoute(fn)"
-            class="cr-function-item"
+            class="unstyled cr-function-item"
             :class="{ active: isSelected }"
             active-class=""
             exact-active-class=""
@@ -51,7 +51,7 @@
             >
               {{ fn.name }}()
             </span>
-          </NuxtLink>
+          </Button>
         </template>
       </FunctionList>
 
