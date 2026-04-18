@@ -69,7 +69,7 @@
           </div>
 
           <nav class="cr-tabs">
-            <AppLinkButton
+            <Button
               v-for="tab in tabs"
               :key="tab.value"
               :class="{ active: currentView === tab.value }"
@@ -81,7 +81,7 @@
               "
             >
               {{ tab.label }}
-            </AppLinkButton>
+            </Button>
           </nav>
         </header>
 
