@@ -35,6 +35,15 @@
     justify-self: var(--cr-function-detail-button-justify);
   }
 
+  .cr-function-source {
+    padding-top: var(--size-3);
+    border-top: var(--border-width) solid var(--cr-border);
+  }
+
+  .cr-function-source-link {
+    min-inline-size: auto;
+  }
+
   .cr-function-cards,
   .cr-function-group,
   .cr-function-group-body {

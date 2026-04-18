@@ -153,38 +153,45 @@ export function useReaderQueryState(options: { path?: string } = {}) {
   const route = useRoute()
   const router = useRouter()
 
-  const state = computed<ReaderQueryState>({
-    get() {
-      return parseReaderQuery(route.query)
-    },
-    set(nextState) {
-      const normalizedState = normalizeReaderQueryState(nextState)
-      const nextQuery: LocationQuery = { ...route.query }
-      for (const key of READER_QUERY_KEYS) delete nextQuery[key]
-      Object.assign(nextQuery, serializeReaderQuery(normalizedState))
+  const state = computed(() => parseReaderQuery(route.query))
 
-      router.replace({
-        path: options.path ?? route.path,
-        query: nextQuery,
-      })
-    },
-  })
+  function routeForState(nextState: ReaderQueryState): RouteLocationRaw {
+    const normalizedState = normalizeReaderQueryState(nextState)
+    const nextQuery: LocationQuery = { ...route.query }
+    for (const key of READER_QUERY_KEYS) delete nextQuery[key]
+    Object.assign(nextQuery, serializeReaderQuery(normalizedState))
+    return { path: options.path ?? route.path, query: nextQuery }
+  }
+
+  function navigate(
+    partial: Partial<ReaderQueryState>,
+    options: { replace?: boolean } = {},
+  ) {
+    const nextState = {
+      ...state.value,
+      ...partial,
+    }
+    const nextRoute = routeForState(nextState)
+    void navigateTo(nextRoute, options)
+  }
 
   function routeFor(partial: Partial<ReaderQueryState>): RouteLocationRaw {
-    const nextState = normalizeReaderQueryState({
+    return routeForState({
       address: state.value.address,
       view: DEFAULT_STATE.view,
       args: [],
       ...partial,
     })
-    const nextQuery: LocationQuery = { ...route.query }
-    for (const key of READER_QUERY_KEYS) delete nextQuery[key]
-    Object.assign(nextQuery, serializeReaderQuery(nextState))
-    return { path: options.path ?? route.path, query: nextQuery }
+  }
+
+  function hrefFor(partial: Partial<ReaderQueryState>) {
+    return router.resolve(routeFor(partial)).href
   }
 
   return {
     state,
+    navigate,
     routeFor,
+    hrefFor,
   }
 }

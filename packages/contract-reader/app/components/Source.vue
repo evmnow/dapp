@@ -51,6 +51,7 @@
           <tr
             v-for="(line, index) in lines"
             :key="index"
+            :ref="(element) => setLineElement(element, index + 1)"
             :class="{ active: isActive(index + 1) }"
           >
             <slot
@@ -59,22 +60,27 @@
               :file-index="activeFileIndex"
               :line-number="index + 1"
               :line="line"
+              :highlighted-line="highlightedLines[index] ?? ''"
               :active="isActive(index + 1)"
               :href="lineLink(activeFile, index + 1, line)"
               :select-line="selectLine"
             >
               <td class="cr-source-line-number-cell">
-                <component
-                  :is="lineLink(activeFile, index + 1, line) ? 'a' : 'button'"
+                <a
+                  v-if="lineLink(activeFile, index + 1, line)"
                   class="cr-line-number"
                   :href="lineLink(activeFile, index + 1, line) || undefined"
-                  :type="
-                    lineLink(activeFile, index + 1, line) ? undefined : 'button'
-                  "
+                >
+                  {{ index + 1 }}
+                </a>
+                <button
+                  v-else
+                  class="cr-line-number"
+                  type="button"
                   @click="selectLine(index + 1)"
                 >
                   {{ index + 1 }}
-                </component>
+                </button>
               </td>
               <td class="cr-source-code-cell">
                 <pre
@@ -110,6 +116,7 @@ const props = defineProps<{
     file: SourceFile,
     lineNumber: number,
     line: string,
+    fileIndex: number,
   ) => string | undefined | null
 }>()
 
@@ -131,6 +138,7 @@ defineSlots<{
     fileIndex: number
     lineNumber: number
     line: string
+    highlightedLine: string
     active: boolean
     href: string | null
     selectLine: (line: number) => void
@@ -149,6 +157,68 @@ const lines = computed(() => activeFile.value?.content.split('\n') || [])
 const highlightedLines = computed(() =>
   activeFile.value ? highlightSolidity(activeFile.value.content) : [],
 )
+const lineElements = new Map<number, HTMLElement>()
+let scrollFrame: number | null = null
+
+function setLineElement(
+  element: Element | ComponentPublicInstance | null,
+  line: number,
+) {
+  if (element instanceof HTMLElement) {
+    lineElements.set(line, element)
+    if (line === props.selectedSource?.line) scheduleScrollToSelectedLine()
+    return
+  }
+
+  lineElements.delete(line)
+}
+
+function scheduleScrollToSelectedLine() {
+  if (typeof window === 'undefined') return
+  if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
+
+  scrollFrame = window.requestAnimationFrame(() => {
+    scrollFrame = window.requestAnimationFrame(() => {
+      scrollFrame = null
+      scrollToSelectedLine()
+    })
+  })
+}
+
+function scrollToSelectedLine() {
+  const line = props.selectedSource?.line
+  if (!line) return
+
+  const element = lineElements.get(line)
+  if (!element || !document.contains(element)) return
+
+  element.scrollIntoView({
+    block: 'center',
+    inline: 'nearest',
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth',
+  })
+}
+
+watch(activeFileIndex, () => lineElements.clear(), { flush: 'sync' })
+
+watch(
+  () => [
+    activeFileIndex.value,
+    props.selectedSource?.line,
+    props.selectedSource?.end,
+    lines.value.length,
+  ],
+  () => scheduleScrollToSelectedLine(),
+  { immediate: true, flush: 'post' },
+)
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined' && scrollFrame !== null) {
+    window.cancelAnimationFrame(scrollFrame)
+  }
+})
 
 function fileLink(file: SourceFile | undefined, index: number) {
   if (!file) return null
@@ -161,7 +231,7 @@ function lineLink(
   line: string,
 ) {
   if (!file) return null
-  return props.lineHref?.(file, lineNumber, line) ?? null
+  return props.lineHref?.(file, lineNumber, line, activeFileIndex.value) ?? null
 }
 
 function isActive(line: number) {
