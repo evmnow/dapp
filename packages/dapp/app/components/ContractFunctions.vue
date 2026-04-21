@@ -21,6 +21,7 @@
       :wallet-connected="walletConnected"
       :connected-address="connectedAddress"
       :title="functionTitle"
+      :source-route="functionCodeRoute"
       @select="selectFunction"
       @update:args="updateArgs"
       @error="emit('read-error', $event)"
@@ -34,7 +35,25 @@
         :all-function-names="allFunctionNames"
         :selected="selectedFunction?.slug"
         @select="selectFunction"
-      />
+      >
+        <template #item="{ fn, selected: isSelected }">
+          <Button
+            :to="functionSelectionRoute(fn)"
+            class="unstyled cr-function-item"
+            :class="{ active: isSelected }"
+            active-class=""
+            exact-active-class=""
+          >
+            <span class="cr-function-item-title">{{ fn.title }}</span>
+            <span
+              v-if="fn.title !== fn.name"
+              class="cr-function-item-signature"
+            >
+              {{ fn.name }}()
+            </span>
+          </Button>
+        </template>
+      </FunctionList>
 
       <div class="contract-functions__detail cr-panel">
         <template v-if="selectedFunction">
@@ -54,6 +73,7 @@
             :resolve-metadata="resolveMetadata"
             :wallet-connected="walletConnected"
             :connected-address="connectedAddress"
+            :source-route="functionCodeRoute?.(selectedFunction)"
             @update:args="updateArgs"
             @error="emit('read-error', $event)"
           />
@@ -74,6 +94,7 @@
 import FunctionCards from '@evmnow/contract-reader/components/Function/Cards'
 import FunctionDetail from '@evmnow/contract-reader/components/Function/Detail'
 import FunctionList from '@evmnow/contract-reader/components/Function/List'
+import type { RouteLocationRaw } from 'vue-router'
 import type {
   ContractData,
   ContractFunction,
@@ -101,6 +122,8 @@ const props = withDefaults(
     walletConnected?: boolean
     connectedAddress?: string
     emptyText?: string
+    functionSelectionRoute: (fn: ContractFunction) => RouteLocationRaw
+    functionCodeRoute?: (fn: ContractFunction) => RouteLocationRaw | undefined
   }>(),
   {
     emptyText: 'select a function',

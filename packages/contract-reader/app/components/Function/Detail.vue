@@ -300,6 +300,25 @@
     </slot>
 
     <slot
+      name="source-link"
+      :fn="fn"
+      :source-route="sourceRoute"
+      :label="labels.viewCode"
+    >
+      <div
+        v-if="sourceRoute"
+        class="cr-function-source"
+      >
+        <Button
+          :to="sourceRoute"
+          class="link cr-function-source-link"
+        >
+          {{ labels.viewCode }}
+        </Button>
+      </div>
+    </slot>
+
+    <slot
       name="footer"
       :fn="fn"
       :result="result"
@@ -310,6 +329,7 @@
 
 <script setup lang="ts">
 import type { Abi, Hash } from 'viem'
+import type { RouteLocationRaw } from 'vue-router'
 import { parseEther } from 'viem'
 import type { ContractFunction } from '../../types/contract'
 import type {
@@ -398,6 +418,11 @@ defineSlots<{
     value: string
     href: string | null
   }) => unknown
+  'source-link'?: (props: {
+    fn: ContractFunction
+    sourceRoute?: RouteLocationRaw
+    label: string
+  }) => unknown
   footer?: (props: {
     fn: ContractFunction
     result: unknown
@@ -427,6 +452,7 @@ const props = withDefaults(
     walletConnected?: boolean
     connectedAddress?: string
     addressHref?: (address: string) => string | undefined | null
+    sourceRoute?: RouteLocationRaw
     resolveMetadata?: MetadataResolveFn
     labels?: Partial<FunctionDetailLabels>
     autoRead?: boolean
@@ -488,6 +514,7 @@ const labels = computed<FunctionDetailLabels>(() => ({
   writeUnavailable: 'write interactions are unavailable',
   walletRequired: 'connect a wallet to send this transaction',
   invalidInputs: 'fix input errors before sending this transaction',
+  viewCode: 'view code',
   ...props.labels,
 }))
 
@@ -551,17 +578,14 @@ onMounted(() => {
   if (autoRead.value) read()
 })
 
-watch(
-  [metadataUri, () => props.resolveMetadata],
-  ([uri, resolveMetadata]) => {
-    if (!uri || !resolveMetadata) {
-      resetMetadataPreview()
-      return
-    }
+watch([metadataUri, () => props.resolveMetadata], ([uri, resolveMetadata]) => {
+  if (!uri || !resolveMetadata) {
+    resetMetadataPreview()
+    return
+  }
 
-    void resolveMetadataPreview(uri, resolveMetadata)
-  },
-)
+  void resolveMetadataPreview(uri, resolveMetadata)
+})
 
 function isTuple(input: ContractFunction['inputs'][number]): boolean {
   return input.type === 'tuple' && !!input.components?.length
@@ -709,5 +733,6 @@ interface FunctionDetailLabels {
   writeUnavailable: string
   walletRequired: string
   invalidInputs: string
+  viewCode: string
 }
 </script>

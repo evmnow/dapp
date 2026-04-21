@@ -124,7 +124,7 @@ Stale responses from older `get()` calls are dropped, so it's safe to react to i
 | --- | --- |
 | `Overview` | Description, stat tiles, long-form `about` markdown — slot-driven for full overrides. |
 | `Source` | Multi-file Solidity viewer with Shiki highlighting, line-level deep-linking, file/line `href` builders. |
-| `FunctionList` | Sidebar list of grouped functions with selection and optional `href` per item. |
+| `FunctionList` | Sidebar list of grouped functions with selection events and item slot overrides. |
 | `FunctionCards` | Card grid alternative — each function expands inline into `FunctionDetail`. |
 | `FunctionGroups` | Headless grouping primitive used by `List`/`Cards`; expose your own layout via slots. |
 | `FunctionDetail` | Form generation, validation, examples, read-call execution, write-call submission. |
