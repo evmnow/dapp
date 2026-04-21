@@ -1,5 +1,11 @@
 # @evmnow/contract-reader
 
+## 0.2.0
+
+### Minor Changes
+
+- [#6](https://github.com/evmnow/dapp/pull/6) [`eae6567`](https://github.com/evmnow/dapp/commit/eae65677fd01406e3127525d9934c0cd8a6799df) Thanks [@yougogirldoteth](https://github.com/yougogirldoteth)! - Refine contract reader navigation primitives and update @evmnow/sdk to 0.1.4 for proxy target source support.
+
 ## 0.1.2
 
 ### Patch Changes
