@@ -84,13 +84,13 @@ const stats = computed<OverviewStat[]>(() => {
   return [
     {
       key: 'read',
-      label: 'read functions',
-      value: props.contract.functions.read.length,
+      label: 'read actions',
+      value: props.contract.actions.read.length,
     },
     {
       key: 'write',
-      label: 'interact functions',
-      value: props.contract.functions.write.length,
+      label: 'interact actions',
+      value: props.contract.actions.write.length,
     },
     {
       key: 'source',

@@ -1,5 +1,5 @@
 import type { Abi, AbiFunction } from 'viem'
-import type { ContractUIMetadata, FunctionMeta, ParamMeta } from './metadata'
+import type { ContractUIMetadata, ActionMeta, ParamMeta } from './metadata'
 
 export type ContractType = 'standard' | 'proxy' | 'diamond'
 export type SourceRole = 'main' | 'implementation' | 'facet'
@@ -31,31 +31,40 @@ export interface ContractProxy {
   admin?: string
 }
 
-export interface ContractFunctionParam {
+export interface ContractActionParam {
   name: string
   label: string
   type: string
   description?: string
   meta?: ParamMeta
-  components?: ContractFunctionParam[]
+  components?: ContractActionParam[]
 }
 
-export interface ContractFunction {
+export interface ContractAction {
+  /** Free-form action identifier (authored or synthesized default id). */
+  id: string
   abi: AbiFunction
   name: string
+  /** URL-safe routing handle; defaults to `id`. */
   slug: string
   signature?: string
+  /** 4-byte selector, lowercase. */
+  selector: `0x${string}`
   title: string
   description?: string
-  inputs: ContractFunctionParam[]
-  outputs: ContractFunctionParam[]
+  inputs: ContractActionParam[]
+  outputs: ContractActionParam[]
   stateMutability: 'pure' | 'view' | 'nonpayable' | 'payable'
   isRead: boolean
   isPayable: boolean
   group?: string
   warning?: string
-  meta?: FunctionMeta
+  meta?: ActionMeta
   facet?: string
+  /** True when this action was synthesized from the ABI (no authored entry). */
+  synthesized: boolean
+  /** True when another action shares this selector. */
+  isVariant: boolean
 }
 
 export interface SourceFile {
@@ -73,9 +82,9 @@ export interface ContractData {
   deployer?: string
   deploymentTxHash?: string
   deployedAt?: string
-  functions: {
-    read: ContractFunction[]
-    write: ContractFunction[]
+  actions: {
+    read: ContractAction[]
+    write: ContractAction[]
   }
   sourceFiles: SourceFile[]
   sources?: ContractSourceUnit[]

@@ -10,7 +10,7 @@ import type {
 } from '../types/contract'
 import type { ContractMetadataResult } from '../types/metadata-result'
 import type { ContractUIMetadata } from '../types/metadata'
-import { parseAbiFunctions } from './abi'
+import { parseActions } from './abi'
 import { parseSourcesIntoFiles, sortSourceFiles } from './source'
 
 const CONTRACT_TYPES: ContractType[] = ['standard', 'proxy', 'diamond']
@@ -37,7 +37,7 @@ const METADATA_KEYS = [
   'audits',
   'theme',
   'groups',
-  'functions',
+  'actions',
   'events',
   'errors',
   'messages',
@@ -278,11 +278,11 @@ function normalizeContractType(
   return 'standard'
 }
 
-function normalizeFunctions(value: unknown): ContractData['functions'] | null {
+function normalizeActions(value: unknown): ContractData['actions'] | null {
   if (!isRecord(value)) return null
 
   return Array.isArray(value.read) && Array.isArray(value.write)
-    ? (value as ContractData['functions'])
+    ? (value as ContractData['actions'])
     : null
 }
 
@@ -328,9 +328,9 @@ export function toContractData(
     ...(deployer ? { deployer } : {}),
     ...(deploymentTxHash ? { deploymentTxHash } : {}),
     ...(deployedAt ? { deployedAt } : {}),
-    functions:
-      normalizeFunctions(raw.functions) ||
-      parseAbiFunctions(abi, metadata, sources),
+    actions:
+      normalizeActions(raw.actions) ||
+      parseActions(abi, metadata, sources),
     sourceFiles,
     sources,
     proxy,

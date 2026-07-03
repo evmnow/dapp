@@ -1,7 +1,7 @@
 import { isAddress } from 'viem'
 import { parseUnits } from '@evmnow/sdk'
 import { ensCache } from '@1001-digital/layers.evm/app/utils/ens'
-import type { ContractFunctionParam } from '../types/contract'
+import type { ContractActionParam } from '../types/contract'
 import type { Autofill, ParamMeta, ValidationRule } from '../types/metadata'
 
 /**
@@ -11,11 +11,11 @@ import type { Autofill, ParamMeta, ValidationRule } from '../types/metadata'
  * human decimal value that is scaled to raw base units on submit.
  */
 export type AmountDecimalsResolver = (
-  input: ContractFunctionParam,
+  input: ContractActionParam,
   key: string,
 ) => number | null
 
-function isTupleInput(input: ContractFunctionParam): boolean {
+function isTupleInput(input: ContractActionParam): boolean {
   return input.type === 'tuple' && !!input.components?.length
 }
 
@@ -240,13 +240,13 @@ function validateArrayValue(
 
 function getParamMeta(
   meta: Record<string, ParamMeta> | undefined,
-  input: ContractFunctionParam,
+  input: ContractActionParam,
   prefix?: string,
 ): ParamMeta | undefined {
   return input.meta || (!prefix ? meta?.[input.name] : undefined)
 }
 
-function resolveAutofillValue(
+export function resolveAutofillValue(
   autofill: Autofill | undefined,
   context: {
     contractAddress?: string
@@ -276,7 +276,7 @@ export function buildInputKey(
 }
 
 export function seedInputValues(
-  inputs: ContractFunctionParam[],
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   prefix?: string,
   meta?: Record<string, ParamMeta>,
@@ -301,6 +301,16 @@ export function seedInputValues(
       return
     }
 
+    // Hidden or disabled params are always driven by autofill, not the user.
+    // Overwrite on every seed to keep the locked value consistent.
+    if (inputMeta?.hidden || inputMeta?.disabled) {
+      const autofill = resolveAutofillValue(inputMeta.autofill, context)
+      if (autofill !== undefined) {
+        values[key] = autofill
+        return
+      }
+    }
+
     if (!(key in values) || values[key] === '') {
       const autofill = resolveAutofillValue(inputMeta?.autofill, context)
       values[key] =
@@ -312,7 +322,7 @@ export function seedInputValues(
 }
 
 export function buildInputArgs(
-  inputs: ContractFunctionParam[],
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   prefix?: string,
   amountDecimals?: AmountDecimalsResolver,
@@ -350,7 +360,7 @@ function isEnsName(value: string): boolean {
 }
 
 function collectEnsNames(
-  inputs: ContractFunctionParam[],
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   prefix?: string,
 ): Set<string> {
@@ -394,7 +404,7 @@ function collectEnsNames(
  * or an error message for the first name that fails to resolve.
  */
 export async function resolveEnsInputs(
-  inputs: ContractFunctionParam[],
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   resolveAddress: EnsAddressResolver,
 ): Promise<{ resolved: ResolvedEnsAddresses; error: string | null }> {
@@ -429,7 +439,7 @@ export function validateAmountString(
 }
 
 export function serializeInputArgs(
-  inputs: ContractFunctionParam[],
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   prefix?: string,
 ): string[] {
@@ -444,7 +454,7 @@ export function serializeInputArgs(
 }
 
 export function hydrateInputValues(
-  inputs: ContractFunctionParam[],
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   args: unknown[],
   prefix?: string,
@@ -491,7 +501,7 @@ export function parseInputValue(
 }
 
 export function buildInputErrors(
-  inputs: ContractFunctionParam[],
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   meta?: Record<string, ParamMeta>,
   prefix?: string,

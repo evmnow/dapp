@@ -43,7 +43,7 @@
             :value="value"
             :href="addressHref"
           >
-            {{ value }}
+            <AccountName :address="value as `0x${string}`" />
           </slot>
         </a>
         <slot
@@ -53,7 +53,7 @@
           :value="value"
           :href="null"
         >
-          {{ value }}
+          <AccountName :address="value as `0x${string}`" />
         </slot>
         <template v-else>
           {{ value }}

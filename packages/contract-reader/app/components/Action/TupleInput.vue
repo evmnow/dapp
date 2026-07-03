@@ -4,14 +4,14 @@
       v-for="(component, index) in components"
       :key="fieldKey(component, index)"
     >
-      <FunctionInput
+      <ActionInput
         v-if="!isTuple(component)"
         :input="component"
         :error="errors[fieldKey(component, index)]"
         v-model="values[fieldKey(component, index)]"
       />
 
-      <FunctionTupleInput
+      <ActionTupleInput
         v-else
         :components="tupleComponents(component)"
         :prefix="fieldKey(component, index)"
@@ -23,30 +23,30 @@
 </template>
 
 <script setup lang="ts">
-import type { ContractFunctionParam } from '../../types/contract'
-import FunctionInput from './Input.vue'
+import type { ContractActionParam } from '../../types/contract'
+import ActionInput from './Input.vue'
 import { buildInputKey } from '../../utils/inputs'
 
-defineOptions({ name: 'FunctionTupleInput' })
+defineOptions({ name: 'ActionTupleInput' })
 
 const props = defineProps<{
-  components: ContractFunctionParam[]
+  components: ContractActionParam[]
   prefix: string
   values: Record<string, string>
   errors: Record<string, string | null>
 }>()
 
-function isTuple(component: ContractFunctionParam): boolean {
+function isTuple(component: ContractActionParam): boolean {
   return component.type === 'tuple' && !!component.components?.length
 }
 
 function tupleComponents(
-  component: ContractFunctionParam,
-): ContractFunctionParam[] {
+  component: ContractActionParam,
+): ContractActionParam[] {
   return component.components || []
 }
 
-function fieldKey(component: ContractFunctionParam, index: number): string {
+function fieldKey(component: ContractActionParam, index: number): string {
   return buildInputKey(props.prefix, component.name, index)
 }
 </script>

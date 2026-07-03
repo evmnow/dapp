@@ -1,7 +1,7 @@
 <template>
-  <nav class="cr-functions">
-    <FunctionGroups
-      :functions="functions"
+  <nav class="cr-actions">
+    <ActionGroups
+      :actions="actions"
       :metadata="metadata"
       :all-function-names="allFunctionNames"
       :title="title"
@@ -16,61 +16,61 @@
         />
       </template>
 
-      <template #group="{ group, functions: fns }">
+      <template #group="{ group, actions: items }">
         <slot
           name="group"
           :group="group"
-          :functions="fns"
+          :actions="items"
           :selected="selected"
-          :select="selectFunction"
+          :select="selectAction"
         >
           <template
-            v-for="fn in fns"
-            :key="fn.slug"
+            v-for="action in items"
+            :key="action.slug"
           >
             <slot
               name="item"
-              :fn="fn"
-              :selected="selected === fn.slug"
-              :select="selectFunction"
+              :action="action"
+              :selected="selected === action.slug"
+              :select="selectAction"
             >
               <Button
-                class="unstyled cr-function-item"
-                :class="{ active: selected === fn.slug }"
+                class="unstyled cr-action-item"
+                :class="{ active: selected === action.slug }"
                 type="button"
-                @click="selectFunction(fn.slug)"
+                @click="selectAction(action.slug)"
               >
-                <span class="cr-function-item-title">{{ fn.title }}</span>
+                <span class="cr-action-item-title">{{ action.title }}</span>
                 <span
-                  v-if="fn.title !== fn.name"
-                  class="cr-function-item-signature"
+                  v-if="action.title !== action.name"
+                  class="cr-action-item-signature"
                 >
-                  {{ fn.name }}()
+                  {{ action.name }}()
                 </span>
               </Button>
             </slot>
           </template>
         </slot>
       </template>
-    </FunctionGroups>
+    </ActionGroups>
   </nav>
 </template>
 
 <script setup lang="ts">
-import FunctionGroups from './Groups.vue'
-import type { ContractFunction } from '../../types/contract'
+import ActionGroups from './Groups.vue'
+import type { ContractAction } from '../../types/contract'
 import type { ContractUIMetadata } from '../../types/metadata'
 
 const slots = defineSlots<{
   header?: (props: Record<string, unknown>) => unknown
   group?: (props: {
-    group: { key: string; label: string; functions: ContractFunction[] }
-    functions: ContractFunction[]
+    group: { key: string; label: string; actions: ContractAction[] }
+    actions: ContractAction[]
     selected?: string | null
     select: (slug: string) => void
   }) => unknown
   item?: (props: {
-    fn: ContractFunction
+    action: ContractAction
     selected: boolean
     select: (slug: string) => void
   }) => unknown
@@ -78,7 +78,7 @@ const slots = defineSlots<{
 
 const props = withDefaults(
   defineProps<{
-    functions: ContractFunction[]
+    actions: ContractAction[]
     metadata?: ContractUIMetadata
     allFunctionNames?: Set<string>
     selected?: string | null
@@ -86,7 +86,7 @@ const props = withDefaults(
   }>(),
   {
     selected: null,
-    title: 'functions',
+    title: 'actions',
   },
 )
 
@@ -94,7 +94,7 @@ const emit = defineEmits<{
   select: [slug: string]
 }>()
 
-function selectFunction(slug: string) {
+function selectAction(slug: string) {
   emit('select', slug)
 }
 </script>

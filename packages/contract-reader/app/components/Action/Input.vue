@@ -9,6 +9,7 @@
       v-if="input.type === 'bool'"
       v-model="model"
       class="cr-input"
+      :disabled="disabled"
     >
       <option value="false">false</option>
       <option value="true">true</option>
@@ -18,6 +19,7 @@
       v-else-if="input.type === 'address'"
       v-model="model"
       class="cr-input"
+      :disabled="disabled"
     />
 
     <textarea
@@ -28,6 +30,7 @@
       rows="3"
       spellcheck="false"
       autocomplete="off"
+      :disabled="disabled"
     />
 
     <EvmAmountInput
@@ -46,6 +49,7 @@
       :placeholder="input.type"
       spellcheck="false"
       autocomplete="off"
+      :disabled="disabled"
     />
 
     <small
@@ -66,12 +70,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { ContractFunctionParam } from '../../types/contract'
+import type { ContractActionParam } from '../../types/contract'
 import type { ParamMeta } from '../../types/metadata'
 import type { AmountInputInfo } from '../../utils/format'
 
 const props = defineProps<{
-  input: ContractFunctionParam
+  input: ContractActionParam
   meta?: ParamMeta
   error?: string | null
   amount?: AmountInputInfo | null
@@ -82,5 +86,8 @@ const model = defineModel<string>({ default: '' })
 const label = computed(() => props.meta?.label || props.input.label)
 const description = computed(
   () => props.meta?.description || props.input.description,
+)
+const disabled = computed(
+  () => Boolean(props.meta?.disabled || props.input.meta?.disabled),
 )
 </script>

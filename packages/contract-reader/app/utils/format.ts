@@ -5,7 +5,7 @@ import {
   type ParamType,
   type TokenInfo,
 } from '@evmnow/sdk'
-import type { ContractFunctionParam } from '../types/contract'
+import type { ContractActionParam } from '../types/contract'
 import type { ParamMeta, SemanticType } from '../types/metadata'
 
 export type { TokenInfo }
@@ -36,7 +36,7 @@ export function getSemanticType(meta?: ParamMeta): SemanticType | undefined {
 }
 
 export function getOutputSemanticType(
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   returnsMeta?: Record<string, ParamMeta>,
 ): SemanticType | undefined {
   const meta =
@@ -45,7 +45,7 @@ export function getOutputSemanticType(
 }
 
 export function resolveOutputSemanticType(
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   returnsMeta?: Record<string, ParamMeta>,
 ): string | undefined {
   return resolveSemanticType(getOutputSemanticType(output, returnsMeta))
@@ -158,7 +158,7 @@ export function formatSemanticValue(
 }
 
 export function resultFieldKind(
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   semanticType?: SemanticType | string,
 ): ResultFieldKind {
   const type: SemanticType | undefined =
@@ -181,7 +181,7 @@ export function resultFieldKind(
 
 export function getResultValue(
   result: unknown,
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   index: number,
 ): unknown {
   if (Array.isArray(result)) {
@@ -206,13 +206,13 @@ export function getResultValue(
 }
 
 export function getResultFieldLabel(
-  output: ContractFunctionParam,
+  output: ContractActionParam,
   index: number,
 ): string {
   return output.label || output.name || `result ${index + 1}`
 }
 
-export function isTupleType(output: ContractFunctionParam): boolean {
+export function isTupleType(output: ContractActionParam): boolean {
   return output.type === 'tuple' && Boolean(output.components?.length)
 }
 

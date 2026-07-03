@@ -1,6 +1,6 @@
 @layer components {
   .cr-copy,
-  .cr-function-item {
+  .cr-action-item {
     color: inherit;
     cursor: pointer;
     font: inherit;
@@ -14,11 +14,11 @@
   }
 
   .cr-copy:disabled,
-  .cr-function-item:disabled {
+  .cr-action-item:disabled {
     cursor: not-allowed;
   }
 
-  .cr-function-item {
+  .cr-action-item {
     text-decoration: none;
   }
 }

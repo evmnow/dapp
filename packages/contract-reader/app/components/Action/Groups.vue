@@ -4,17 +4,17 @@
       v-for="(group, index) in allGroups"
       :key="group.key"
     >
-      <section class="cr-function-group">
+      <section class="cr-action-group">
         <slot
           name="header"
           :group="group"
           :index="index"
-          :functions="group.functions"
+          :actions="group.actions"
         >
           <div class="cr-group-title">
             <span>
               {{ group.label }}
-              <span class="cr-group-count">({{ group.functions.length }})</span>
+              <span class="cr-group-count">({{ group.actions.length }})</span>
             </span>
 
             <slot
@@ -24,11 +24,11 @@
           </div>
         </slot>
 
-        <div class="cr-function-group-body">
+        <div class="cr-action-group-body">
           <slot
             name="group"
             :group="group"
-            :functions="group.functions"
+            :actions="group.actions"
           />
         </div>
       </section>
@@ -44,42 +44,42 @@
 </template>
 
 <script setup lang="ts">
-import type { ContractFunction } from '../../types/contract'
+import type { ContractAction } from '../../types/contract'
 import type { ContractUIMetadata } from '../../types/metadata'
-import { groupFunctions, type ContractFunctionGroup } from '../../utils/abi'
+import { groupActions, type ContractActionGroup } from '../../utils/abi'
 
 const props = withDefaults(
   defineProps<{
-    functions: ContractFunction[]
+    actions: ContractAction[]
     metadata?: ContractUIMetadata
     allFunctionNames?: Set<string>
     title?: string
-    groups?: ContractFunctionGroup[]
-    labels?: Partial<FunctionGroupLabels>
+    groups?: ContractActionGroup[]
+    labels?: Partial<ActionGroupLabels>
   }>(),
   {
-    title: 'functions',
+    title: 'actions',
   },
 )
 
-interface FunctionGroupLabels {
+interface ActionGroupLabels {
   empty: string
   other: string
   constants: string
 }
 
-const labels = computed<FunctionGroupLabels>(() => ({
-  empty: 'no functions found',
+const labels = computed<ActionGroupLabels>(() => ({
+  empty: 'no actions found',
   other: 'Other',
   constants: 'Constants',
   ...props.labels,
 }))
 
 const groups = computed(() =>
-  groupFunctions(props.functions, props.metadata, props.allFunctionNames),
+  groupActions(props.actions, props.metadata, props.allFunctionNames),
 )
 
-const allGroups = computed<ContractFunctionGroup[]>(() => {
+const allGroups = computed<ContractActionGroup[]>(() => {
   if (props.groups) return props.groups
 
   const { grouped, ungrouped, constants } = groups.value
@@ -90,7 +90,7 @@ const allGroups = computed<ContractFunctionGroup[]>(() => {
     result.push({
       key: '_ungrouped',
       label: hasOtherGroups ? labels.value.other : props.title,
-      functions: ungrouped,
+      actions: ungrouped,
     })
   }
 
@@ -98,7 +98,7 @@ const allGroups = computed<ContractFunctionGroup[]>(() => {
     result.push({
       key: '_constants',
       label: labels.value.constants,
-      functions: constants,
+      actions: constants,
     })
   }
 

@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ContractFunctionParam } from '../../types/contract'
+import type { ContractActionParam } from '../../types/contract'
 import type { ParamMeta } from '../../types/metadata'
 import {
   formatArgValue,
@@ -76,7 +76,7 @@ import {
 
 const props = defineProps<{
   result: unknown
-  outputs: ContractFunctionParam[]
+  outputs: ContractActionParam[]
   returnsMeta?: Record<string, ParamMeta>
   addressHref?: (address: string) => string | undefined | null
   tokenInfo?: Record<string, TokenInfo>
@@ -96,7 +96,7 @@ interface ResultField {
 
 function buildFields(
   result: unknown,
-  outputs: ContractFunctionParam[],
+  outputs: ContractActionParam[],
   depth = 0,
   prefix = '',
 ): ResultField[] {

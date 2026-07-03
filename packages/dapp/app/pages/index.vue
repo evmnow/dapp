@@ -91,9 +91,9 @@
           :link-resolver="resolveStatLink"
         />
 
-        <ContractFunctions
+        <ContractActions
           v-else-if="currentView === 'read' || currentView === 'interact'"
-          :functions="visibleFunctions"
+          :actions="visibleActions"
           :contract-address="contractData.address"
           :abi="contractData.abi"
           :chain-id="contractData.chainId"
@@ -110,10 +110,10 @@
           "
           :wallet-connected="walletConnected"
           :connected-address="connectedAddress"
-          :empty-text="emptyFunctionText"
-          :function-selection-route="functionSelectionRoute"
-          :function-code-route="functionCodeRoute"
-          @select="selectFunction"
+          :empty-text="emptyActionText"
+          :action-selection-route="actionSelectionRoute"
+          :action-code-route="actionCodeRoute"
+          @select="selectAction"
           @update:args="updateArgs"
           @read-error="onReadError"
         />
@@ -153,7 +153,7 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
 import type {
-  ContractFunction,
+  ContractAction,
   SourceFile,
 } from '@evmnow/contract-reader/types/contract'
 import type {
@@ -242,16 +242,16 @@ const activeSourceSelection = computed(() => {
     ) ?? undefined
   )
 })
-const visibleFunctions = computed(() => {
-  return functionsForView(currentView.value)
+const visibleActions = computed(() => {
+  return actionsForView(currentView.value)
 })
 const allFunctionNames = computed(() => {
   if (!contractData.value) return undefined
   return new Set(
     [
-      ...contractData.value.functions.read,
-      ...contractData.value.functions.write,
-    ].map((fn) => fn.name),
+      ...contractData.value.actions.read,
+      ...contractData.value.actions.write,
+    ].map((action) => action.name),
   )
 })
 const STAT_VIEW_MAP: Record<string, ContractView> = {
@@ -285,10 +285,10 @@ const title = computed(
     fallbackFileName.value ||
     'Contract',
 )
-const emptyFunctionText = computed(() =>
+const emptyActionText = computed(() =>
   currentView.value === 'interact'
-    ? 'select an interaction function'
-    : 'select a read function',
+    ? 'select an interaction'
+    : 'select a read action',
 )
 const contentClass = computed(() =>
   isReaderMode.value ? undefined : 'home-page',
@@ -326,12 +326,12 @@ function onReadError(cause: unknown) {
 
 function viewStateForTab(view: ContractView) {
   const nextState = { ...viewState.value, view }
-  const functions = functionsForView(view)
+  const actions = actionsForView(view)
 
   if (
     (view === 'read' || view === 'interact') &&
     nextState.fn &&
-    !functions.some((fn) => fn.slug === nextState.fn)
+    !actions.some((action) => action.slug === nextState.fn)
   ) {
     nextState.fn = undefined
     nextState.args = []
@@ -344,7 +344,7 @@ function routeForView(view: ContractView): RouteLocationRaw {
   return readerRoute(viewStateForTab(view))
 }
 
-function selectFunction(fn: string | undefined) {
+function selectAction(fn: string | undefined) {
   if (fn === viewState.value.fn) return
   navigateViewState({ fn, args: [] })
 }
@@ -361,26 +361,26 @@ function selectSource(source: SourceSelection) {
   })
 }
 
-function functionsForView(view: ContractView) {
+function actionsForView(view: ContractView) {
   if (!contractData.value) return []
   return view === 'interact'
-    ? contractData.value.functions.write
-    : contractData.value.functions.read
+    ? contractData.value.actions.write
+    : contractData.value.actions.read
 }
 
-function functionSelectionRoute(fn: ContractFunction): RouteLocationRaw {
+function actionSelectionRoute(action: ContractAction): RouteLocationRaw {
   return readerRoute({
     view: currentView.value,
-    fn: fn.slug,
-    args: fn.slug === viewState.value.fn ? viewState.value.args : [],
+    fn: action.slug,
+    args: action.slug === viewState.value.fn ? viewState.value.args : [],
   })
 }
 
-function functionCodeRoute(fn: ContractFunction): RouteLocationRaw | undefined {
+function actionCodeRoute(action: ContractAction): RouteLocationRaw | undefined {
   const files = contractData.value?.sourceFiles ?? []
-  if (!findFunctionSourceSelection(files, fn.slug)) return undefined
+  if (!findFunctionSourceSelection(files, action.slug)) return undefined
 
-  return readerRoute({ view: 'code', fn: fn.slug })
+  return readerRoute({ view: 'code', fn: action.slug })
 }
 
 function sourceFileHref(_file: SourceFile, file: number) {
