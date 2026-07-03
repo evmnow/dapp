@@ -1,25 +1,16 @@
 #!/usr/bin/env node
 
-// Publish the dapp to IPFS and point the ENS name at the new build.
+// Publish the dapp to IPFS and print the CID for the ENS update.
 //
 // Runs `pnpm generate`, uploads .output/public to the self-hosted IPFS node
 // (admin credentials from ~/1001/ipfs-server/.env.production, override with
-// IPFS_ENV_PATH), pins the result, and updates the ENS contenthash on mainnet.
-//
-// The signing key is read from the hardhat v3 keystore
-// (~/.config/hardhat-nodejs/keystore.json, secret DEPLOYER_1001_PRIVATE_KEY)
-// after an interactive password prompt, so it never touches shell history or
-// the environment. For non-interactive runs the DEPLOYER_1001_PRIVATE_KEY env
-// var is honored instead; it is stripped from the build's child environment.
+// IPFS_ENV_PATH), and pins the result. The ENS contenthash is not touched;
+// copy the printed CID / contenthash into the SAFE that owns the name.
 //
 // Overrides:
-//   PUBLISH_SITE_ENS_NAME           target ENS name (default evmnow.eth)
-//   PUBLISH_SITE_MFS_PARENT         MFS directory on the IPFS node (default /<ens name>)
-//   PUBLISH_SITE_TIMESTAMP          fixed timestamp for the MFS dist dir
-//   PUBLISH_SITE_RPC_URL            mainnet RPC (default from .env NUXT_PUBLIC_MAINNET_ENS_RPC)
-//   PUBLISH_SITE_ALLOW_NON_MAINNET  set to 1 for a fork/test run
-//   PUBLISH_SITE_KEYSTORE_PATH      hardhat keystore file
-//   PUBLISH_SITE_KEYSTORE_SECRET    keystore secret name (default DEPLOYER_1001_PRIVATE_KEY)
+//   PUBLISH_SITE_ENS_NAME    ENS name used for the MFS directory (default evmnow.eth)
+//   PUBLISH_SITE_MFS_PARENT  MFS directory on the IPFS node (default /<ens name>)
+//   PUBLISH_SITE_TIMESTAMP   fixed timestamp for the MFS dist dir
 
 import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
@@ -27,29 +18,7 @@ import { appendFile, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, join, posix, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { siv } from '@noble/ciphers/aes'
-import { hmac } from '@noble/hashes/hmac'
-import { scrypt } from '@noble/hashes/scrypt'
-import { sha256 } from '@noble/hashes/sha2'
-import {
-  bytesToHex as nobleBytesToHex,
-  hexToBytes as nobleHexToBytes,
-} from '@noble/hashes/utils'
-import {
-  bytesToHex,
-  createPublicClient,
-  createWalletClient,
-  encodeFunctionData,
-  getAddress,
-  http,
-  namehash,
-  parseAbi,
-  zeroAddress,
-  type Address,
-  type Hex,
-} from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
-import { mainnet } from 'viem/chains'
+import { bytesToHex, type Hex } from 'viem'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const DAPP_DIR = resolve(SCRIPT_DIR, '..')
@@ -60,41 +29,8 @@ const DEFAULT_IPFS_ENV_PATH = resolve(
   '1001/ipfs-server/.env.production',
 )
 
-const DEFAULT_KEYSTORE_PATH = resolve(
-  homedir(),
-  '.config/hardhat-nodejs/keystore.json',
-)
-const KEYSTORE_VERSION = 'hardhat-v3-keystore-1'
-const SIGNER_KEY_NAME = 'DEPLOYER_1001_PRIVATE_KEY'
-
-const ENS_REGISTRY = getAddress('0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e')
-const CONTENTHASH_INTERFACE_ID = '0xbc1c58d1' as const
 const IPFS_NS_CODEC = 0xe3
 const DAG_PB_CODEC = 0x70
-
-const ENS_REGISTRY_ABI = parseAbi([
-  'function owner(bytes32 node) view returns (address)',
-  'function resolver(bytes32 node) view returns (address)',
-  'function isApprovedForAll(address owner, address operator) view returns (bool)',
-  'function setApprovalForAll(address operator, bool approved)',
-])
-
-const RESOLVER_ABI = parseAbi([
-  'function contenthash(bytes32 node) view returns (bytes)',
-  'function setContenthash(bytes32 node, bytes hash)',
-  'function supportsInterface(bytes4 interfaceID) view returns (bool)',
-])
-
-// Record-edit authorization across PublicResolver generations: PR2 (2019) uses
-// node-scoped authorisations, the NameWrapper-era resolver uses operator
-// approvals, the 2023 resolver adds per-node delegates.
-const RESOLVER_AUTH_ABI = parseAbi([
-  'function authorisations(bytes32 node, address owner, address target) view returns (bool)',
-  'function setAuthorisation(bytes32 node, address target, bool isAuthorised)',
-  'function isApprovedForAll(address account, address operator) view returns (bool)',
-  'function isApprovedFor(address owner, bytes32 node, address delegate) view returns (bool)',
-  'function approve(bytes32 node, address delegate, bool approved)',
-])
 
 type EnvMap = Record<string, string>
 type EnvLike = Record<string, string | undefined>
@@ -105,34 +41,6 @@ type IpfsEnv = {
   user: string
   password: string
   envPath: string
-}
-
-type Signer = {
-  account: ReturnType<typeof privateKeyToAccount>
-  rpcUrl: string
-}
-
-type EncryptedData = {
-  iv: string
-  cypherText: string
-}
-
-type Keystore = {
-  version: string
-  crypto: {
-    masterKeyDerivation: {
-      salt: string
-      paramN: number
-      paramR: number
-      paramP: number
-      keyLength: number
-      unicodeNormalizationForm: string
-    }
-  }
-  hmacKey: EncryptedData
-  dataEncryptionKey: EncryptedData
-  secrets: Record<string, EncryptedData>
-  hmac: string
 }
 
 type FileEntry = {
@@ -162,8 +70,6 @@ async function main() {
     ? resolve(process.env.IPFS_ENV_PATH)
     : DEFAULT_IPFS_ENV_PATH
   const ipfsEnv = loadIpfsEnv(ipfsEnvPath)
-  const signer = await loadSigner()
-  const ens = await preflightEns(signer, ensName)
 
   console.log(`ENS name     ${ensName}`)
   console.log(`MFS path     ${mfsPath}`)
@@ -187,327 +93,17 @@ async function main() {
   const cid = await uploadDirectory(ipfsEnv, OUTPUT_DIR, files, mfsPath)
   const contenthash = encodeIpfsContenthash(cid)
 
+  await logUpload(ipfsEnv, cid, mfsPath, OUTPUT_DIR)
+
+  console.log('')
   console.log(`CID         ${cid}`)
+  console.log(`ipfs://     ipfs://${cid}`)
   console.log(`Contenthash ${contenthash}`)
   console.log(`Gateway     https://${ipfsEnv.gatewayHost}/ipfs/${cid}/`)
-
-  await logUpload(ipfsEnv, cid, mfsPath, OUTPUT_DIR)
-  await updateEnsContenthash(signer, ens, contenthash)
-}
-
-// Verifies — before the build even starts — that the signer is actually
-// allowed to update the name's records, across the auth mechanisms of the
-// registry and the known PublicResolver generations. On failure it prints the
-// exact one-time approval call the name owner needs to make.
-async function preflightEns(signer: Signer, ensName: string) {
-  const publicClient = createPublicClient({
-    chain: mainnet,
-    transport: http(signer.rpcUrl),
-  })
-  const signerAddress = getAddress(signer.account.address)
-
-  const chainId = await publicClient.getChainId()
-  if (
-    chainId !== 1 &&
-    !parseBoolEnv(process.env.PUBLISH_SITE_ALLOW_NON_MAINNET)
-  ) {
-    throw new Error(
-      `Refusing to update ${ensName} on chain ${chainId}. Point PUBLISH_SITE_RPC_URL at mainnet, or set PUBLISH_SITE_ALLOW_NON_MAINNET=1 for a fork/test run.`,
-    )
-  }
-
-  const node = namehash(ensName)
-  const resolver = (await publicClient.readContract({
-    address: ENS_REGISTRY,
-    abi: ENS_REGISTRY_ABI,
-    functionName: 'resolver',
-    args: [node],
-  })) as Address
-  if (resolver === zeroAddress) {
-    throw new Error(`${ensName} has no resolver set in the ENS registry`)
-  }
-
-  const owner = (await publicClient.readContract({
-    address: ENS_REGISTRY,
-    abi: ENS_REGISTRY_ABI,
-    functionName: 'owner',
-    args: [node],
-  })) as Address
-
-  const supportsContenthash = await publicClient
-    .readContract({
-      address: resolver,
-      abi: RESOLVER_ABI,
-      functionName: 'supportsInterface',
-      args: [CONTENTHASH_INTERFACE_ID],
-    })
-    .catch(() => null)
-  if (supportsContenthash === false) {
-    throw new Error(`${resolver} does not report ENS contenthash support`)
-  }
-
-  // true / false, or null when the resolver doesn't implement the mechanism.
-  const probe = async (
-    functionName: 'authorisations' | 'isApprovedForAll' | 'isApprovedFor',
-    args: readonly unknown[],
-  ): Promise<boolean | null> => {
-    try {
-      const result = await publicClient.readContract({
-        address: resolver,
-        abi: RESOLVER_AUTH_ABI,
-        functionName,
-        args: args as never,
-      })
-      return result === true
-    } catch {
-      return null
-    }
-  }
-
-  const registryOperator = (await publicClient
-    .readContract({
-      address: ENS_REGISTRY,
-      abi: ENS_REGISTRY_ABI,
-      functionName: 'isApprovedForAll',
-      args: [owner, signerAddress],
-    })
-    .catch(() => false)) as boolean
-  const nodeAuthorisation = await probe('authorisations', [
-    node,
-    owner,
-    signerAddress,
-  ])
-  const resolverOperator = await probe('isApprovedForAll', [
-    owner,
-    signerAddress,
-  ])
-  const nodeDelegate = await probe('isApprovedFor', [
-    owner,
-    node,
-    signerAddress,
-  ])
-
-  const authVia =
-    owner === signerAddress
-      ? 'name owner'
-      : registryOperator
-        ? 'registry operator'
-        : nodeAuthorisation
-          ? 'resolver authorisation'
-          : resolverOperator
-            ? 'resolver operator'
-            : nodeDelegate
-              ? 'resolver delegate'
-              : null
-
-  if (authVia === null) {
-    // Suggest the narrowest mechanism this resolver supports.
-    const suggestion =
-      nodeAuthorisation !== null
-        ? {
-            call: `setAuthorisation(${node}, ${signerAddress}, true)`,
-            calldata: encodeFunctionData({
-              abi: RESOLVER_AUTH_ABI,
-              functionName: 'setAuthorisation',
-              args: [node, signerAddress, true],
-            }),
-          }
-        : nodeDelegate !== null
-          ? {
-              call: `approve(${node}, ${signerAddress}, true)`,
-              calldata: encodeFunctionData({
-                abi: RESOLVER_AUTH_ABI,
-                functionName: 'approve',
-                args: [node, signerAddress, true],
-              }),
-            }
-          : {
-              call: `setApprovalForAll(${signerAddress}, true) on the ENS registry ${ENS_REGISTRY} (broad: covers every name owned by ${owner})`,
-              calldata: encodeFunctionData({
-                abi: ENS_REGISTRY_ABI,
-                functionName: 'setApprovalForAll',
-                args: [signerAddress, true],
-              }),
-            }
-    throw new Error(
-      [
-        `Signer ${signerAddress} is not authorized to update records for ${ensName}.`,
-        `The name is owned by ${owner}. From that account, authorize the signer once:`,
-        `  contract  ${resolver}`,
-        `  call      ${suggestion.call}`,
-        `  calldata  ${suggestion.calldata}`,
-      ].join('\n'),
-    )
-  }
-
-  console.log(`Chain       ${chainId}`)
-  console.log(`Signer      ${signerAddress} (${authVia})`)
-  console.log(`Owner       ${owner}`)
-  console.log(`Resolver    ${resolver}`)
-
-  return { node, resolver }
-}
-
-async function loadSigner(): Promise<Signer> {
-  const dappEnv = loadOptionalEnv(resolve(DAPP_DIR, '.env'))
-  const rpcUrl =
-    process.env.PUBLISH_SITE_RPC_URL ??
-    dappEnv.NUXT_PUBLIC_MAINNET_ENS_RPC ??
-    dappEnv.NUXT_PUBLIC_DEFAULT_RPC
-  if (!rpcUrl) {
-    throw new Error(
-      'No mainnet RPC found. Set PUBLISH_SITE_RPC_URL or NUXT_PUBLIC_MAINNET_ENS_RPC in .env.',
-    )
-  }
-
-  const rawKey = process.env[SIGNER_KEY_NAME] ?? (await loadKeyFromKeystore())
-  const privateKey = (rawKey.startsWith('0x') ? rawKey : `0x${rawKey}`) as Hex
-  return { account: privateKeyToAccount(privateKey), rpcUrl }
-}
-
-// Reads the signing key from the hardhat v3 keystore. Same format and
-// primitives as @nomicfoundation/hardhat-keystore: scrypt master key,
-// HMAC-SHA-256 integrity check, AES-GCM-SIV encrypted secrets.
-async function loadKeyFromKeystore(): Promise<string> {
-  const keystorePath = process.env.PUBLISH_SITE_KEYSTORE_PATH
-    ? resolve(process.env.PUBLISH_SITE_KEYSTORE_PATH)
-    : DEFAULT_KEYSTORE_PATH
-  const secretName = process.env.PUBLISH_SITE_KEYSTORE_SECRET ?? SIGNER_KEY_NAME
-
-  if (!existsSync(keystorePath)) {
-    throw new Error(
-      `Hardhat keystore not found: ${keystorePath}. Set ${SIGNER_KEY_NAME} for non-interactive runs.`,
-    )
-  }
-
-  const keystore = JSON.parse(readFileSync(keystorePath, 'utf8')) as Keystore
-  if (keystore.version !== KEYSTORE_VERSION) {
-    throw new Error(
-      `Unsupported keystore version in ${keystorePath}: ${keystore.version}`,
-    )
-  }
-  if (!(secretName in keystore.secrets)) {
-    throw new Error(`Secret ${secretName} not found in ${keystorePath}`)
-  }
-
-  const password = await promptHidden(`Keystore password for ${secretName}: `)
-  return decryptKeystoreSecret(keystore, secretName, password)
-}
-
-function decryptKeystoreSecret(
-  keystore: Keystore,
-  secretName: string,
-  password: string,
-): string {
-  const derivation = keystore.crypto.masterKeyDerivation
-  const masterKey = scrypt(
-    password.normalize(derivation.unicodeNormalizationForm),
-    nobleHexToBytes(derivation.salt),
-    {
-      N: derivation.paramN,
-      r: derivation.paramR,
-      p: derivation.paramP,
-      dkLen: derivation.keyLength / 8,
-    },
+  console.log('')
+  console.log(
+    `Update ${ensName} from the SAFE: set the contenthash above (or ipfs://${cid} in the ENS manager).`,
   )
-
-  let hmacKey: Uint8Array
-  try {
-    hmacKey = nobleHexToBytes(decryptUtf8(masterKey, keystore.hmacKey))
-  } catch {
-    throw new Error('Keystore decryption failed. Wrong password?')
-  }
-  const hmacPreImage = deterministicJsonStringify({
-    ...keystore,
-    hmac: undefined,
-  })
-  const expectedHmac = nobleBytesToHex(
-    hmac(sha256, hmacKey, new TextEncoder().encode(hmacPreImage)),
-  )
-  if (expectedHmac !== keystore.hmac) {
-    throw new Error('Keystore HMAC mismatch')
-  }
-
-  const dataEncryptionKey = nobleHexToBytes(
-    decryptUtf8(masterKey, keystore.dataEncryptionKey),
-  )
-  return decryptUtf8(dataEncryptionKey, keystore.secrets[secretName])
-}
-
-function decryptUtf8(key: Uint8Array, data: EncryptedData): string {
-  const plain = siv(key, nobleHexToBytes(data.iv)).decrypt(
-    nobleHexToBytes(data.cypherText),
-  )
-  return new TextDecoder().decode(plain)
-}
-
-// Mirrors hardhat-keystore's deterministic serialization: object keys sorted
-// ascending at every level, no arrays or nulls.
-function deterministicJsonStringify(obj: unknown): string {
-  return JSON.stringify(obj, function stableReplacer(_key, value) {
-    if (
-      typeof value === 'string' ||
-      typeof value === 'number' ||
-      typeof value === 'undefined'
-    ) {
-      return value
-    }
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      throw new Error('Unsupported type in deterministic JSON')
-    }
-    const sorted: Record<string, unknown> = {}
-    for (const key of Object.keys(value).sort()) {
-      sorted[key] = (value as Record<string, unknown>)[key]
-    }
-    return sorted
-  })
-}
-
-async function promptHidden(question: string): Promise<string> {
-  const { stdin, stderr } = process
-  if (!stdin.isTTY) {
-    throw new Error(
-      `Keystore password needs a terminal. Set ${SIGNER_KEY_NAME} for non-interactive runs.`,
-    )
-  }
-
-  stderr.write(question)
-  stdin.setRawMode(true)
-  stdin.resume()
-
-  return await new Promise<string>((resolvePromise, reject) => {
-    let value = ''
-    const cleanup = () => {
-      stdin.setRawMode(false)
-      stdin.pause()
-      stdin.off('data', onData)
-      stderr.write('\n')
-    }
-    const onData = (chunk: Buffer) => {
-      for (const char of chunk.toString('utf8')) {
-        if (char === '\r' || char === '\n') {
-          cleanup()
-          resolvePromise(value)
-          return
-        }
-        if (char === '\u0003') {
-          cleanup()
-          reject(new Error('Aborted'))
-          return
-        }
-        if (char === '\u007f' || char === '\b') {
-          if (value.length > 0) {
-            value = value.slice(0, -1)
-            stderr.write('\b \b')
-          }
-          continue
-        }
-        value += char
-        stderr.write('*')
-      }
-    }
-    stdin.on('data', onData)
-  })
 }
 
 async function generateStaticSite() {
@@ -519,8 +115,6 @@ async function generateStaticSite() {
     ...loadOptionalEnv(resolve(DAPP_DIR, '.env.production')),
     NODE_ENV: 'production',
   }
-  // Never hand the signing key to the build's process tree.
-  delete env[SIGNER_KEY_NAME]
 
   console.log('Generating  pnpm generate')
   await run('pnpm', ['generate'], DAPP_DIR, env)
@@ -575,65 +169,6 @@ async function uploadDirectory(
   const cid = extractCid(result)
   await ipfsJson(env, 'pin/add', { arg: cid })
   return cid
-}
-
-async function updateEnsContenthash(
-  signer: Signer,
-  ens: { node: Hex; resolver: Address },
-  contenthash: Hex,
-) {
-  const { node, resolver } = ens
-  const transport = http(signer.rpcUrl)
-  const publicClient = createPublicClient({ chain: mainnet, transport })
-  const wallet = createWalletClient({
-    account: signer.account,
-    chain: mainnet,
-    transport,
-  })
-
-  const current = (await publicClient.readContract({
-    address: resolver,
-    abi: RESOLVER_ABI,
-    functionName: 'contenthash',
-    args: [node],
-  })) as Hex
-
-  if (current.toLowerCase() === contenthash.toLowerCase()) {
-    console.log('ENS         contenthash already up to date')
-    return
-  }
-
-  console.log(`Current     ${current}`)
-  console.log('ENS         simulating setContenthash')
-  const { request } = await publicClient.simulateContract({
-    address: resolver,
-    abi: RESOLVER_ABI,
-    functionName: 'setContenthash',
-    args: [node, contenthash],
-    account: signer.account,
-  })
-
-  console.log('ENS         sending setContenthash')
-  const txHash = await wallet.writeContract(request)
-  console.log(`Tx          ${txHash}`)
-
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
-  if (receipt.status !== 'success') {
-    throw new Error(`setContenthash transaction reverted: ${txHash}`)
-  }
-
-  const updated = (await publicClient.readContract({
-    address: resolver,
-    abi: RESOLVER_ABI,
-    functionName: 'contenthash',
-    args: [node],
-  })) as Hex
-  if (updated.toLowerCase() !== contenthash.toLowerCase()) {
-    throw new Error(`Resolver contenthash mismatch after tx: ${updated}`)
-  }
-
-  console.log(`Block       ${receipt.blockNumber}`)
-  console.log('Done        ENS contenthash updated')
 }
 
 async function ipfsFetch(
@@ -897,11 +432,6 @@ async function logUpload(
   const logPath = resolve(dirname(env.envPath), 'uploads.log')
   const line = `${new Date().toISOString()}  ${cid}  ${mfsPath}  ${sourcePath}\n`
   await appendFile(logPath, line).catch(() => undefined)
-}
-
-function parseBoolEnv(value: string | undefined): boolean {
-  if (!value) return false
-  return ['1', 'true', 'yes', 'y'].includes(value.toLowerCase())
 }
 
 function formatTimestamp(date: Date): string {
