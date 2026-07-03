@@ -3,6 +3,12 @@
 All notable changes across all packages in this monorepo.
 Generated from individual package changelogs — do not edit manually.
 
+## 2026-07-03
+
+- **Minor** Render and collect the amount-like semantic types (`eth`, `gwei`, `amount`, `token-amount`) using the canonical `@evmnow/sdk` formatter. [`c911301`](https://github.com/evmnow/dapp/commit/c911301)
+  Function results, single-value reads, and multi-return fields now display amounts scaled by their decimals with a unit symbol. Function inputs for amount types accept a human decimal value (scaled to base units on submit), show a symbol suffix, and — for `token-amount` — resolve the token's on-chain decimals/symbol and offer a balance-backed "max" button. Amount inputs render through the shared `EvmAmountInput`. Requires `@evmnow/sdk` >= 0.2.0 and `@1001-digital/layers.evm` >= 2.9.0.
+  _`contract-reader`_
+
 ## 2026-04-17
 
 - **Minor** Refine contract reader navigation primitives and update @evmnow/sdk to 0.1.4 for proxy target source support. ([#6](https://github.com/evmnow/dapp/pull/6)) [`eae6567`](https://github.com/evmnow/dapp/commit/eae6567)
