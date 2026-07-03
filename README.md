@@ -37,6 +37,16 @@ NUXT_PUBLIC_DEFAULT_RPC=https://rpc.example.org
 
 `NUXT_PUBLIC_MAINNET_ENS_RPC` can be set when you want a dedicated Ethereum mainnet RPC for `.eth` ENS resolution.
 
+### RPC via URL
+
+Links can pass an RPC endpoint with the [dappspec](https://ethereum-magicians.org/t/new-erc-best-practices-for-dapps-dappspec/24407) query parameter `ds-rpc-<chainId>`:
+
+```
+https://evmnow.eth.link/?ds-rpc-1=https%3A%2F%2Frpc.example.org
+```
+
+The override takes priority over saved settings for the session and is never stored. When several `ds-rpc-*` parameters are present, the one matching the selected chain wins, falling back to the first. A `ds-rpc-1` endpoint is also used for `.eth` ENS resolution.
+
 ## Repo
 
 - `packages/dapp` is the Nuxt app.

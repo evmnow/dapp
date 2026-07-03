@@ -1,12 +1,12 @@
 import type { Abi, AbiFunction } from 'viem'
 import { toFunctionSelector } from 'viem'
-import { resolveActions, type ResolvedAction } from '@evmnow/sdk'
+import { paramMetaAt, resolveActions, type ResolvedAction } from '@evmnow/sdk'
 import type {
   ContractAction,
   ContractActionParam,
   ContractSourceUnit,
 } from '../types/contract'
-import type { ContractUIMetadata, ParamMeta } from '../types/metadata'
+import type { Autofill, ContractUIMetadata, ParamMeta } from '../types/metadata'
 
 type AbiParam = {
   name?: string
@@ -27,7 +27,7 @@ function buildParam(
   paramsMeta?: Record<string, ParamMeta>,
 ): ContractActionParam {
   const key = input.name || `_${index}`
-  const meta = getParamMeta(paramsMeta, key, index)
+  const meta = paramMetaAt(paramsMeta, input, index)
 
   return {
     name: key,
@@ -39,15 +39,6 @@ function buildParam(
       buildParam(component, i, meta?.components),
     ),
   }
-}
-
-function getParamMeta(
-  paramsMeta: Record<string, ParamMeta> | undefined,
-  key: string,
-  index: number,
-): ParamMeta | undefined {
-  if (!paramsMeta) return undefined
-  return paramsMeta[key] || paramsMeta[String(index)]
 }
 
 function buildFacetMap(sources: ContractSourceUnit[]): Map<string, string> {
@@ -108,6 +99,30 @@ function buildAction(
     synthesized: resolved.synthesized,
     isVariant: resolved.isVariant,
   }
+}
+
+/**
+ * True when the action is only invocable with a connected wallet — a locked
+ * (hidden/disabled) param or the transaction value autofills from
+ * `connected-address`, so there is nothing to inject while disconnected.
+ * Per the spec, consumers omit such actions (e.g. the ERC-20 interface's
+ * "My Balance") from the default UI until a wallet connects.
+ */
+export function actionRequiresConnectedWallet(action: ContractAction): boolean {
+  const locked = (meta?: {
+    autofill?: Autofill
+    hidden?: boolean
+    disabled?: boolean
+  }) =>
+    Boolean(
+      meta &&
+      (meta.hidden || meta.disabled) &&
+      meta.autofill === 'connected-address',
+    )
+  const paramLocked = (param: ContractActionParam): boolean =>
+    locked(param.meta) || (param.components?.some(paramLocked) ?? false)
+
+  return action.inputs.some(paramLocked) || locked(action.meta?.value)
 }
 
 export function parseActions(

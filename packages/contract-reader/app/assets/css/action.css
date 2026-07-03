@@ -31,11 +31,18 @@
     margin-bottom: var(--cr-action-detail-gap);
   }
 
+  /* The source link spaces itself so the gap above it stays the same whether
+     a form, a result, or nothing at all precedes it. */
+  .cr-action-detail > .cr-form:has(+ .cr-action-source) {
+    margin-bottom: 0;
+  }
+
   .cr-action-action {
     justify-self: var(--cr-action-detail-button-justify);
   }
 
   .cr-action-source {
+    margin-top: var(--cr-action-detail-gap);
     padding-top: var(--size-3);
     border-top: var(--border-width) solid var(--cr-border);
   }

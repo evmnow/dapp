@@ -1,3 +1,5 @@
+import { parseRpcOverrides, type RpcOverride } from '../utils/rpcOverrides'
+
 const RPC_STORAGE_KEY = 'evm-now:contract-reader:rpc'
 const CHAIN_ID_STORAGE_KEY = 'evm-now:contract-reader:chain-id'
 
@@ -29,6 +31,12 @@ export function useReaderRpc() {
   const chainId = useState<string>('evm-now:contract-reader:chain-id', () => {
     return String(defaultChainId.value)
   })
+  // Dappspec ?ds-rpc-<chainId>=<url> overrides, captured once per session so
+  // they survive in-app navigation but are never persisted.
+  const rpcOverrides = useState<RpcOverride[]>(
+    'evm-now:contract-reader:rpc-overrides',
+    () => (import.meta.client ? parseRpcOverrides(window.location.search) : []),
+  )
   const hydrated = ref(false)
 
   onMounted(() => {
@@ -88,15 +96,37 @@ export function useReaderRpc() {
     { immediate: false },
   )
 
-  const isConfigured = computed(() => rpc.value.trim().length > 0)
+  const rpcOverride = computed(() => {
+    const overrides = rpcOverrides.value
+    if (!overrides.length) return undefined
+
+    const selectedChainId =
+      normalizeChainId(chainId.value) ?? defaultChainId.value
+    return (
+      overrides.find((override) => override.chainId === selectedChainId) ??
+      overrides[0]
+    )
+  })
+
+  const effectiveRpc = computed(() => {
+    return rpcOverride.value?.rpc ?? rpc.value.trim()
+  })
+  const isConfigured = computed(() => effectiveRpc.value.length > 0)
   const effectiveChainId = computed(() => {
-    return normalizeChainId(chainId.value) ?? defaultChainId.value
+    return (
+      rpcOverride.value?.chainId ??
+      normalizeChainId(chainId.value) ??
+      defaultChainId.value
+    )
   })
 
   return {
     chainId,
     effectiveChainId,
+    effectiveRpc,
     isConfigured,
     rpc,
+    rpcOverride,
+    rpcOverrides,
   }
 }
