@@ -8,6 +8,18 @@
       </p>
     </header>
 
+    <Alert
+      v-if="rpcOverride"
+      type="info"
+    >
+      <p>
+        This session uses an RPC override from the URL (<code
+          >ds-rpc-{{ rpcOverride.chainId }}</code
+        >): <code>{{ rpcOverride.rpc }}</code
+        >. It takes priority over the settings below and is not stored.
+      </p>
+    </Alert>
+
     <AppRpcSettings
       v-model="rpc"
       v-model:chain-id="chainId"
@@ -16,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-const { chainId, rpc } = useReaderRpc()
+const { chainId, rpc, rpcOverride } = useReaderRpc()
 
 useHead({ title: 'Settings' })
 </script>

@@ -4,6 +4,19 @@
 
     <template v-else>
       <Alert
+        v-if="rpcOverride"
+        type="info"
+        dismissable
+      >
+        <p>
+          This link set the RPC endpoint for chain {{ rpcOverride.chainId }} to
+          <code>{{ rpcOverride.rpc }}</code
+          >. Contract data is read through it instead of your saved settings —
+          only trust results if you trust the link.
+        </p>
+      </Alert>
+
+      <Alert
         v-if="!hasRpc"
         type="info"
       >
@@ -180,17 +193,26 @@ const readerAddress = computed(
   () => readerQueryState.value.address?.trim() || '',
 )
 const isReaderMode = computed(() => Boolean(readerAddress.value))
-const { effectiveChainId, rpc } = useReaderRpc()
-const wallet = useContractWallet({ chainId: effectiveChainId, rpc })
+const { effectiveChainId, effectiveRpc, rpcOverride, rpcOverrides } =
+  useReaderRpc()
+const wallet = useContractWallet({
+  chainId: effectiveChainId,
+  rpc: effectiveRpc,
+})
 const walletConnected = wallet.walletConnected
 const connectedAddress = wallet.walletAddress
 const { resolveMetadata } = useTokenMetadataResolver()
 const metadataRpc = computed(() => wallet.metadataOptions.value.rpc ?? '')
+const mainnetRpcOverride = computed(
+  () =>
+    rpcOverrides.value.find((override) => override.chainId === 1)?.rpc ?? '',
+)
 const { contract, error, get, pending, clear } = useContractMetadataSdk({
   chainId: wallet.chainId,
   rpc: metadataRpc,
   ensRpc: computed(
     () =>
+      mainnetRpcOverride.value ||
       mainnetEnsRpc.value ||
       (wallet.metadataOptions.value.chainId === 1 ? metadataRpc.value : ''),
   ),
