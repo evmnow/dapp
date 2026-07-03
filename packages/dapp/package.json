@@ -9,6 +9,7 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "publish:site": "node scripts/publish-site.ts",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {

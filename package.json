@@ -9,6 +9,7 @@
     "build": "pnpm -r --if-present build",
     "generate": "pnpm --filter @evmnow/dapp generate",
     "preview": "pnpm --filter @evmnow/dapp preview",
+    "publish:site": "pnpm --filter @evmnow/dapp publish:site",
     "typecheck": "pnpm -r --if-present typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
