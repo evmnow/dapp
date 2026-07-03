@@ -1,5 +1,23 @@
 # @evmnow/contract-reader
 
+## 0.4.0
+
+### Minor Changes
+
+- [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Resolve positional parameter keys (`_0`, `_1`, ...) by position for action params, returns, and examples.
+
+  Interface metadata can only reference parameters positionally, because implementations name them differently — WETH's `approve(guy, wad)` is the same ERC-20 function as OpenZeppelin's `approve(spender, amount)`. Previously the reader matched parameter metadata by ABI name only, so interface-provided actions lost their labels and locked params on such contracts (WETH's "Revoke Approval" rendered raw `guy`/`wad` inputs instead of a single spender field with the amount locked to 0). Name keys win when both forms describe the same parameter, and `applyInputExample` now takes the action inputs as its first argument so positional example keys map onto named fields. Requires `@evmnow/sdk` >= 0.3.0.
+
+- [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Hide actions locked to the connected wallet while no wallet is connected.
+
+  An action whose hidden or disabled parameter (or transaction value) autofills from `connected-address` — like the ERC-20 interface's "My Balance" — cannot be invoked without a wallet. The new `actionRequiresConnectedWallet()` util identifies such actions, and the dapp now omits them from the action list until a wallet connects.
+
+### Patch Changes
+
+- [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Keep the spacing above the action's "view code" link consistent whether a form, a result, or nothing at all precedes it.
+
+- [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Never scale locked (hidden/disabled) parameters by amount decimals when building call arguments. Autofill values are denominated in raw base units per the metadata spec, so an amount-typed locked param (e.g. an unlimited-approval constant) would have been multiplied by 10^decimals again.
+
 ## 0.3.0
 
 ### Minor Changes

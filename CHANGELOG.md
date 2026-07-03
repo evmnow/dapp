@@ -5,9 +5,17 @@ Generated from individual package changelogs — do not edit manually.
 
 ## 2026-07-03
 
+- **Minor** Resolve positional parameter keys (`_0`, `_1`, ...) by position for action params, returns, and examples. [`e552f41`](https://github.com/evmnow/dapp/commit/e552f41)
+  Interface metadata can only reference parameters positionally, because implementations name them differently — WETH's `approve(guy, wad)` is the same ERC-20 function as OpenZeppelin's `approve(spender, amount)`. Previously the reader matched parameter metadata by ABI name only, so interface-provided actions lost their labels and locked params on such contracts (WETH's "Revoke Approval" rendered raw `guy`/`wad` inputs instead of a single spender field with the amount locked to 0). Name keys win when both forms describe the same parameter, and `applyInputExample` now takes the action inputs as its first argument so positional example keys map onto named fields. Requires `@evmnow/sdk` >= 0.3.0.
+  _`contract-reader`, `dapp`_
+
 - **Minor** Render and collect the amount-like semantic types (`eth`, `gwei`, `amount`, `token-amount`) using the canonical `@evmnow/sdk` formatter. [`c911301`](https://github.com/evmnow/dapp/commit/c911301)
   Function results, single-value reads, and multi-return fields now display amounts scaled by their decimals with a unit symbol. Function inputs for amount types accept a human decimal value (scaled to base units on submit), show a symbol suffix, and — for `token-amount` — resolve the token's on-chain decimals/symbol and offer a balance-backed "max" button. Amount inputs render through the shared `EvmAmountInput`. Requires `@evmnow/sdk` >= 0.2.0 and `@1001-digital/layers.evm` >= 2.9.0.
   _`contract-reader`_
+
+- **Minor** Support setting the RPC from a URL query parameter. [`6022259`](https://github.com/evmnow/dapp/commit/6022259)
+  Links can now pass an RPC endpoint per chain using the dappspec `ds-rpc-<chainId>` convention, e.g. `?ds-rpc-1=https%3A%2F%2Frpc.example.org`. The override takes priority over locally saved settings for the duration of the session and is never persisted. A `ds-rpc-1` endpoint is also used for `.eth` ENS resolution, and both the reader and the settings page show a notice while an override is active.
+  _`dapp`_
 
 ## 2026-04-17
 

@@ -1,5 +1,24 @@
 # @evmnow/dapp
 
+## 0.2.0
+
+### Minor Changes
+
+- [`6022259`](https://github.com/evmnow/dapp/commit/602225903f5675f8407207f3fd54b401e340f4bf) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Support setting the RPC from a URL query parameter.
+
+  Links can now pass an RPC endpoint per chain using the dappspec `ds-rpc-<chainId>` convention, e.g. `?ds-rpc-1=https%3A%2F%2Frpc.example.org`. The override takes priority over locally saved settings for the duration of the session and is never persisted. A `ds-rpc-1` endpoint is also used for `.eth` ENS resolution, and both the reader and the settings page show a notice while an override is active.
+
+### Patch Changes
+
+- [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Align amount-input prefix/suffix segments with the reader theme. The form-item group now carries the input border, and the segments no longer draw their own outset ring taller than the field they belong to.
+
+- [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Hide actions locked to the connected wallet while no wallet is connected.
+
+  An action whose hidden or disabled parameter (or transaction value) autofills from `connected-address` — like the ERC-20 interface's "My Balance" — cannot be invoked without a wallet. The new `actionRequiresConnectedWallet()` util identifies such actions, and the dapp now omits them from the action list until a wallet connects.
+
+- Updated dependencies [[`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b), [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b), [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b), [`e552f41`](https://github.com/evmnow/dapp/commit/e552f4193833cec3993ad469f85fcac73e35647b)]:
+  - @evmnow/contract-reader@0.4.0
+
 ## 0.1.4
 
 ### Patch Changes
