@@ -103,11 +103,11 @@
       </template>
 
       <label
-        v-if="action.isPayable"
+        v-if="action.isPayable && !valueHidden"
         class="cr-field cr-value-field"
       >
         <span class="cr-field-label">
-          value
+          {{ valueLabel }}
           <span class="cr-field-type">(ETH)</span>
         </span>
 
@@ -118,7 +118,22 @@
           placeholder="0"
           spellcheck="false"
           autocomplete="off"
+          :disabled="valueDisabled"
         />
+
+        <small
+          v-if="valueMeta?.description"
+          class="cr-input-help cr-muted"
+        >
+          <InlineMarkdown :text="valueMeta.description" />
+        </small>
+
+        <small
+          v-if="valueError"
+          class="cr-input-help cr-error"
+        >
+          {{ valueError }}
+        </small>
       </label>
 
       <slot
@@ -328,7 +343,7 @@
 <script setup lang="ts">
 import type { Abi, Hash } from 'viem'
 import type { RouteLocationRaw } from 'vue-router'
-import { parseEther } from 'viem'
+import { formatEther, parseEther } from 'viem'
 import { resolveAmountDisplay, type ParamType } from '@evmnow/sdk'
 import type { ContractAction, ContractActionParam } from '../../types/contract'
 import type { SemanticType } from '../../types/metadata'
@@ -345,6 +360,7 @@ import {
   buildInputArgs,
   buildInputErrors,
   hydrateInputValues,
+  resolveAutofillValue,
   resolveEnsInputs,
   seedInputValues,
   serializeInputArgs,
@@ -485,10 +501,53 @@ const inputErrors = computed(() =>
     amountDecimals,
   ),
 )
-const hasErrors = computed(() =>
-  Object.values(inputErrors.value).some((error) => !!error),
+const hasErrors = computed(
+  () =>
+    Object.values(inputErrors.value).some((error) => !!error) ||
+    Boolean(valueError.value),
 )
 const txValue = ref('')
+
+// ── Native currency (msg.value) metadata for payable calls ──
+const valueMeta = computed(() => props.action.meta?.value)
+const valueLabel = computed(() => valueMeta.value?.label || 'value')
+const valueHidden = computed(() => Boolean(valueMeta.value?.hidden))
+const valueDisabled = computed(() => Boolean(valueMeta.value?.disabled))
+
+// The value autofill is denominated in wei; the input collects ETH.
+function seededValue(): string {
+  const autofill = valueMeta.value?.autofill
+  const wei = resolveAutofillValue(autofill, {
+    contractAddress: props.address,
+    connectedAddress: props.connectedAddress,
+    now: Date.now(),
+  })
+  if (!wei) return ''
+  try {
+    return formatEther(BigInt(wei))
+  } catch {
+    return ''
+  }
+}
+
+const valueError = computed(() => {
+  const rule = valueMeta.value?.validation
+  const raw = txValue.value.trim()
+  if (!rule || !raw) return null
+  let wei: bigint
+  try {
+    wei = parseEther(raw)
+  } catch {
+    return rule.message || 'invalid amount'
+  }
+  if (rule.min != null && wei < BigInt(rule.min)) {
+    return rule.message || `minimum ${formatEther(BigInt(rule.min))} ETH`
+  }
+  if (rule.max != null && wei > BigInt(rule.max)) {
+    return rule.message || `maximum ${formatEther(BigInt(rule.max))} ETH`
+  }
+  return null
+})
 const result = ref<unknown>(null)
 const error = ref('')
 const pending = ref(false)
@@ -785,7 +844,7 @@ function setInputValue(key: string, value: string) {
 function resetInputs() {
   result.value = null
   error.value = ''
-  txValue.value = ''
+  txValue.value = seededValue()
   hasResult.value = false
   resetMetadataPreview()
 

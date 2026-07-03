@@ -246,7 +246,7 @@ function getParamMeta(
   return input.meta || (!prefix ? meta?.[input.name] : undefined)
 }
 
-function resolveAutofillValue(
+export function resolveAutofillValue(
   autofill: Autofill | undefined,
   context: {
     contractAddress?: string
