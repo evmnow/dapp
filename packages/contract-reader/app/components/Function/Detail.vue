@@ -94,6 +94,7 @@
             v-else
             :input="input"
             :meta="input.meta"
+            :amount="amountMeta(input)"
             :error="inputErrors[fieldKey(input, index)]"
             v-model="inputValues[fieldKey(input, index)]"
           />
@@ -205,6 +206,8 @@
             :outputs="fn.outputs"
             :returns-meta="fn.meta?.returns"
             :address-href="addressHref"
+            :token-info="tokenMeta"
+            :contract-address="address"
           >
             <template #address="slotProps">
               <slot
@@ -240,6 +243,8 @@
             :outputs="fn.outputs"
             :returns-meta="fn.meta?.returns"
             :address-href="addressHref"
+            :token-info="tokenMeta"
+            :contract-address="address"
           >
             <template #address="slotProps">
               <slot
@@ -331,7 +336,12 @@
 import type { Abi, Hash } from 'viem'
 import type { RouteLocationRaw } from 'vue-router'
 import { parseEther } from 'viem'
-import type { ContractFunction } from '../../types/contract'
+import { resolveAmountDisplay, type ParamType } from '@evmnow/sdk'
+import type {
+  ContractFunction,
+  ContractFunctionParam,
+} from '../../types/contract'
+import type { SemanticType } from '../../types/metadata'
 import type {
   ContractReadFn,
   ContractWriteFn,
@@ -345,8 +355,10 @@ import {
   buildInputArgs,
   buildInputErrors,
   hydrateInputValues,
+  resolveEnsInputs,
   seedInputValues,
   serializeInputArgs,
+  type ResolvedEnsAddresses,
 } from '../../utils/inputs'
 import FunctionInput from './Input.vue'
 import FunctionArtifactPreview from './ArtifactPreview.client.vue'
@@ -357,7 +369,11 @@ import FunctionTupleInput from './TupleInput.vue'
 import {
   formatArgValue,
   formatSemanticValue,
-  resolveOutputSemanticType,
+  getOutputSemanticType,
+  semanticAmountKind,
+  tokenAddressOf,
+  type AmountInputInfo,
+  type TokenInfo,
 } from '../../utils/format'
 import { detectPreviewMarkupKind } from '../../utils/markup-preview'
 import {
@@ -467,9 +483,17 @@ const emit = defineEmits<{
   error: [error: unknown]
 }>()
 
+const { resolveAddress: resolveEnsAddress } = useEnsResolver()
+
 const inputValues = reactive<Record<string, string>>({})
 const inputErrors = computed(() =>
-  buildInputErrors(props.fn.inputs, inputValues, props.fn.meta?.params),
+  buildInputErrors(
+    props.fn.inputs,
+    inputValues,
+    props.fn.meta?.params,
+    undefined,
+    amountDecimals,
+  ),
 )
 const hasErrors = computed(() =>
   Object.values(inputErrors.value).some((error) => !!error),
@@ -492,6 +516,145 @@ const hasForm = computed(
   () => props.fn.inputs.length > 0 || props.fn.isPayable || !props.fn.isRead,
 )
 const hasResultFields = computed(() => props.fn.outputs.length > 1)
+
+// ── Amount-like params (eth / gwei / amount / token-amount) ──
+const ERC20_META_ABI = [
+  {
+    type: 'function',
+    name: 'decimals',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint8' }],
+  },
+  {
+    type: 'function',
+    name: 'symbol',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'string' }],
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [{ type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+  },
+] as const satisfies Abi
+
+// On-chain identity of token-amount tokens, resolved lazily via readFunction.
+const tokenMeta = reactive<Record<string, TokenInfo>>({})
+const tokenBalance = reactive<Record<string, bigint>>({})
+
+function paramTokenAddress(type?: SemanticType): string | undefined {
+  if (semanticAmountKind(type) !== 'token-amount') return undefined
+  return (tokenAddressOf(type) ?? props.address)?.toLowerCase()
+}
+
+// Rendering/parsing info for an amount-like input, or null if not amount-like
+// (or a token-amount whose decimals are not resolved yet — kept as a raw field).
+function amountMeta(param: ContractFunctionParam): AmountInputInfo | null {
+  const type = param.meta?.type
+  const kind = semanticAmountKind(type)
+  if (!kind) return null
+  if (!/^u?int/.test(param.type)) return null
+
+  if (kind === 'token-amount') {
+    const addr = paramTokenAddress(type)
+    const info = addr ? tokenMeta[addr] : undefined
+    if (!info) return null
+    return {
+      decimals: info.decimals,
+      symbol: info.symbol,
+      balance: addr ? tokenBalance[addr] : undefined,
+    }
+  }
+
+  const display = resolveAmountDisplay(type as ParamType)
+  if (!display) return null
+  return { decimals: display.decimals, symbol: display.symbol }
+}
+
+const amountDecimals = (input: ContractFunctionParam) =>
+  amountMeta(input)?.decimals ?? null
+
+function collectTokenAddresses(): string[] {
+  const set = new Set<string>()
+  for (const input of props.fn.inputs) {
+    const addr = paramTokenAddress(input.meta?.type)
+    if (addr) set.add(addr)
+  }
+  if (!hasResultFields.value) {
+    const out = props.fn.outputs[0]
+    const addr = out
+      ? paramTokenAddress(getOutputSemanticType(out, props.fn.meta?.returns))
+      : undefined
+    if (addr) set.add(addr)
+  }
+  return [...set]
+}
+
+async function resolveTokenMeta() {
+  const reader = props.readFunction
+  if (!reader) return
+  for (const addr of collectTokenAddresses()) {
+    if (tokenMeta[addr]) continue
+    try {
+      const [decimals, symbol] = await Promise.all([
+        reader({
+          address: addr,
+          abi: ERC20_META_ABI as unknown as Abi,
+          functionName: 'decimals',
+        }),
+        reader({
+          address: addr,
+          abi: ERC20_META_ABI as unknown as Abi,
+          functionName: 'symbol',
+        }).catch(() => undefined),
+      ])
+      tokenMeta[addr] = {
+        decimals: Number(decimals),
+        symbol: typeof symbol === 'string' ? symbol : undefined,
+      }
+    } catch {
+      // leave unresolved — the input stays a raw integer field
+    }
+  }
+  await resolveTokenBalances()
+}
+
+async function resolveTokenBalances() {
+  const reader = props.readFunction
+  const holder = props.connectedAddress
+  if (!reader || !holder) return
+  for (const input of props.fn.inputs) {
+    const addr = paramTokenAddress(input.meta?.type)
+    if (!addr || !tokenMeta[addr]) continue
+    try {
+      const balance = await reader({
+        address: addr,
+        abi: ERC20_META_ABI as unknown as Abi,
+        functionName: 'balanceOf',
+        args: [holder],
+      })
+      tokenBalance[addr] = BigInt(balance as bigint | number | string)
+    } catch {
+      // ignore — max button simply won't render
+    }
+  }
+}
+
+watch(
+  () => [props.fn.slug, props.readFunction, props.address] as const,
+  () => void resolveTokenMeta(),
+  { immediate: true },
+)
+
+watch(
+  () => props.connectedAddress,
+  () => void resolveTokenBalances(),
+)
+
 const artifactResult = computed(() => {
   if (typeof result.value !== 'string') return null
   return detectPreviewMarkupKind(result.value) ? result.value : null
@@ -533,11 +696,18 @@ const writeRequest = computed<(() => Promise<Hash>) | undefined>(() => {
   return async () => {
     const value = props.fn.isPayable ? txValue.value.trim() : ''
 
+    const { resolved, error: ensError } = await resolveEnsInputs(
+      props.fn.inputs,
+      inputValues,
+      resolveEnsAddress,
+    )
+    if (ensError) throw new Error(ensError)
+
     return writeFunction({
       address: props.address,
       abi: props.abi,
       functionName: props.fn.name,
-      args: buildArgs(),
+      args: buildArgs(resolved),
       ...(value ? { value: parseEther(value) } : {}),
     })
   }
@@ -629,8 +799,14 @@ function resetInputs() {
   )
 }
 
-function buildArgs() {
-  return buildInputArgs(props.fn.inputs, inputValues)
+function buildArgs(resolvedEns?: ResolvedEnsAddresses) {
+  return buildInputArgs(
+    props.fn.inputs,
+    inputValues,
+    undefined,
+    amountDecimals,
+    resolvedEns,
+  )
 }
 
 function resetMetadataPreview() {
@@ -686,11 +862,22 @@ async function read() {
   hasResult.value = false
 
   try {
+    const { resolved, error: ensError } = await resolveEnsInputs(
+      props.fn.inputs,
+      inputValues,
+      resolveEnsAddress,
+    )
+    if (ensError) {
+      error.value = ensError
+      hasResult.value = true
+      return
+    }
+
     result.value = await props.readFunction({
       address: props.address,
       abi: props.abi,
       functionName: props.fn.name,
-      args: buildArgs(),
+      args: buildArgs(resolved),
     })
     hasResult.value = true
   } catch (err: any) {
@@ -720,8 +907,10 @@ function applyExample(example: FunctionExample) {
 function formatValue(value: unknown) {
   const output = props.fn.outputs[0]
   if (!output) return formatArgValue(value)
-  const semanticType = resolveOutputSemanticType(output, props.fn.meta?.returns)
-  return formatSemanticValue(value, semanticType)
+  const semanticType = getOutputSemanticType(output, props.fn.meta?.returns)
+  const addr = paramTokenAddress(semanticType)
+  const info = addr ? tokenMeta[addr] : undefined
+  return formatSemanticValue(value, semanticType, info)
 }
 
 interface FunctionDetailLabels {

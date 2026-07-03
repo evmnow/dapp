@@ -1,7 +1,19 @@
 import { isAddress } from 'viem'
+import { parseUnits } from '@evmnow/sdk'
 import { ensCache } from '@1001-digital/layers.evm/app/utils/ens'
 import type { ContractFunctionParam } from '../types/contract'
 import type { Autofill, ParamMeta, ValidationRule } from '../types/metadata'
+
+/**
+ * Resolves the fixed-point decimals for an amount-like input (eth/gwei/amount/
+ * token-amount), or `null` when the input is not amount-like or its decimals
+ * are not yet known (e.g. an unresolved token-amount). Amount inputs collect a
+ * human decimal value that is scaled to raw base units on submit.
+ */
+export type AmountDecimalsResolver = (
+  input: ContractFunctionParam,
+  key: string,
+) => number | null
 
 function isTupleInput(input: ContractFunctionParam): boolean {
   return input.type === 'tuple' && !!input.components?.length
@@ -62,25 +74,39 @@ function parseJsonArray(value: string): unknown[] | null {
   }
 }
 
-function resolveAddressValue(value: string): string {
+function resolveAddressValue(
+  value: string,
+  resolvedEns?: ResolvedEnsAddresses,
+): string {
   const trimmed = value.trim()
   if (!trimmed || isAddress(trimmed)) return trimmed
+
+  const resolved = resolvedEns?.[trimmed]
+  if (resolved && isAddress(resolved)) return resolved
 
   const cached = ensCache.get(`ens-resolve-${trimmed}`)
   return cached?.address && isAddress(cached.address) ? cached.address : trimmed
 }
 
-function parsePrimitiveValue(value: string, type: string): unknown {
+function parsePrimitiveValue(
+  value: string,
+  type: string,
+  resolvedEns?: ResolvedEnsAddresses,
+): unknown {
   const trimmed = value.trim()
   if (!trimmed && type !== 'bool') return ''
 
   if (type === 'bool') return trimmed === 'true'
   if (isIntegerType(type)) return BigInt(trimmed)
-  if (type === 'address') return resolveAddressValue(trimmed)
+  if (type === 'address') return resolveAddressValue(trimmed, resolvedEns)
   return trimmed
 }
 
-function parseArrayValue(value: string, type: string): unknown[] {
+function parseArrayValue(
+  value: string,
+  type: string,
+  resolvedEns?: ResolvedEnsAddresses,
+): unknown[] {
   const itemType = getArrayItemType(type)
   const nested = getArrayDepth(type) > 1
   const items = parseArrayEntries(value)
@@ -97,7 +123,7 @@ function parseArrayValue(value: string, type: string): unknown[] {
       return item
     }
 
-    return parsePrimitiveValue(item, itemType)
+    return parsePrimitiveValue(item, itemType, resolvedEns)
   })
 }
 
@@ -289,15 +315,117 @@ export function buildInputArgs(
   inputs: ContractFunctionParam[],
   values: Record<string, string>,
   prefix?: string,
+  amountDecimals?: AmountDecimalsResolver,
+  resolvedEns?: ResolvedEnsAddresses,
 ): unknown[] {
   return inputs.map((input, index) => {
     const key = buildInputKey(prefix, input.name, index)
     if (isTupleInput(input)) {
-      return buildInputArgs(input.components!, values, key)
+      return buildInputArgs(
+        input.components!,
+        values,
+        key,
+        amountDecimals,
+        resolvedEns,
+      )
     }
 
-    return parseInputValue(values[key] || '', input.type)
+    const decimals = amountDecimals?.(input, key)
+    if (decimals != null) {
+      const raw = (values[key] || '').trim()
+      return raw ? parseUnits(raw, decimals) : raw
+    }
+
+    return parseInputValue(values[key] || '', input.type, resolvedEns)
   })
+}
+
+/** Addresses keyed by the ENS name they were resolved from. */
+export type ResolvedEnsAddresses = Record<string, string>
+
+export type EnsAddressResolver = (identifier: string) => Promise<string | null>
+
+function isEnsName(value: string): boolean {
+  return !!value && !isAddress(value) && value.includes('.')
+}
+
+function collectEnsNames(
+  inputs: ContractFunctionParam[],
+  values: Record<string, string>,
+  prefix?: string,
+): Set<string> {
+  const names = new Set<string>()
+
+  inputs.forEach((input, index) => {
+    const key = buildInputKey(prefix, input.name, index)
+
+    if (isTupleInput(input)) {
+      for (const name of collectEnsNames(input.components!, values, key)) {
+        names.add(name)
+      }
+      return
+    }
+
+    const value = values[key] || ''
+
+    if (input.type === 'address') {
+      const trimmed = value.trim()
+      if (isEnsName(trimmed)) names.add(trimmed)
+      return
+    }
+
+    // Only flat address arrays substitute per-item values (see parseArrayValue).
+    if (input.type === 'address[]') {
+      for (const entry of parseArrayEntries(value)) {
+        if (typeof entry !== 'string') continue
+        const trimmed = entry.trim()
+        if (isEnsName(trimmed)) names.add(trimmed)
+      }
+    }
+  })
+
+  return names
+}
+
+/**
+ * Force-resolve every ENS name used in address-typed inputs before args are
+ * built, so a read/write never races the background resolution of the address
+ * input fields. Returns the resolved name → address map for `buildInputArgs`,
+ * or an error message for the first name that fails to resolve.
+ */
+export async function resolveEnsInputs(
+  inputs: ContractFunctionParam[],
+  values: Record<string, string>,
+  resolveAddress: EnsAddressResolver,
+): Promise<{ resolved: ResolvedEnsAddresses; error: string | null }> {
+  const resolved: ResolvedEnsAddresses = {}
+  const names = [...collectEnsNames(inputs, values)]
+
+  const addresses = await Promise.all(
+    names.map((name) => resolveAddress(name).catch(() => null)),
+  )
+
+  for (const [index, name] of names.entries()) {
+    const address = addresses[index]
+    if (!address || !isAddress(address)) {
+      return { resolved, error: `Could not resolve ENS name "${name}"` }
+    }
+    resolved[name] = address
+  }
+
+  return { resolved, error: null }
+}
+
+/** Validate a human decimal amount string (non-negative, optional fraction). */
+export function validateAmountString(
+  value: string,
+  validation?: ValidationRule,
+): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return /^\d+(\.\d+)?$|^\.\d+$/.test(trimmed)
+    ? null
+    : validation?.message || 'Enter a valid amount'
 }
 
 export function serializeInputArgs(
@@ -353,9 +481,13 @@ export function hydrateInputValues(
   })
 }
 
-export function parseInputValue(value: string, type: string): unknown {
-  if (isArrayInput(type)) return parseArrayValue(value, type)
-  return parsePrimitiveValue(value, type)
+export function parseInputValue(
+  value: string,
+  type: string,
+  resolvedEns?: ResolvedEnsAddresses,
+): unknown {
+  if (isArrayInput(type)) return parseArrayValue(value, type, resolvedEns)
+  return parsePrimitiveValue(value, type, resolvedEns)
 }
 
 export function buildInputErrors(
@@ -363,6 +495,7 @@ export function buildInputErrors(
   values: Record<string, string>,
   meta?: Record<string, ParamMeta>,
   prefix?: string,
+  amountDecimals?: AmountDecimalsResolver,
 ): Record<string, string | null> {
   const errors: Record<string, string | null> = {}
 
@@ -373,12 +506,22 @@ export function buildInputErrors(
     if (isTupleInput(input)) {
       Object.assign(
         errors,
-        buildInputErrors(input.components!, values, inputMeta?.components, key),
+        buildInputErrors(
+          input.components!,
+          values,
+          inputMeta?.components,
+          key,
+          amountDecimals,
+        ),
       )
       return
     }
 
     const value = values[key] || ''
+    if (amountDecimals?.(input, key) != null) {
+      errors[key] = validateAmountString(value, inputMeta?.validation)
+      return
+    }
     errors[key] = isArrayInput(input.type)
       ? validateArrayValue(value, input.type, inputMeta?.validation)
       : validatePrimitiveValue(value, input.type, inputMeta?.validation)

@@ -14,11 +14,11 @@
   "dependencies": {
     "@evmnow/contract-reader": "workspace:*",
     "@wagmi/core": "3.4.1",
-    "nuxt": "^4.4.2",
-    "viem": "2.47.6"
+    "nuxt": "^4.4.8",
+    "viem": "2.48.4"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "vue-tsc": "^3.2.6"
+    "vue-tsc": "^3.3.6"
   }
 }

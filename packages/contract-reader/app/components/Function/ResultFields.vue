@@ -64,11 +64,14 @@ import type { ParamMeta } from '../../types/metadata'
 import {
   formatArgValue,
   formatSemanticValue,
+  getOutputSemanticType,
   getResultFieldLabel,
   getResultValue,
   isTupleType,
-  resolveOutputSemanticType,
   resultFieldKind,
+  tokenAddressOf,
+  type ResultFieldKind,
+  type TokenInfo,
 } from '../../utils/format'
 
 const props = defineProps<{
@@ -76,20 +79,15 @@ const props = defineProps<{
   outputs: ContractFunctionParam[]
   returnsMeta?: Record<string, ParamMeta>
   addressHref?: (address: string) => string | undefined | null
+  tokenInfo?: Record<string, TokenInfo>
+  contractAddress?: string
 }>()
 
 interface ResultField {
   key: string
   name: string
   label: string
-  kind:
-    | 'default'
-    | 'eth'
-    | 'percentage'
-    | 'basis-points'
-    | 'timestamp'
-    | 'address'
-    | 'boolean'
+  kind: ResultFieldKind
   value: string
   raw: unknown
   depth: number
@@ -106,10 +104,15 @@ function buildFields(
 
   return outputs.flatMap((output, index) => {
     const value = getResultValue(result, output, index)
-    const semanticType = resolveOutputSemanticType(output, props.returnsMeta)
+    const semanticType = getOutputSemanticType(output, props.returnsMeta)
     const key = `${prefix}${output.name || 'field'}-${index}`
     const kind = resultFieldKind(output, semanticType)
     const label = getResultFieldLabel(output, index)
+
+    const tokenAddr = (
+      tokenAddressOf(semanticType) ?? props.contractAddress
+    )?.toLowerCase()
+    const info = tokenAddr ? props.tokenInfo?.[tokenAddr] : undefined
 
     const baseField: ResultField = {
       key,
@@ -117,7 +120,7 @@ function buildFields(
       label,
       kind,
       value: semanticType
-        ? formatSemanticValue(value, semanticType)
+        ? formatSemanticValue(value, semanticType, info)
         : formatArgValue(value),
       raw: value,
       depth,

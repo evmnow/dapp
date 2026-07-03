@@ -30,6 +30,15 @@
       autocomplete="off"
     />
 
+    <EvmAmountInput
+      v-else-if="amount"
+      v-model="model"
+      class="cr-input"
+      :decimals="amount.decimals"
+      :symbol="amount.symbol"
+      :balance="amount.balance"
+    />
+
     <input
       v-else
       v-model="model"
@@ -59,11 +68,13 @@
 import { computed } from 'vue'
 import type { ContractFunctionParam } from '../../types/contract'
 import type { ParamMeta } from '../../types/metadata'
+import type { AmountInputInfo } from '../../utils/format'
 
 const props = defineProps<{
   input: ContractFunctionParam
   meta?: ParamMeta
   error?: string | null
+  amount?: AmountInputInfo | null
 }>()
 
 const model = defineModel<string>({ default: '' })
