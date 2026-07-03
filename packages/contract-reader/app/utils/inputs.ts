@@ -340,7 +340,10 @@ export function buildInputArgs(
       )
     }
 
-    const decimals = amountDecimals?.(input, key)
+    // Locked params hold autofill values, which are already denominated in
+    // raw base units — only user-facing amount inputs collect human decimals.
+    const locked = Boolean(input.meta?.hidden || input.meta?.disabled)
+    const decimals = locked ? null : amountDecimals?.(input, key)
     if (decimals != null) {
       const raw = (values[key] || '').trim()
       return raw ? parseUnits(raw, decimals) : raw
@@ -528,7 +531,8 @@ export function buildInputErrors(
     }
 
     const value = values[key] || ''
-    if (amountDecimals?.(input, key) != null) {
+    const locked = Boolean(inputMeta?.hidden || inputMeta?.disabled)
+    if (!locked && amountDecimals?.(input, key) != null) {
       errors[key] = validateAmountString(value, inputMeta?.validation)
       return
     }
@@ -541,11 +545,25 @@ export function buildInputErrors(
 }
 
 export function applyInputExample(
+  inputs: ContractActionParam[],
   values: Record<string, string>,
   example: Record<string, string>,
 ): Record<string, string> {
+  // Example params are keyed by ABI parameter name or position (`_N`);
+  // positional keys map onto the named field they describe.
+  const fieldKeys = new Set(
+    inputs.map((input, index) => buildInputKey(undefined, input.name, index)),
+  )
+
   for (const [key, value] of Object.entries(example)) {
-    values[key] = value
+    let fieldKey = key
+    const positional = key.match(/^_(\d+)$/)
+    if (positional && !fieldKeys.has(key)) {
+      const input = inputs[Number(positional[1])]
+      if (!input) continue
+      fieldKey = buildInputKey(undefined, input.name, Number(positional[1]))
+    }
+    values[fieldKey] = value
   }
 
   return values

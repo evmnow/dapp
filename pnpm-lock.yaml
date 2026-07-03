@@ -27,8 +27,8 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0(1e0a9ea4f9676ac66c4f30de8424dd0a)
       '@evmnow/sdk':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.3.0
+        version: 0.3.0
       shiki:
         specifier: ^4.3.0
         version: 4.3.0
@@ -721,8 +721,8 @@ packages:
   '@ethersproject/wordlists@5.8.0':
     resolution: {integrity: sha512-2df9bbXicZws2Sb5S6ET493uJ0Z84Fjr3pC4tu/qlnZERibZCeUVuqdtt+7Tv9xxhUxHoIekIA7avrKUWHrezg==}
 
-  '@evmnow/sdk@0.2.0':
-    resolution: {integrity: sha512-v7ZzXlXIb8FscVTok/ROtXBlu9Cwz54gp9Tsc8i4rDKyLPmKR6qp0G7qhEIIYg7hxlOWrQh19d5LUFCp956jvg==}
+  '@evmnow/sdk@0.3.0':
+    resolution: {integrity: sha512-pRJQuUlogy2yKmCRBCm0g1JD+JRw7RQ/eFcy3OhyOgHiCsMJOLvb3vUvAhvDA5Tuye8+s98pna7PDWaTlLhFog==}
 
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
@@ -8676,7 +8676,7 @@ snapshots:
       '@ethersproject/properties': 5.8.0
       '@ethersproject/strings': 5.8.0
 
-  '@evmnow/sdk@0.2.0':
+  '@evmnow/sdk@0.3.0':
     dependencies:
       '@1001-digital/natspec': 0.1.0
       '@1001-digital/proxies': 0.1.1

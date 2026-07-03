@@ -958,7 +958,7 @@ function submit() {
 
 function applyExample(example: ActionExample) {
   resetInputs()
-  applyInputExample(inputValues, example.params)
+  applyInputExample(props.action.inputs, inputValues, example.params)
 
   if (props.action.isRead) {
     nextTick(() => {

@@ -161,6 +161,7 @@ import type {
   ContractViewState,
   SourceSelection,
 } from '~/types/view'
+import { actionRequiresConnectedWallet } from '@evmnow/contract-reader/utils/abi'
 import { toContractData } from '@evmnow/contract-reader/utils/contract'
 import { findFunctionSourceSelection } from '@evmnow/contract-reader/utils/source'
 import { normalizeReadError } from '@evmnow/contract-reader/utils/errors'
@@ -363,9 +364,15 @@ function selectSource(source: SourceSelection) {
 
 function actionsForView(view: ContractView) {
   if (!contractData.value) return []
-  return view === 'interact'
-    ? contractData.value.actions.write
-    : contractData.value.actions.read
+  const actions =
+    view === 'interact'
+      ? contractData.value.actions.write
+      : contractData.value.actions.read
+
+  // Actions locked to the connected address (e.g. "My Balance") have nothing
+  // to autofill without a wallet — list them only once one is connected.
+  if (walletConnected.value) return actions
+  return actions.filter((action) => !actionRequiresConnectedWallet(action))
 }
 
 function actionSelectionRoute(action: ContractAction): RouteLocationRaw {
