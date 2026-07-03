@@ -6,10 +6,7 @@ import type {
   ContractActionParam,
   ContractSourceUnit,
 } from '../types/contract'
-import type {
-  ContractUIMetadata,
-  ParamMeta,
-} from '../types/metadata'
+import type { ContractUIMetadata, ParamMeta } from '../types/metadata'
 
 type AbiParam = {
   name?: string
@@ -125,6 +122,9 @@ export function parseActions(
   const write: ContractAction[] = []
 
   for (const resolved of actions) {
+    // Hidden actions stay resolvable for calldata matching but are excluded
+    // from the default UI per the spec.
+    if (resolved.meta.hidden) continue
     const action = buildAction(resolved, facetMap)
     if (action.isRead) read.push(action)
     else write.push(action)
@@ -286,7 +286,10 @@ export function groupActions(
   const ungrouped: ContractAction[] = []
 
   for (const action of actions) {
-    if (action.group && (metadataGroups[action.group] || facetNames.has(action.group))) {
+    if (
+      action.group &&
+      (metadataGroups[action.group] || facetNames.has(action.group))
+    ) {
       addToGroup(groupMap, action.group, action)
     } else if (standardMap?.has(action.name)) {
       addToGroup(groupMap, standardMap.get(action.name)!, action)
