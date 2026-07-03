@@ -21,6 +21,7 @@
       :wallet-connected="walletConnected"
       :connected-address="connectedAddress"
       :title="actionTitle"
+      :source-route="actionCodeRoute"
       @select="selectAction"
       @update:args="updateArgs"
       @error="emit('read-error', $event)"
@@ -34,7 +35,25 @@
         :all-function-names="allFunctionNames"
         :selected="selectedAction?.slug"
         @select="selectAction"
-      />
+      >
+        <template #item="{ action, selected: isSelected }">
+          <Button
+            :to="actionSelectionRoute(action)"
+            class="unstyled cr-action-item"
+            :class="{ active: isSelected }"
+            active-class=""
+            exact-active-class=""
+          >
+            <span class="cr-action-item-title">{{ action.title }}</span>
+            <span
+              v-if="action.title !== action.name"
+              class="cr-action-item-signature"
+            >
+              {{ action.name }}()
+            </span>
+          </Button>
+        </template>
+      </ActionList>
 
       <div class="contract-actions__detail cr-panel">
         <template v-if="selectedAction">
@@ -54,6 +73,7 @@
             :resolve-metadata="resolveMetadata"
             :wallet-connected="walletConnected"
             :connected-address="connectedAddress"
+            :source-route="actionCodeRoute?.(selectedAction)"
             @update:args="updateArgs"
             @error="emit('read-error', $event)"
           />
@@ -74,6 +94,7 @@
 import ActionCards from '@evmnow/contract-reader/components/Action/Cards'
 import ActionDetail from '@evmnow/contract-reader/components/Action/Detail'
 import ActionList from '@evmnow/contract-reader/components/Action/List'
+import type { RouteLocationRaw } from 'vue-router'
 import type {
   ContractData,
   ContractAction,
@@ -101,6 +122,8 @@ const props = withDefaults(
     walletConnected?: boolean
     connectedAddress?: string
     emptyText?: string
+    actionSelectionRoute: (action: ContractAction) => RouteLocationRaw
+    actionCodeRoute?: (action: ContractAction) => RouteLocationRaw | undefined
   }>(),
   {
     emptyText: 'select an action',

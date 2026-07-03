@@ -46,6 +46,7 @@
                     :resolve-metadata="resolveMetadata"
                     :wallet-connected="walletConnected"
                     :connected-address="connectedAddress"
+                    :source-route="sourceRoute?.(action)"
                     @update:args="updateArgs(action.slug, $event)"
                     @error="emit('error', $event)"
                   />
@@ -61,6 +62,7 @@
 
 <script setup lang="ts">
 import type { Abi } from 'viem'
+import type { RouteLocationRaw } from 'vue-router'
 import ActionDetail from './Detail.vue'
 import ActionGroups from './Groups.vue'
 import type { ContractAction } from '../../types/contract'
@@ -87,6 +89,7 @@ const props = withDefaults(
     walletConnected?: boolean
     connectedAddress?: string
     title?: string
+    sourceRoute?: (action: ContractAction) => RouteLocationRaw | undefined
   }>(),
   {
     selected: null,

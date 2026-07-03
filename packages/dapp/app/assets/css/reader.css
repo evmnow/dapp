@@ -152,11 +152,14 @@
     opacity: 0.65;
   }
 
+  .cr-actions .cr-action-item.cr-action-item,
   .cr-action-item {
+    position: static;
     appearance: none;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+    justify-content: normal;
     inline-size: 100%;
     min-inline-size: 0;
     block-size: auto;
@@ -169,6 +172,17 @@
     padding: var(--ui-padding-block) var(--ui-padding-inline);
     text-transform: none;
     user-select: none;
+  }
+
+  .cr-actions .cr-action-item.cr-action-item > .cr-action-item-title,
+  .cr-actions .cr-action-item.cr-action-item > .cr-action-item-signature {
+    display: block;
+    inline-size: auto;
+    block-size: auto;
+    gap: normal;
+    align-items: normal;
+    justify-content: normal;
+    text-align: inherit;
   }
 
   .cr-action-item:is(:hover, :focus-visible) {

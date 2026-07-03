@@ -1,6 +1,21 @@
 import { formatEther } from 'viem'
+import {
+  amountKind,
+  formatAmount,
+  type ParamType,
+  type TokenInfo,
+} from '@evmnow/sdk'
 import type { ContractActionParam } from '../types/contract'
-import type { SemanticType } from '../types/metadata'
+import type { ParamMeta, SemanticType } from '../types/metadata'
+
+export type { TokenInfo }
+
+/** Rendering/parsing info for an amount-like input field. */
+export interface AmountInputInfo {
+  decimals: number
+  symbol?: string
+  balance?: bigint
+}
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -12,6 +27,47 @@ export function resolveSemanticType(
   if (!semanticType) return undefined
   if (typeof semanticType === 'string') return semanticType
   return semanticType.type
+}
+
+// The full (possibly object) semantic type — needed for amount decimals/symbol
+// and token-amount addresses, which the flattened string form discards.
+export function getSemanticType(meta?: ParamMeta): SemanticType | undefined {
+  return meta?.type
+}
+
+export function getOutputSemanticType(
+  output: ContractActionParam,
+  returnsMeta?: Record<string, ParamMeta>,
+): SemanticType | undefined {
+  const meta =
+    output.meta || (output.name ? returnsMeta?.[output.name] : undefined)
+  return meta?.type
+}
+
+export function resolveOutputSemanticType(
+  output: ContractActionParam,
+  returnsMeta?: Record<string, ParamMeta>,
+): string | undefined {
+  return resolveSemanticType(getOutputSemanticType(output, returnsMeta))
+}
+
+/** The explicit `tokenAddress` of a `token-amount` type, if any. */
+export function tokenAddressOf(type?: SemanticType): string | undefined {
+  if (type && typeof type === 'object' && type.type === 'token-amount') {
+    return type.tokenAddress
+  }
+  return undefined
+}
+
+// The dapp keeps its own SemanticType copy; it is structurally compatible with
+// the SDK's ParamType for the amount-like shapes the SDK cares about.
+function asParamType(type?: SemanticType): ParamType | undefined {
+  return type as ParamType | undefined
+}
+
+/** The amount-like kind of a semantic type, or null. */
+export function semanticAmountKind(type?: SemanticType) {
+  return amountKind(asParamType(type))
 }
 
 export function formatArgValue(value: unknown): string {
@@ -39,29 +95,58 @@ export function formatEthValue(wei: string, maxDecimals = 8): string {
   return eth.slice(0, dot + maxDecimals + 1).replace(/\.?0+$/, '')
 }
 
+export type ResultFieldKind =
+  | 'default'
+  | 'eth'
+  | 'gwei'
+  | 'amount'
+  | 'percentage'
+  | 'basis-points'
+  | 'timestamp'
+  | 'address'
+  | 'boolean'
+
+/**
+ * Format a value for display from its semantic type. Amount-like types
+ * (eth/gwei/amount/token-amount) route through the SDK's canonical formatter;
+ * `token-amount` needs resolved `tokenInfo` for real decimals/symbol and falls
+ * back to the raw value until it is available.
+ */
 export function formatSemanticValue(
   value: unknown,
-  semanticType?: string,
+  semanticType?: SemanticType | string,
+  tokenInfo?: TokenInfo,
 ): string {
-  if (
-    semanticType === 'eth' &&
-    (typeof value === 'bigint' ||
-      typeof value === 'number' ||
-      typeof value === 'string')
-  ) {
-    return `${formatEthValue(String(value))} ETH`
+  const type: SemanticType | undefined =
+    typeof semanticType === 'string'
+      ? (semanticType as SemanticType)
+      : semanticType
+
+  const kind = semanticAmountKind(type)
+  if (kind) {
+    if (kind === 'token-amount' && !tokenInfo) return formatArgValue(value)
+    if (isNumberish(value)) {
+      const formatted = formatAmount(value, asParamType(type), {
+        tokenInfo,
+        maxDecimals: 8,
+      })
+      if (formatted !== null) return formatted
+    }
+    return formatArgValue(value)
   }
 
-  if (semanticType === 'percentage' && isNumberish(value)) {
+  const name = typeof type === 'string' ? type : type?.type
+
+  if (name === 'percentage' && isNumberish(value)) {
     return `${formatArgValue(value)}%`
   }
 
-  if (semanticType === 'basis-points' && isNumberish(value)) {
+  if (name === 'basis-points' && isNumberish(value)) {
     return `${formatArgValue(value)} bps`
   }
 
   if (
-    semanticType === 'timestamp' &&
+    name === 'timestamp' &&
     (typeof value === 'bigint' || typeof value === 'number')
   ) {
     const n = Number(value)
@@ -74,21 +159,23 @@ export function formatSemanticValue(
 
 export function resultFieldKind(
   output: ContractActionParam,
-  semanticType?: string,
-):
-  | 'default'
-  | 'eth'
-  | 'percentage'
-  | 'basis-points'
-  | 'timestamp'
-  | 'address'
-  | 'boolean' {
-  if (semanticType === 'eth') return 'eth'
-  if (semanticType === 'percentage') return 'percentage'
-  if (semanticType === 'basis-points') return 'basis-points'
-  if (semanticType === 'timestamp') return 'timestamp'
-  if (semanticType === 'address' || output.type === 'address') return 'address'
-  if (semanticType === 'boolean' || output.type === 'bool') return 'boolean'
+  semanticType?: SemanticType | string,
+): ResultFieldKind {
+  const type: SemanticType | undefined =
+    typeof semanticType === 'string'
+      ? (semanticType as SemanticType)
+      : semanticType
+  const kind = semanticAmountKind(type)
+  if (kind === 'eth') return 'eth'
+  if (kind === 'gwei') return 'gwei'
+  if (kind === 'amount' || kind === 'token-amount') return 'amount'
+
+  const name = typeof type === 'string' ? type : type?.type
+  if (name === 'percentage') return 'percentage'
+  if (name === 'basis-points') return 'basis-points'
+  if (name === 'timestamp') return 'timestamp'
+  if (name === 'address' || output.type === 'address') return 'address'
+  if (name === 'boolean' || output.type === 'bool') return 'boolean'
   return 'default'
 }
 

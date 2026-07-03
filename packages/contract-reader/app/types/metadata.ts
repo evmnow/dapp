@@ -15,10 +15,11 @@ export type SemanticType =
   | 'datetime'
   | 'hidden'
   | { type: 'address'; ens?: boolean; addressBook?: boolean }
-  | { type: 'token-amount'; tokenAddress?: string }
-  | { type: 'token-id'; tokenAddress?: string }
+  | { type: 'token-amount'; tokenAddress: string }
+  | { type: 'amount'; decimals?: number; symbol?: string }
+  | { type: 'token-id'; tokenAddress: string }
   | { type: 'enum'; values: Record<string, string> }
-  | { type: 'slider'; min?: string; max?: string; step?: string }
+  | { type: 'slider'; min: string; max: string; step?: string }
 
 export type Autofill =
   | 'connected-address'
@@ -58,6 +59,7 @@ export interface ParamMeta {
    * Mutually exclusive with `hidden: true`.
    */
   disabled?: boolean
+  [key: `_${string}`]: unknown
 }
 
 export interface ActionExample {
@@ -65,9 +67,27 @@ export interface ActionExample {
   params: Record<string, string>
 }
 
+/**
+ * Metadata for the native currency (msg.value) sent with a payable call.
+ * Always denominated in wei and rendered as the `eth` semantic type — hence
+ * no `type` field. Shares lock semantics (`hidden`/`disabled` + `autofill`)
+ * with parameters.
+ */
+export interface ValueMeta {
+  label?: string
+  description?: string
+  /** Pre-populate the value input. A constant is denominated in wei. */
+  autofill?: Autofill
+  validation?: ValidationRule
+  /** Do not render a value input; the `autofill` value is attached at call time. REQUIRES `autofill`. */
+  hidden?: boolean
+  /** Render the value input non-editable (e.g. a fixed mint price). REQUIRES `autofill`. Mutually exclusive with `hidden`. */
+  disabled?: boolean
+  [key: `_${string}`]: unknown
+}
+
 export type ComponentExtension =
-  | string
-  | { type: string; about?: string; props?: Record<string, unknown> }
+  string | { type: string; about?: string; props?: Record<string, unknown> }
 
 export interface ContractTheme {
   background?: string
@@ -132,6 +152,11 @@ export interface ActionMeta {
   warning?: string
   stateMutability?: 'view' | 'pure' | 'nonpayable' | 'payable'
   params?: Record<string, ParamMeta>
+  /**
+   * Metadata for the native currency (msg.value) sent with the call.
+   * Only meaningful on payable functions.
+   */
+  value?: ValueMeta
   returns?: Record<string, ParamMeta>
   examples?: ActionExample[]
   /** Identifiers of related actions (keys in the top-level `actions` object). */
@@ -146,14 +171,18 @@ export interface ActionMeta {
 
 export interface EventMeta {
   order?: number
+  title?: string
   description?: string
   params?: Record<string, ParamMeta>
+  [key: `_${string}`]: unknown
 }
 
 export interface ErrorMeta {
   order?: number
+  title?: string
   description?: string
   params?: Record<string, ParamMeta>
+  [key: `_${string}`]: unknown
 }
 
 export interface MessageMeta {
@@ -163,6 +192,7 @@ export interface MessageMeta {
   warning?: string
   intent?: string
   fields?: Record<string, ParamMeta>
+  [key: `_${string}`]: unknown
 }
 
 export interface ContractUIMetadata extends ContractMeta {
@@ -179,10 +209,11 @@ export interface ContractUIMetadata extends ContractMeta {
   }
   groups?: Record<
     string,
-    { label: string; description?: string; order?: number }
+    { label: string; description?: string; order: number }
   >
   actions?: Record<string, ActionMeta>
   events?: Record<string, EventMeta>
   errors?: Record<string, ErrorMeta>
   messages?: Record<string, MessageMeta>
+  [key: `_${string}`]: unknown
 }

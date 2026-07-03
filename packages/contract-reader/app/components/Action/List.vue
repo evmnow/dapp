@@ -32,15 +32,12 @@
               name="item"
               :action="action"
               :selected="selected === action.slug"
-              :href="itemHref(action)"
               :select="selectAction"
             >
-              <component
-                :is="itemHref(action) ? 'a' : 'button'"
-                class="cr-action-item"
+              <Button
+                class="unstyled cr-action-item"
                 :class="{ active: selected === action.slug }"
-                :href="itemHref(action) || undefined"
-                :type="itemHref(action) ? undefined : 'button'"
+                type="button"
                 @click="selectAction(action.slug)"
               >
                 <span class="cr-action-item-title">{{ action.title }}</span>
@@ -50,7 +47,7 @@
                 >
                   {{ action.name }}()
                 </span>
-              </component>
+              </Button>
             </slot>
           </template>
         </slot>
@@ -75,7 +72,6 @@ const slots = defineSlots<{
   item?: (props: {
     action: ContractAction
     selected: boolean
-    href: string | null
     select: (slug: string) => void
   }) => unknown
 }>()
@@ -87,7 +83,6 @@ const props = withDefaults(
     allFunctionNames?: Set<string>
     selected?: string | null
     title?: string
-    itemHref?: (action: ContractAction) => string | undefined | null
   }>(),
   {
     selected: null,
@@ -98,10 +93,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   select: [slug: string]
 }>()
-
-function itemHref(action: ContractAction) {
-  return props.itemHref?.(action) ?? null
-}
 
 function selectAction(slug: string) {
   emit('select', slug)

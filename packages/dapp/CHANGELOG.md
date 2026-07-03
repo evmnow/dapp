@@ -1,5 +1,30 @@
 # @evmnow/dapp
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`eae6567`](https://github.com/evmnow/dapp/commit/eae65677fd01406e3127525d9934c0cd8a6799df)]:
+  - @evmnow/contract-reader@0.2.0
+
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`da7aa28`](https://github.com/evmnow/dapp/commit/da7aa2868ebdb0511032c9ae2095053a15146544)]:
+  - @evmnow/contract-reader@0.1.2
+
+## 0.1.1
+
+### Patch Changes
+
+- [`8c906be`](https://github.com/evmnow/dapp/commit/8c906be5b79cbe6ade88133e609c6bbfb6e31c6d) Thanks [@yougogirldoteth](https://github.com/yougogirldoteth)! - Encode contract function arguments as repeated `args[]` query parameters instead of a JSON string, making shared reader URLs safer for values that include reserved URL characters.
+
+- [`31a9d97`](https://github.com/evmnow/dapp/commit/31a9d971208e3ffa49d35494a46a5069a1898f7d) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Add contract example links to home page.
+
+- Updated dependencies [[`cd55d0c`](https://github.com/evmnow/dapp/commit/cd55d0cf0bfef06614be219f4b78ff4a18793893)]:
+  - @evmnow/contract-reader@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

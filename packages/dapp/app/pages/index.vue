@@ -73,8 +73,12 @@
               v-for="tab in tabs"
               :key="tab.value"
               :class="{ active: currentView === tab.value }"
-              type="button"
-              @click="setView(tab.value)"
+              :to="routeForView(tab.value)"
+              active-class=""
+              exact-active-class=""
+              :aria-current-value="
+                currentView === tab.value ? 'page' : undefined
+              "
             >
               {{ tab.label }}
             </Button>
@@ -107,6 +111,8 @@
           :wallet-connected="walletConnected"
           :connected-address="connectedAddress"
           :empty-text="emptyActionText"
+          :action-selection-route="actionSelectionRoute"
+          :action-code-route="actionCodeRoute"
           @select="selectAction"
           @update:args="updateArgs"
           @read-error="onReadError"
@@ -115,9 +121,30 @@
         <Source
           v-else-if="currentView === 'code'"
           :files="contractData.sourceFiles"
-          :selected-source="selectedSource"
-          @update:source="updateSource"
-        />
+          :selected-source="activeSourceSelection"
+          :file-href="sourceFileHref"
+          @update:source="selectSource"
+        >
+          <template #line="{ fileIndex, lineNumber, highlightedLine, active }">
+            <td class="cr-source-line-number-cell">
+              <NuxtLink
+                :to="sourceLineRoute(fileIndex, lineNumber)"
+                class="cr-line-number"
+                :class="{ active }"
+                active-class=""
+                exact-active-class=""
+              >
+                {{ lineNumber }}
+              </NuxtLink>
+            </td>
+            <td class="cr-source-code-cell">
+              <pre
+                class="cr-source-code-block"
+                v-html="highlightedLine"
+              />
+            </td>
+          </template>
+        </Source>
       </section>
     </template>
   </AppPage>
@@ -126,23 +153,31 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
 import type {
+  ContractAction,
+  SourceFile,
+} from '@evmnow/contract-reader/types/contract'
+import type {
   ContractView,
   ContractViewState,
   SourceSelection,
 } from '~/types/view'
 import { toContractData } from '@evmnow/contract-reader/utils/contract'
-import {
-  findFunctionSourceSelection,
-  isSameSourceSelection,
-} from '@evmnow/contract-reader/utils/source'
+import { findFunctionSourceSelection } from '@evmnow/contract-reader/utils/source'
 import { normalizeReadError } from '@evmnow/contract-reader/utils/errors'
 
 const config = useRuntimeConfig()
 const mainnetEnsRpc = computed(() =>
   String(config.public.mainnetEnsRpc ?? '').trim(),
 )
-const { state, routeFor } = useReaderQueryState()
-const readerAddress = computed(() => state.value.address?.trim() || '')
+const {
+  state: readerQueryState,
+  navigate: navigateReaderQuery,
+  routeFor: readerRoute,
+  hrefFor: readerHref,
+} = useReaderQueryState()
+const readerAddress = computed(
+  () => readerQueryState.value.address?.trim() || '',
+)
 const isReaderMode = computed(() => Boolean(readerAddress.value))
 const { effectiveChainId, rpc } = useReaderRpc()
 const wallet = useContractWallet({ chainId: effectiveChainId, rpc })
@@ -172,25 +207,12 @@ const contractData = computed(() => {
   return { ...normalized, chainId: wallet.chainId.value }
 })
 
-const viewState = computed<ContractViewState>({
-  get() {
-    return {
-      view: state.value.view,
-      fn: state.value.fn,
-      args: state.value.args,
-      source: state.value.source,
-    }
-  },
-  set(nextState) {
-    state.value = {
-      ...state.value,
-      view: nextState.view,
-      fn: nextState.fn,
-      args: nextState.args ?? [],
-      source: nextState.source,
-    }
-  },
-})
+const viewState = computed<ContractViewState>(() => ({
+  view: readerQueryState.value.view,
+  fn: readerQueryState.value.fn,
+  args: readerQueryState.value.args,
+  source: readerQueryState.value.source,
+}))
 const hasAbi = computed(() => Boolean(contractData.value?.abi.length))
 const tabs = computed<{ value: ContractView; label: string }[]>(() => [
   { value: 'overview', label: 'overview' },
@@ -209,11 +231,16 @@ const currentView = computed<ContractView>(() => {
 
   return viewState.value.view
 })
-const selectedActionSlug = computed(() =>
-  currentView.value === 'code' ? viewState.value.fn : undefined,
-)
-const selectedSource = computed(() => {
-  return state.value.source
+const activeSourceSelection = computed(() => {
+  if (readerQueryState.value.source) return readerQueryState.value.source
+  if (currentView.value !== 'code') return undefined
+
+  return (
+    findFunctionSourceSelection(
+      contractData.value?.sourceFiles ?? [],
+      viewState.value.fn,
+    ) ?? undefined
+  )
 })
 const visibleActions = computed(() => {
   return actionsForView(currentView.value)
@@ -239,7 +266,7 @@ function resolveStatLink(stat: {
 }): RouteLocationRaw | undefined {
   const view = STAT_VIEW_MAP[stat.key]
   if (!view || !stat.value) return undefined
-  return routeFor({ view })
+  return readerRoute({ view })
 }
 
 const fallbackFileName = computed(() => {
@@ -293,27 +320,11 @@ watch(
   { immediate: true },
 )
 
-watch(
-  [selectedActionSlug, () => contractData.value?.sourceFiles],
-  ([slug, files]) => {
-    if (!slug || !files?.length) return
-
-    const source = findFunctionSourceSelection(files, slug)
-    if (!source || isSameSourceSelection(state.value.source, source)) return
-
-    viewState.value = {
-      ...viewState.value,
-      source,
-    }
-  },
-  { immediate: true },
-)
-
 function onReadError(cause: unknown) {
   callError.value = normalizeReadError(cause)
 }
 
-function setView(view: ContractView) {
+function viewStateForTab(view: ContractView) {
   const nextState = { ...viewState.value, view }
   const actions = actionsForView(view)
 
@@ -326,23 +337,28 @@ function setView(view: ContractView) {
     nextState.args = []
   }
 
-  viewState.value = nextState
+  return nextState
+}
+
+function routeForView(view: ContractView): RouteLocationRaw {
+  return readerRoute(viewStateForTab(view))
 }
 
 function selectAction(fn: string | undefined) {
-  viewState.value = { ...viewState.value, fn, args: [] }
+  if (fn === viewState.value.fn) return
+  navigateViewState({ fn, args: [] })
 }
 
 function updateArgs(args: string[]) {
-  viewState.value = { ...viewState.value, args }
+  navigateViewState({ args }, { replace: true })
 }
 
-function updateSource(source: SourceSelection) {
-  viewState.value = {
-    ...viewState.value,
+function selectSource(source: SourceSelection) {
+  navigateViewState({
     view: 'code',
+    fn: undefined,
     source,
-  }
+  })
 }
 
 function actionsForView(view: ContractView) {
@@ -350,5 +366,44 @@ function actionsForView(view: ContractView) {
   return view === 'interact'
     ? contractData.value.actions.write
     : contractData.value.actions.read
+}
+
+function actionSelectionRoute(action: ContractAction): RouteLocationRaw {
+  return readerRoute({
+    view: currentView.value,
+    fn: action.slug,
+    args: action.slug === viewState.value.fn ? viewState.value.args : [],
+  })
+}
+
+function actionCodeRoute(action: ContractAction): RouteLocationRaw | undefined {
+  const files = contractData.value?.sourceFiles ?? []
+  if (!findFunctionSourceSelection(files, action.slug)) return undefined
+
+  return readerRoute({ view: 'code', fn: action.slug })
+}
+
+function sourceFileHref(_file: SourceFile, file: number) {
+  return readerHref(sourceSelectionState({ file }))
+}
+
+function sourceLineRoute(file: number, line: number): RouteLocationRaw {
+  return readerRoute(sourceSelectionState({ file, line }))
+}
+
+function sourceSelectionState(
+  source: SourceSelection,
+): Partial<ContractViewState> {
+  return {
+    view: 'code',
+    source,
+  }
+}
+
+function navigateViewState(
+  nextState: Partial<ContractViewState>,
+  options: { replace?: boolean } = {},
+) {
+  navigateReaderQuery(nextState, options)
 }
 </script>

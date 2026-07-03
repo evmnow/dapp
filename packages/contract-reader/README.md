@@ -124,7 +124,7 @@ Stale responses from older `get()` calls are dropped, so it's safe to react to i
 | --- | --- |
 | `Overview` | Description, stat tiles, long-form `about` markdown — slot-driven for full overrides. |
 | `Source` | Multi-file Solidity viewer with Shiki highlighting, line-level deep-linking, file/line `href` builders. |
-| `ActionList` | Sidebar list of grouped actions with selection and optional `href` per item. |
+| `ActionList` | Sidebar list of grouped actions with selection events and item slot overrides. |
 | `ActionCards` | Card grid alternative — each action expands inline into `ActionDetail`. |
 | `ActionGroups` | Headless grouping primitive used by `List`/`Cards`; expose your own layout via slots. |
 | `ActionDetail` | Form generation, validation, examples, read-call execution, write-call submission. Respects `hidden`/`disabled` param flags for variant actions. |

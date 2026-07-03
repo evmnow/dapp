@@ -95,6 +95,7 @@
             v-else
             :input="input"
             :meta="input.meta"
+            :amount="amountMeta(input)"
             :error="inputErrors[fieldKey(input, index)]"
             v-model="inputValues[fieldKey(input, index)]"
           />
@@ -198,6 +199,8 @@
             :outputs="action.outputs"
             :returns-meta="action.meta?.returns"
             :address-href="addressHref"
+            :token-info="tokenMeta"
+            :contract-address="address"
           >
             <template #address="slotProps">
               <slot
@@ -233,6 +236,8 @@
             :outputs="action.outputs"
             :returns-meta="action.meta?.returns"
             :address-href="addressHref"
+            :token-info="tokenMeta"
+            :contract-address="address"
           >
             <template #address="slotProps">
               <slot
@@ -293,6 +298,25 @@
     </slot>
 
     <slot
+      name="source-link"
+      :action="action"
+      :source-route="sourceRoute"
+      :label="labels.viewCode"
+    >
+      <div
+        v-if="sourceRoute"
+        class="cr-action-source"
+      >
+        <Button
+          :to="sourceRoute"
+          class="link cr-action-source-link"
+        >
+          {{ labels.viewCode }}
+        </Button>
+      </div>
+    </slot>
+
+    <slot
       name="footer"
       :action="action"
       :result="result"
@@ -303,8 +327,11 @@
 
 <script setup lang="ts">
 import type { Abi, Hash } from 'viem'
+import type { RouteLocationRaw } from 'vue-router'
 import { parseEther } from 'viem'
-import type { ContractAction } from '../../types/contract'
+import { resolveAmountDisplay, type ParamType } from '@evmnow/sdk'
+import type { ContractAction, ContractActionParam } from '../../types/contract'
+import type { SemanticType } from '../../types/metadata'
 import type {
   ContractReadFn,
   ContractWriteFn,
@@ -318,8 +345,10 @@ import {
   buildInputArgs,
   buildInputErrors,
   hydrateInputValues,
+  resolveEnsInputs,
   seedInputValues,
   serializeInputArgs,
+  type ResolvedEnsAddresses,
 } from '../../utils/inputs'
 import ActionInput from './Input.vue'
 import ActionArtifactPreview from './ArtifactPreview.client.vue'
@@ -327,7 +356,15 @@ import ActionMetadataPreview from './MetadataPreview.client.vue'
 import ActionResult from './Result.vue'
 import ActionResultFields from './ResultFields.vue'
 import ActionTupleInput from './TupleInput.vue'
-import { formatArgValue } from '../../utils/format'
+import {
+  formatArgValue,
+  formatSemanticValue,
+  getOutputSemanticType,
+  semanticAmountKind,
+  tokenAddressOf,
+  type AmountInputInfo,
+  type TokenInfo,
+} from '../../utils/format'
 import { detectPreviewMarkupKind } from '../../utils/markup-preview'
 import {
   isResolvableMetadataUri,
@@ -387,6 +424,11 @@ defineSlots<{
     value: string
     href: string | null
   }) => unknown
+  'source-link'?: (props: {
+    action: ContractAction
+    sourceRoute?: RouteLocationRaw
+    label: string
+  }) => unknown
   footer?: (props: {
     action: ContractAction
     result: unknown
@@ -416,6 +458,7 @@ const props = withDefaults(
     walletConnected?: boolean
     connectedAddress?: string
     addressHref?: (address: string) => string | undefined | null
+    sourceRoute?: RouteLocationRaw
     resolveMetadata?: MetadataResolveFn
     labels?: Partial<ActionDetailLabels>
     autoRead?: boolean
@@ -430,9 +473,17 @@ const emit = defineEmits<{
   error: [error: unknown]
 }>()
 
+const { resolveAddress: resolveEnsAddress } = useEnsResolver()
+
 const inputValues = reactive<Record<string, string>>({})
 const inputErrors = computed(() =>
-  buildInputErrors(props.action.inputs, inputValues, props.action.meta?.params),
+  buildInputErrors(
+    props.action.inputs,
+    inputValues,
+    props.action.meta?.params,
+    undefined,
+    amountDecimals,
+  ),
 )
 const hasErrors = computed(() =>
   Object.values(inputErrors.value).some((error) => !!error),
@@ -463,6 +514,147 @@ const hasForm = computed(
     !props.action.isRead,
 )
 const hasResultFields = computed(() => props.action.outputs.length > 1)
+
+// ── Amount-like params (eth / gwei / amount / token-amount) ──
+const ERC20_META_ABI = [
+  {
+    type: 'function',
+    name: 'decimals',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint8' }],
+  },
+  {
+    type: 'function',
+    name: 'symbol',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'string' }],
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [{ type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+  },
+] as const satisfies Abi
+
+// On-chain identity of token-amount tokens, resolved lazily via readFunction.
+const tokenMeta = reactive<Record<string, TokenInfo>>({})
+const tokenBalance = reactive<Record<string, bigint>>({})
+
+function paramTokenAddress(type?: SemanticType): string | undefined {
+  if (semanticAmountKind(type) !== 'token-amount') return undefined
+  return (tokenAddressOf(type) ?? props.address)?.toLowerCase()
+}
+
+// Rendering/parsing info for an amount-like input, or null if not amount-like
+// (or a token-amount whose decimals are not resolved yet — kept as a raw field).
+function amountMeta(param: ContractActionParam): AmountInputInfo | null {
+  const type = param.meta?.type
+  const kind = semanticAmountKind(type)
+  if (!kind) return null
+  if (!/^u?int/.test(param.type)) return null
+
+  if (kind === 'token-amount') {
+    const addr = paramTokenAddress(type)
+    const info = addr ? tokenMeta[addr] : undefined
+    if (!info) return null
+    return {
+      decimals: info.decimals,
+      symbol: info.symbol,
+      balance: addr ? tokenBalance[addr] : undefined,
+    }
+  }
+
+  const display = resolveAmountDisplay(type as ParamType)
+  if (!display) return null
+  return { decimals: display.decimals, symbol: display.symbol }
+}
+
+const amountDecimals = (input: ContractActionParam) =>
+  amountMeta(input)?.decimals ?? null
+
+function collectTokenAddresses(): string[] {
+  const set = new Set<string>()
+  for (const input of props.action.inputs) {
+    const addr = paramTokenAddress(input.meta?.type)
+    if (addr) set.add(addr)
+  }
+  if (!hasResultFields.value) {
+    const out = props.action.outputs[0]
+    const addr = out
+      ? paramTokenAddress(
+          getOutputSemanticType(out, props.action.meta?.returns),
+        )
+      : undefined
+    if (addr) set.add(addr)
+  }
+  return [...set]
+}
+
+async function resolveTokenMeta() {
+  const reader = props.readFunction
+  if (!reader) return
+  for (const addr of collectTokenAddresses()) {
+    if (tokenMeta[addr]) continue
+    try {
+      const [decimals, symbol] = await Promise.all([
+        reader({
+          address: addr,
+          abi: ERC20_META_ABI as unknown as Abi,
+          functionName: 'decimals',
+        }),
+        reader({
+          address: addr,
+          abi: ERC20_META_ABI as unknown as Abi,
+          functionName: 'symbol',
+        }).catch(() => undefined),
+      ])
+      tokenMeta[addr] = {
+        decimals: Number(decimals),
+        symbol: typeof symbol === 'string' ? symbol : undefined,
+      }
+    } catch {
+      // leave unresolved — the input stays a raw integer field
+    }
+  }
+  await resolveTokenBalances()
+}
+
+async function resolveTokenBalances() {
+  const reader = props.readFunction
+  const holder = props.connectedAddress
+  if (!reader || !holder) return
+  for (const input of props.action.inputs) {
+    const addr = paramTokenAddress(input.meta?.type)
+    if (!addr || !tokenMeta[addr]) continue
+    try {
+      const balance = await reader({
+        address: addr,
+        abi: ERC20_META_ABI as unknown as Abi,
+        functionName: 'balanceOf',
+        args: [holder],
+      })
+      tokenBalance[addr] = BigInt(balance as bigint | number | string)
+    } catch {
+      // ignore — max button simply won't render
+    }
+  }
+}
+
+watch(
+  () => [props.action.slug, props.readFunction, props.address] as const,
+  () => void resolveTokenMeta(),
+  { immediate: true },
+)
+
+watch(
+  () => props.connectedAddress,
+  () => void resolveTokenBalances(),
+)
+
 const artifactResult = computed(() => {
   if (typeof result.value !== 'string') return null
   return detectPreviewMarkupKind(result.value) ? result.value : null
@@ -485,6 +677,7 @@ const labels = computed<ActionDetailLabels>(() => ({
   writeUnavailable: 'write interactions are unavailable',
   walletRequired: 'connect a wallet to send this transaction',
   invalidInputs: 'fix input errors before sending this transaction',
+  viewCode: 'view code',
   ...props.labels,
 }))
 
@@ -503,11 +696,18 @@ const writeRequest = computed<(() => Promise<Hash>) | undefined>(() => {
   return async () => {
     const value = props.action.isPayable ? txValue.value.trim() : ''
 
+    const { resolved, error: ensError } = await resolveEnsInputs(
+      props.action.inputs,
+      inputValues,
+      resolveEnsAddress,
+    )
+    if (ensError) throw new Error(ensError)
+
     return writeFunction({
       address: props.address,
       abi: props.abi,
       functionName: props.action.name,
-      args: buildArgs(),
+      args: buildArgs(resolved),
       ...(value ? { value: parseEther(value) } : {}),
     })
   }
@@ -603,8 +803,14 @@ function resetInputs() {
   )
 }
 
-function buildArgs() {
-  return buildInputArgs(props.action.inputs, inputValues)
+function buildArgs(resolvedEns?: ResolvedEnsAddresses) {
+  return buildInputArgs(
+    props.action.inputs,
+    inputValues,
+    undefined,
+    amountDecimals,
+    resolvedEns,
+  )
 }
 
 function resetMetadataPreview() {
@@ -660,11 +866,22 @@ async function read() {
   hasResult.value = false
 
   try {
+    const { resolved, error: ensError } = await resolveEnsInputs(
+      props.action.inputs,
+      inputValues,
+      resolveEnsAddress,
+    )
+    if (ensError) {
+      error.value = ensError
+      hasResult.value = true
+      return
+    }
+
     result.value = await props.readFunction({
       address: props.address,
       abi: props.abi,
       functionName: props.action.name,
-      args: buildArgs(),
+      args: buildArgs(resolved),
     })
     hasResult.value = true
   } catch (err: any) {
@@ -692,7 +909,12 @@ function applyExample(example: ActionExample) {
 }
 
 function formatValue(value: unknown) {
-  return formatArgValue(value)
+  const output = props.action.outputs[0]
+  if (!output) return formatArgValue(value)
+  const semanticType = getOutputSemanticType(output, props.action.meta?.returns)
+  const addr = paramTokenAddress(semanticType)
+  const info = addr ? tokenMeta[addr] : undefined
+  return formatSemanticValue(value, semanticType, info)
 }
 
 interface ActionDetailLabels {
@@ -704,5 +926,6 @@ interface ActionDetailLabels {
   writeUnavailable: string
   walletRequired: string
   invalidInputs: string
+  viewCode: string
 }
 </script>

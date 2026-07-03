@@ -1,7 +1,7 @@
 {
   "name": "@evmnow/contract-reader",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Components, composables and utilities for inspecting and interacting with verified EVM smart contracts.",
   "license": "MIT",
   "main": "./nuxt.config.ts",
@@ -29,15 +29,15 @@
     "typecheck": "nuxi typecheck .playground"
   },
   "dependencies": {
-    "@1001-digital/layers.evm": "^2.6.13",
-    "@evmnow/sdk": "^0.1.1",
-    "shiki": "^4.0.2",
-    "viem": "2.47.6"
+    "@1001-digital/layers.evm": "^2.9.0",
+    "@evmnow/sdk": "^0.2.0",
+    "shiki": "^4.3.0",
+    "viem": "2.48.4"
   },
   "devDependencies": {
-    "nuxt": "^4.4.2",
+    "nuxt": "^4.4.8",
     "typescript": "^5.9.3",
-    "vue": "^3.5.30",
-    "vue-tsc": "^3.2.6"
+    "vue": "^3.5.39",
+    "vue-tsc": "^3.3.6"
   }
 }
