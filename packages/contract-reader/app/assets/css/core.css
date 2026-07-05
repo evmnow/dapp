@@ -91,11 +91,20 @@
 
   .cr-overview code,
   .cr-action-item-signature {
-    display: block;
     max-width: 100%;
     color: var(--cr-muted);
     line-height: var(--line-height-md);
     overflow-wrap: anywhere;
+  }
+
+  .cr-action-item-signature {
+    display: block;
+  }
+
+  /* inline-block, not block: overview code also appears inside running
+     text, where it must flow with the sentence. */
+  .cr-overview code {
+    display: inline-block;
   }
 
   .cr-group-count {
