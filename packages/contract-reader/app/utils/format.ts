@@ -2,8 +2,11 @@ import { formatEther } from 'viem'
 import {
   amountKind,
   formatAmount,
+  tokenAddressOf as sdkTokenAddressOf,
+  resolveTokenAddress as sdkResolveTokenAddress,
   type ParamType,
   type TokenInfo,
+  type TokenResolutionContext,
 } from '@evmnow/sdk'
 import type { ContractActionParam } from '../types/contract'
 import type { ParamMeta, SemanticType } from '../types/metadata'
@@ -51,12 +54,21 @@ export function resolveOutputSemanticType(
   return resolveSemanticType(getOutputSemanticType(output, returnsMeta))
 }
 
-/** The explicit `tokenAddress` of a `token-amount` type, if any. */
+/** The explicit `tokenAddress` of a `token-amount` / `token-id` type, if any. */
 export function tokenAddressOf(type?: SemanticType): string | undefined {
-  if (type && typeof type === 'object' && type.type === 'token-amount') {
-    return type.tokenAddress
-  }
-  return undefined
+  return sdkTokenAddressOf(asParamType(type))
+}
+
+/**
+ * Resolve the token a `token-amount` refers to, per the standard's order:
+ * explicit `tokenAddress` → the value of the `tokenParam` argument → the
+ * described contract (bare form).
+ */
+export function resolveTokenAddress(
+  type: SemanticType | undefined,
+  context: TokenResolutionContext = {},
+): string | undefined {
+  return sdkResolveTokenAddress(asParamType(type), context)
 }
 
 // The dapp keeps its own SemanticType copy; it is structurally compatible with

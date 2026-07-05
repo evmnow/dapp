@@ -15,7 +15,7 @@ export type SemanticType =
   | 'datetime'
   | 'hidden'
   | { type: 'address'; ens?: boolean; addressBook?: boolean }
-  | { type: 'token-amount'; tokenAddress: string }
+  | { type: 'token-amount'; tokenAddress?: string; tokenParam?: string }
   | { type: 'amount'; decimals?: number; symbol?: string }
   | { type: 'token-id'; tokenAddress: string }
   | { type: 'enum'; values: Record<string, string> }

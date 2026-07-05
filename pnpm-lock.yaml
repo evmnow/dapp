@@ -27,8 +27,8 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0(1e0a9ea4f9676ac66c4f30de8424dd0a)
       '@evmnow/sdk':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.5.0
+        version: 0.5.0
       '@wagmi/core':
         specifier: ^3.4.1
         version: 3.4.6(@tanstack/query-core@5.95.2)(@types/react@19.2.14)(immer@9.0.21)(react@19.2.5)(typescript@5.9.3)(viem@2.48.4(typescript@5.9.3)(zod@3.25.76))
@@ -718,8 +718,8 @@ packages:
   '@ethersproject/wordlists@5.8.0':
     resolution: {integrity: sha512-2df9bbXicZws2Sb5S6ET493uJ0Z84Fjr3pC4tu/qlnZERibZCeUVuqdtt+7Tv9xxhUxHoIekIA7avrKUWHrezg==}
 
-  '@evmnow/sdk@0.4.0':
-    resolution: {integrity: sha512-5LK8f8XgTuSK6CxTcsl2/xt2TS6z1pdlcnS5YiTVGnsE71u2gCAVnDkyU9XH1+jbrs72ZXr8NRkH00fmHrnO9g==}
+  '@evmnow/sdk@0.5.0':
+    resolution: {integrity: sha512-pTWruD7t00nOa9YeQcYLbOmYAuANzVKCkVC5L6YdCDgiRpy9AbnKNzu8k22UBC4E2A3H23zM2OmdR7dQ86PxBw==}
 
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
@@ -8658,7 +8658,7 @@ snapshots:
       '@ethersproject/properties': 5.8.0
       '@ethersproject/strings': 5.8.0
 
-  '@evmnow/sdk@0.4.0':
+  '@evmnow/sdk@0.5.0':
     dependencies:
       '@1001-digital/natspec': 0.1.0
       '@1001-digital/proxies': 0.2.0
