@@ -3,6 +3,22 @@
 All notable changes across all packages in this monorepo.
 Generated from individual package changelogs — do not edit manually.
 
+## 2026-07-05
+
+- **Minor** Move the generic reader glue from the app into the layer so any consumer gets a complete, wireable contract reader: [`d0f2c59`](https://github.com/evmnow/dapp/commit/d0f2c59)
+  - `useContractWallet` — wallet-layer wiring for `readFunction`/`writeFunction`, SDK `metadataOptions`/`metadataFetch` (moved from the dapp; now falls back to the wallet layer's main chain).
+  - `useTokenMetadataResolver` — token-URI metadata resolution with gateways from `appConfig.evm`.
+  - `useReaderQueryState` — query-param reader state machine with configurable views.
+  - `utils/provider-rpc` — `createProviderRpcFetch` / `PROVIDER_RPC_URL` viem-client-to-fetch bridge.
+  - `ActionPanel` component — the responsive list+detail / cards composition (formerly the dapp's `ContractActions`), with slot pass-through to `ActionDetail` (also added to `ActionCards`).
+  - `types/view` — shared `ContractView` / `ContractViewState` / `ReaderQueryState` types.
+  - `ContractReadParams` gains optional `blockNumber` for historical reads.
+  - `Source` accepts a `highlight` function prop; `utils/syntax` adds `loadSyntaxTheme` / `setSyntaxTheme` and a theme argument on `highlightSolidity`.
+  - The layer stylesheet now owns all `.cr-*` structural and default visual rules (shell/header/tabs, action items, cards, inputs, warnings, copy button, form-item fixes); apps only remap `--cr-*` tokens.
+  - Ship `LICENSE` with the package.
+  The dapp now contains only branding, routing, RPC-settings UX and theme token remaps; wagmi/viem are no longer direct dependencies.
+  _`contract-reader`, `dapp`_
+
 ## 2026-07-03
 
 - **Minor** Resolve positional parameter keys (`_0`, `_1`, ...) by position for action params, returns, and examples. [`e552f41`](https://github.com/evmnow/dapp/commit/e552f41)
