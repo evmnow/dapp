@@ -31,6 +31,7 @@
   "dependencies": {
     "@1001-digital/layers.evm": "^2.9.0",
     "@evmnow/sdk": "^0.3.0",
+    "@wagmi/core": "^3.4.1",
     "shiki": "^4.3.0",
     "viem": "2.48.4"
   },

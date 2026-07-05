@@ -12,6 +12,65 @@
     gap: var(--spacer);
   }
 
+  /* Scope element for a contract-reader surface: grid flow plus the place to
+     override --cr-* tokens without leaking into the rest of the app. */
+  .cr-shell {
+    display: grid;
+    gap: var(--cr-gap);
+    color: var(--cr-text);
+    font-family: var(--cr-font);
+  }
+
+  /* Declared after .cr-panel: a `cr-header cr-panel` element must lay out as
+     a flex row (title left, tabs right), not inherit the panel's grid. */
+  .cr-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--cr-gap);
+    padding: var(--cr-gap);
+  }
+
+  .cr-header > * {
+    min-width: 0;
+  }
+
+  .cr-header > div {
+    flex: 1 1 calc(var(--form-width) - var(--size-7));
+  }
+
+  .cr-header h1 {
+    margin: 0;
+    font-size: var(--font-lg);
+    line-height: var(--line-height-md);
+  }
+
+  .cr-header code {
+    display: block;
+    max-width: 100%;
+    color: var(--cr-muted);
+    font-family: var(--cr-mono);
+    font-size: var(--font-xs);
+    line-height: var(--line-height-md);
+    overflow-wrap: anywhere;
+  }
+
+  .cr-tabs {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: var(--cr-action-field-gap);
+    margin-left: auto;
+  }
+
+  @media (max-width: 768px) {
+    .cr-tabs {
+      justify-content: flex-start;
+      margin-left: 0;
+    }
+  }
+
   .cr-muted {
     color: var(--cr-muted);
   }
@@ -37,6 +96,11 @@
     color: var(--cr-muted);
     line-height: var(--line-height-md);
     overflow-wrap: anywhere;
+  }
+
+  .cr-group-count {
+    font-weight: 400;
+    opacity: 0.65;
   }
 
   .cr-group-title,

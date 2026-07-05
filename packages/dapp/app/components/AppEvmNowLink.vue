@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ContractView } from '~/types/view'
+import type { ContractView } from '@evmnow/contract-reader/types/view'
 
 const EVMNOW_ORIGIN = 'https://evm.now'
 

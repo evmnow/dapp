@@ -14,9 +14,7 @@
   },
   "dependencies": {
     "@evmnow/contract-reader": "workspace:*",
-    "@wagmi/core": "3.4.1",
-    "nuxt": "^4.4.8",
-    "viem": "2.48.4"
+    "nuxt": "^4.4.8"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

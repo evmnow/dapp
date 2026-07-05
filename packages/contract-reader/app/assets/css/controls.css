@@ -10,15 +10,147 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: var(--line-height-md);
+    width: var(--size-6);
+    height: var(--size-6);
+    min-inline-size: 0;
+    block-size: auto;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: var(--cr-radius);
+    box-shadow: none;
+    background: transparent;
+    color: var(--cr-muted);
+    line-height: var(--line-height-sm);
+    transition:
+      color var(--speed),
+      background var(--speed);
+  }
+
+  .cr-copy:hover {
+    background: var(--cr-surface-muted);
+    color: var(--cr-text);
+  }
+
+  .cr-copy-icon {
+    width: var(--size-4);
+    height: var(--size-4);
   }
 
   .cr-copy:disabled,
   .cr-action-item:disabled {
     cursor: not-allowed;
+    opacity: 0.55;
   }
 
   .cr-action-item {
+    border: var(--border-width) solid var(--cr-border);
+    border-radius: var(--cr-radius);
+    background: var(--cr-surface-muted);
+    color: var(--cr-text);
+    letter-spacing: 0;
+    line-height: var(--line-height-md);
     text-decoration: none;
+    text-transform: none;
+    user-select: none;
+  }
+
+  .cr-action-item:is(:hover, :focus-visible) {
+    outline: none;
+    background: var(--cr-active-surface);
+  }
+
+  .cr-action-item.active {
+    border-color: var(--cr-primary);
+    background: var(--cr-active-surface);
+  }
+
+  /* The base layer decorates buttons and inputs with outset shadows; the
+     reader's controls are flat. */
+  button.cr-action-item,
+  input.cr-input,
+  select.cr-input,
+  textarea.cr-input,
+  button.cr-action-item:is(:hover, :active, :focus, .active),
+  input.cr-input:is(:hover, :active, :focus, .active),
+  select.cr-input:is(:hover, :active, :focus, .active),
+  textarea.cr-input:is(:hover, :active, :focus, .active) {
+    box-shadow: none;
+  }
+
+  .cr-input {
+    width: 100%;
+    border: var(--border-width) solid var(--cr-border);
+    border-radius: var(--cr-radius);
+    background: var(--cr-surface-muted);
+    color: var(--cr-text);
+    font: inherit;
+    font-family: var(--cr-mono);
+    font-size: var(--font-sm);
+    line-height: var(--line-height-md);
+    outline: none;
+    padding: var(--cr-input-padding-block) var(--cr-input-padding-inline);
+  }
+
+  .cr-input::placeholder {
+    color: var(--cr-muted);
+    font-family: var(--cr-font);
+  }
+
+  .cr-input:focus {
+    border-color: var(--cr-primary);
+  }
+
+  .cr-warning {
+    border: var(--border-width) solid var(--cr-border);
+    border-left: var(--border-width) solid var(--cr-primary);
+    border-radius: var(--cr-radius);
+    background: var(--cr-surface-muted);
+    font-size: var(--font-sm);
+    line-height: var(--line-height-lg);
+    padding: var(--cr-warning-padding-block) var(--cr-warning-padding-inline);
+  }
+
+  .cr-error {
+    color: var(--cr-error);
+    font-size: var(--font-sm);
+    line-height: var(--line-height-md);
+  }
+
+  .cr-hint {
+    font-size: var(--font-sm);
+  }
+}
+
+/* Base-layer form-item groups (amount inputs with a prefix/suffix segment):
+   the group carries the border the theme gives plain .cr-inputs, and the
+   inner input and segments go borderless — otherwise the segments keep their
+   own outset rings and render taller than the field they belong to. Lives in
+   the utilities layer because the FormItem SFC's scoped [data-v] selectors
+   are unbeatable on specificity within the components layer. */
+@layer utilities {
+  .cr-shell .form-item:has(> .prefix, > .suffix) {
+    block-size: var(--form-item-height);
+    border: var(--border-width) solid var(--cr-border);
+    border-radius: var(--cr-radius);
+    background: var(--cr-surface-muted);
+  }
+
+  .cr-shell .form-item:has(> .prefix, > .suffix):focus-within {
+    border-color: var(--cr-primary);
+  }
+
+  .cr-shell .form-item:has(> .prefix, > .suffix) > input.cr-input {
+    block-size: 100%;
+    border: 0;
+    background: transparent;
+  }
+
+  .cr-shell .form-item :is(.prefix, .suffix) {
+    block-size: auto;
+    align-self: stretch;
+    box-shadow: none;
+    background: transparent;
+    color: var(--cr-muted);
   }
 }

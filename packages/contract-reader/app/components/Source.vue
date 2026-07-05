@@ -118,6 +118,9 @@ const props = defineProps<{
     line: string,
     fileIndex: number,
   ) => string | undefined | null
+  /** Override the highlighter, e.g. for custom shiki themes. Must return one
+   * HTML string per source line. Defaults to `highlightSolidity`. */
+  highlight?: (content: string) => string[]
 }>()
 
 const emit = defineEmits<{
@@ -154,9 +157,10 @@ const activeFile = computed(
   () => props.files[activeFileIndex.value] || props.files[0],
 )
 const lines = computed(() => activeFile.value?.content.split('\n') || [])
-const highlightedLines = computed(() =>
-  activeFile.value ? highlightSolidity(activeFile.value.content) : [],
-)
+const highlightedLines = computed(() => {
+  if (!activeFile.value) return []
+  return (props.highlight ?? highlightSolidity)(activeFile.value.content)
+})
 const lineElements = new Map<number, HTMLElement>()
 let scrollFrame: number | null = null
 

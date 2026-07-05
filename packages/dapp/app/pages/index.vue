@@ -104,10 +104,10 @@
           :link-resolver="resolveStatLink"
         />
 
-        <ContractActions
+        <ActionPanel
           v-else-if="currentView === 'read' || currentView === 'interact'"
           :actions="visibleActions"
-          :contract-address="contractData.address"
+          :address="contractData.address"
           :abi="contractData.abi"
           :chain-id="contractData.chainId"
           :metadata="contractData.metadata"
@@ -123,12 +123,13 @@
           "
           :wallet-connected="walletConnected"
           :connected-address="connectedAddress"
+          :title="actionsTitle"
           :empty-text="emptyActionText"
           :action-selection-route="actionSelectionRoute"
           :action-code-route="actionCodeRoute"
           @select="selectAction"
           @update:args="updateArgs"
-          @read-error="onReadError"
+          @error="onReadError"
         />
 
         <Source
@@ -173,7 +174,7 @@ import type {
   ContractView,
   ContractViewState,
   SourceSelection,
-} from '~/types/view'
+} from '@evmnow/contract-reader/types/view'
 import { actionRequiresConnectedWallet } from '@evmnow/contract-reader/utils/abi'
 import { toContractData } from '@evmnow/contract-reader/utils/contract'
 import { findFunctionSourceSelection } from '@evmnow/contract-reader/utils/source'
@@ -312,6 +313,9 @@ const emptyActionText = computed(() =>
   currentView.value === 'interact'
     ? 'select an interaction'
     : 'select a read action',
+)
+const actionsTitle = computed(() =>
+  currentView.value === 'interact' ? 'interaction actions' : 'read actions',
 )
 const contentClass = computed(() =>
   isReaderMode.value ? undefined : 'home-page',

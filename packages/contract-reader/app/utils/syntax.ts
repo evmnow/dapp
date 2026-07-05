@@ -9,6 +9,27 @@ const highlighter = createHighlighterCoreSync({
   engine: createJavaScriptRegexEngine(),
 })
 
+const DEFAULT_THEME = 'one-light'
+let activeTheme = DEFAULT_THEME
+
+type SyntaxTheme = Parameters<(typeof highlighter)['loadTheme']>[number]
+
+/** Register an additional shiki theme for `highlightSolidity`. */
+export async function loadSyntaxTheme(theme: SyntaxTheme): Promise<void> {
+  await highlighter.loadTheme(theme)
+}
+
+/** Set the theme used by `highlightSolidity` when none is passed explicitly.
+ * The theme must have been registered via `loadSyntaxTheme` first (the
+ * bundled default is `one-light`). */
+export function setSyntaxTheme(name: string): void {
+  activeTheme = name || DEFAULT_THEME
+}
+
+export function getSyntaxTheme(): string {
+  return activeTheme
+}
+
 export function escapeCodeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -31,13 +52,13 @@ function renderToken(content: string, style: unknown): string {
   return color ? `<span style="color:${color}">${text}</span>` : text
 }
 
-export function highlightSolidity(source: string): string[] {
+export function highlightSolidity(source: string, theme?: string): string[] {
   const sourceLines = source.split('\n')
 
   try {
     const { tokens } = highlighter.codeToTokens(source, {
       lang: 'solidity',
-      theme: 'one-light',
+      theme: theme || activeTheme,
     })
 
     return sourceLines.map((line, index) => {

@@ -49,7 +49,18 @@
                     :source-route="sourceRoute?.(action)"
                     @update:args="updateArgs(action.slug, $event)"
                     @error="emit('error', $event)"
-                  />
+                  >
+                    <template
+                      v-for="(_, name) in $slots"
+                      :key="name"
+                      #[name]="slotProps"
+                    >
+                      <slot
+                        :name="name"
+                        v-bind="slotProps"
+                      />
+                    </template>
+                  </ActionDetail>
                 </div>
               </div>
             </div>

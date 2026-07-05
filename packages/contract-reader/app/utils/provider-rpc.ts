@@ -1,5 +1,11 @@
 import type { PublicClient } from 'viem'
 
+/**
+ * Sentinel URL routed through a wallet/viem client instead of the network.
+ * Pass `createProviderRpcFetch(...)` as the `fetch` option of
+ * `useContractMetadataSdk` and set this as the RPC URL to serve the SDK's
+ * JSON-RPC traffic through a connected wallet provider.
+ */
 export const PROVIDER_RPC_URL = 'evm-now:provider-rpc'
 
 interface JsonRpcRequest {

@@ -1,14 +1,14 @@
 <template>
   <section
     ref="root"
-    class="contract-actions"
-    :class="{ 'is-card-view': isCardView }"
+    class="cr-action-panel"
+    :class="{ 'is-cards': isCardView }"
   >
     <ActionCards
       v-if="isCardView"
-      class="contract-actions__cards"
+      class="cr-action-panel-cards"
       :actions="actions"
-      :address="contractAddress"
+      :address="address"
       :abi="abi"
       :chain-id="chainId"
       :metadata="metadata"
@@ -20,50 +20,78 @@
       :resolve-metadata="resolveMetadata"
       :wallet-connected="walletConnected"
       :connected-address="connectedAddress"
-      :title="actionTitle"
+      :title="title"
       :source-route="actionCodeRoute"
-      @select="selectAction"
-      @update:args="updateArgs"
-      @error="emit('read-error', $event)"
-    />
+      @select="emit('select', $event)"
+      @update:args="emit('update:args', $event)"
+      @error="emit('error', $event)"
+    >
+      <template
+        v-for="(_, name) in detailSlots"
+        :key="name"
+        #[name]="slotProps"
+      >
+        <slot
+          :name="name"
+          v-bind="slotProps"
+        />
+      </template>
+    </ActionCards>
 
     <template v-else>
       <ActionList
-        class="contract-actions__list cr-panel"
+        class="cr-action-panel-list cr-panel"
         :actions="actions"
         :metadata="metadata"
         :all-function-names="allFunctionNames"
         :selected="selectedAction?.slug"
-        @select="selectAction"
+        :title="title"
+        @select="emit('select', $event)"
       >
-        <template #item="{ action, selected: isSelected }">
-          <Button
-            :to="actionSelectionRoute(action)"
-            class="unstyled cr-action-item"
-            :class="{ active: isSelected }"
-            active-class=""
-            exact-active-class=""
+        <template
+          v-if="slots.item || actionSelectionRoute"
+          #item="{ action, selected: isSelected, select }"
+        >
+          <slot
+            name="item"
+            :action="action"
+            :selected="isSelected"
+            :select="select"
           >
-            <span class="cr-action-item-title">{{ action.title }}</span>
-            <span
-              v-if="action.title !== action.name"
-              class="cr-action-item-signature"
+            <Button
+              :to="actionSelectionRoute!(action)"
+              class="unstyled cr-action-item"
+              :class="{ active: isSelected }"
+              active-class=""
+              exact-active-class=""
             >
-              {{ action.name }}()
-            </span>
-          </Button>
+              <span class="cr-action-item-title">{{ action.title }}</span>
+              <span
+                v-if="action.title !== action.name"
+                class="cr-action-item-signature"
+              >
+                {{ action.name }}()
+              </span>
+            </Button>
+          </slot>
         </template>
       </ActionList>
 
-      <div class="contract-actions__detail cr-panel">
+      <div class="cr-action-panel-detail cr-panel">
         <template v-if="selectedAction">
-          <header class="contract-actions__heading">
-            <h2>{{ selectedAction.title }}</h2>
-            <code>{{ signature }}</code>
-          </header>
+          <slot
+            name="heading"
+            :action="selectedAction"
+            :signature="signature"
+          >
+            <header class="cr-action-panel-heading">
+              <h2>{{ selectedAction.title }}</h2>
+              <code>{{ signature }}</code>
+            </header>
+          </slot>
 
           <ActionDetail
-            :address="contractAddress"
+            :address="address"
             :abi="abi"
             :chain-id="chainId"
             :action="selectedAction"
@@ -74,9 +102,20 @@
             :wallet-connected="walletConnected"
             :connected-address="connectedAddress"
             :source-route="actionCodeRoute?.(selectedAction)"
-            @update:args="updateArgs"
-            @error="emit('read-error', $event)"
-          />
+            @update:args="emit('update:args', $event)"
+            @error="emit('error', $event)"
+          >
+            <template
+              v-for="(_, name) in detailSlots"
+              :key="name"
+              #[name]="slotProps"
+            >
+              <slot
+                :name="name"
+                v-bind="slotProps"
+              />
+            </template>
+          </ActionDetail>
         </template>
 
         <p
@@ -91,25 +130,22 @@
 </template>
 
 <script setup lang="ts">
-import ActionCards from '@evmnow/contract-reader/components/Action/Cards'
-import ActionDetail from '@evmnow/contract-reader/components/Action/Detail'
-import ActionList from '@evmnow/contract-reader/components/Action/List'
+import ActionCards from './Cards.vue'
+import ActionDetail from './Detail.vue'
+import ActionList from './List.vue'
 import type { RouteLocationRaw } from 'vue-router'
-import type {
-  ContractData,
-  ContractAction,
-} from '@evmnow/contract-reader/types/contract'
-import type { ContractUIMetadata } from '@evmnow/contract-reader/types/metadata'
+import type { ContractData, ContractAction } from '../../types/contract'
+import type { ContractUIMetadata } from '../../types/metadata'
 import type {
   ContractReadFn,
   ContractWriteFn,
   MetadataResolveFn,
-} from '@evmnow/contract-reader/types/actions'
+} from '../../types/actions'
 
 const props = withDefaults(
   defineProps<{
     actions: ContractAction[]
-    contractAddress: string
+    address: string
     abi: ContractData['abi']
     chainId?: number
     metadata?: ContractUIMetadata
@@ -121,12 +157,18 @@ const props = withDefaults(
     resolveMetadata?: MetadataResolveFn
     walletConnected?: boolean
     connectedAddress?: string
+    title?: string
     emptyText?: string
-    actionSelectionRoute: (action: ContractAction) => RouteLocationRaw
+    /** `auto` switches to cards below the two-column breakpoint. */
+    mode?: 'auto' | 'list' | 'cards'
+    /** Renders list items as links when provided; falls back to buttons. */
+    actionSelectionRoute?: (action: ContractAction) => RouteLocationRaw
     actionCodeRoute?: (action: ContractAction) => RouteLocationRaw | undefined
   }>(),
   {
+    title: 'actions',
     emptyText: 'select an action',
+    mode: 'auto',
     walletConnected: false,
   },
 )
@@ -134,11 +176,22 @@ const props = withDefaults(
 const emit = defineEmits<{
   select: [slug: string | undefined]
   'update:args': [args: string[]]
-  'read-error': [error: unknown]
+  error: [error: unknown]
 }>()
 
+const slots = useSlots()
+const PANEL_SLOTS = ['item', 'heading']
+const detailSlots = computed(() =>
+  Object.fromEntries(
+    Object.entries(slots).filter(([name]) => !PANEL_SLOTS.includes(name)),
+  ),
+)
+
 const root = ref<HTMLElement | null>(null)
-const isCardView = ref(false)
+const autoCardView = ref(false)
+const isCardView = computed(() =>
+  props.mode === 'auto' ? autoCardView.value : props.mode === 'cards',
+)
 
 const selectedAction = computed(
   () =>
@@ -154,12 +207,6 @@ const signature = computed(() => {
     .map((input) => input.type)
     .join(', ')})`
 })
-
-const actionTitle = computed(() =>
-  props.emptyText.includes('interaction')
-    ? 'interaction actions'
-    : 'read actions',
-)
 
 function readSizeVariable(name: string): number {
   const rootStyle = getComputedStyle(document.documentElement)
@@ -180,12 +227,13 @@ function updateLayoutMode() {
   const size8 = readSizeVariable('--size-8')
   const desktopWidth = formWidth - size7 + formWidth + size8 + size4
 
-  isCardView.value = root.value.clientWidth < desktopWidth
+  autoCardView.value = root.value.clientWidth < desktopWidth
 }
 
 let resizeObserver: ResizeObserver | undefined
 
 onMounted(() => {
+  if (props.mode !== 'auto') return
   updateLayoutMode()
   resizeObserver = new ResizeObserver(updateLayoutMode)
   if (root.value) resizeObserver.observe(root.value)
@@ -194,48 +242,4 @@ onMounted(() => {
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
 })
-
-function selectAction(slug: string | undefined) {
-  emit('select', slug)
-}
-
-function updateArgs(nextArgs: string[]) {
-  emit('update:args', nextArgs)
-}
 </script>
-
-<style scoped>
-@layer components {
-  .contract-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--cr-gap);
-
-    &.is-card-view {
-      display: block;
-    }
-  }
-
-  .contract-actions__list {
-    flex: 0 1 calc(var(--form-width) - var(--size-7));
-    align-self: start;
-    overflow: auto;
-  }
-
-  .contract-actions__detail {
-    display: grid;
-    flex: 1 1 calc(var(--form-width) + var(--size-8));
-    align-content: start;
-    gap: var(--cr-contract-actions-detail-gap);
-  }
-
-  .contract-actions__cards {
-    flex: 1 1 100%;
-  }
-
-  .contract-actions__heading h2 {
-    font-size: var(--font-base);
-    min-width: 50%;
-  }
-}
-</style>

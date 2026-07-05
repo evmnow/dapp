@@ -1,4 +1,4 @@
-@layer variables, components;
+@layer variables, reset, base, components, utilities;
 
 /* Token defaults */
 @import './tokens.css';
@@ -11,6 +11,7 @@
 @import './overview.css';
 @import './controls.css';
 @import './action.css';
+@import './panel.css';
 @import './result.css';
 @import './preview.css';
 @import './source.css';

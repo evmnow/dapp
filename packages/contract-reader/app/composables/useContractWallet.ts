@@ -4,18 +4,20 @@ import {
   http,
   parseEther,
   type Address,
-  type Abi,
   type PublicClient,
 } from 'viem'
 import { readContract as readContractAction } from 'viem/actions'
-import type { ContractReadParams } from '@evmnow/contract-reader/types/actions'
-import { createProviderRpcFetch, PROVIDER_RPC_URL } from '../utils/providerRpc'
+import type { ContractReadParams, ContractWriteParams } from '../types/actions'
+import { createProviderRpcFetch, PROVIDER_RPC_URL } from '../utils/provider-rpc'
 
-export interface ContractWriteParams {
-  address: string
-  abi: Abi
-  functionName: string
-  args?: unknown[]
+/**
+ * Superset of the `ContractWriteFn` params accepted when calling the wallet
+ * directly: human-entered values and an explicit chain are normalized here.
+ */
+export interface ContractWalletWriteParams extends Omit<
+  ContractWriteParams,
+  'value'
+> {
   value?: bigint | number | string
   chainId?: number
 }
@@ -52,21 +54,30 @@ function normalizeWriteValue(
   return undefined
 }
 
+/**
+ * Wires the wallet stack from `@1001-digital/layers.evm` (wagmi + viem) into
+ * the callback shapes the reader components expect: `readContractFunction` /
+ * `writeContractFunction` for `ActionDetail`, plus `metadataOptions` and
+ * `metadataFetch` for `useContractMetadataSdk`.
+ *
+ * Resolution order for reads: explicit `rpc` option, then the connected
+ * wallet's provider, then the wagmi public client for the active chain.
+ */
 export function useContractWallet(
   options: {
     chainId?: MaybeRefOrGetter<number>
     rpc?: MaybeRefOrGetter<string>
   } = {},
 ) {
-  const runtimeConfig = useRuntimeConfig()
   const config = useConfig()
   const connection = useConnection()
   const { writeContractAsync } = useWriteContract()
+  const mainChainId = useMainChainId()
 
   const configuredChainId = computed(() => {
     const raw = options.chainId
       ? Number(toValue(options.chainId))
-      : Number(runtimeConfig.public.defaultChainId ?? 1)
+      : Number(mainChainId ?? 1)
     return Number.isFinite(raw) && raw > 0 ? raw : 1
   })
 
@@ -149,10 +160,13 @@ export function useContractWallet(
       abi: params.abi,
       functionName: params.functionName,
       args: params.args ?? [],
+      ...(params.blockNumber !== undefined
+        ? { blockNumber: params.blockNumber }
+        : {}),
     })
   }
 
-  async function writeContractFunction(params: ContractWriteParams) {
+  async function writeContractFunction(params: ContractWalletWriteParams) {
     if (!connection.isConnected.value) {
       throw new Error('Connect a wallet before sending contract writes.')
     }

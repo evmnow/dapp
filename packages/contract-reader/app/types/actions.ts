@@ -6,6 +6,8 @@ export interface ContractReadParams {
   abi: Abi
   functionName: string
   args?: unknown[]
+  /** Pin the read to a historical block. Implementations may ignore it. */
+  blockNumber?: bigint
 }
 
 export type ContractReadFn = (params: ContractReadParams) => Promise<unknown>

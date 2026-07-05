@@ -1,0 +1,67 @@
+@layer components {
+  .cr-action-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cr-gap);
+  }
+
+  .cr-action-panel.is-cards {
+    display: block;
+  }
+
+  .cr-action-panel-list,
+  .cr-action-panel-detail {
+    min-width: 0;
+    padding: var(--cr-gap);
+  }
+
+  .cr-action-panel-list {
+    flex: 0 1 calc(var(--form-width) - var(--size-7));
+    align-self: start;
+    overflow: auto;
+  }
+
+  .cr-action-panel-detail {
+    display: grid;
+    flex: 1 1 calc(var(--form-width) + var(--size-8));
+    align-content: start;
+    gap: var(--cr-action-panel-detail-gap);
+  }
+
+  .cr-action-panel-cards {
+    flex: 1 1 100%;
+  }
+
+  .cr-action-panel-cards .cr-action-group,
+  .cr-action-panel-cards .cr-action-card-grid {
+    gap: var(--cr-action-group-gap);
+  }
+
+  .cr-action-panel-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--cr-gap);
+  }
+
+  .cr-action-panel-heading > * {
+    min-width: 0;
+  }
+
+  .cr-action-panel-heading h2 {
+    margin: 0;
+    font-size: var(--font-base);
+    min-width: 50%;
+    line-height: var(--line-height-md);
+  }
+
+  .cr-action-panel-heading code {
+    display: block;
+    max-width: 100%;
+    color: var(--cr-muted);
+    font-family: var(--cr-mono);
+    font-size: var(--font-xs);
+    line-height: var(--line-height-md);
+    overflow-wrap: anywhere;
+  }
+}
