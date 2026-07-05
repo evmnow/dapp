@@ -376,8 +376,8 @@ import {
   formatArgValue,
   formatSemanticValue,
   getOutputSemanticType,
+  resolveTokenAddress,
   semanticAmountKind,
-  tokenAddressOf,
   type AmountInputInfo,
   type TokenInfo,
 } from '../../utils/format'
@@ -603,9 +603,28 @@ const ERC20_META_ABI = [
 const tokenMeta = reactive<Record<string, TokenInfo>>({})
 const tokenBalance = reactive<Record<string, bigint>>({})
 
+// Current value of the input the given metadata key (ABI name or `_N`
+// positional) refers to — lets `tokenParam` references resolve against what
+// the user has typed so far.
+function inputArgValue(key: string): unknown {
+  const inputs = props.action.inputs
+  let index = inputs.findIndex(
+    (input, i) => buildInputKey(undefined, input.name, i) === key,
+  )
+  if (index === -1) {
+    const positional = key.match(/^_(\d+)$/)
+    if (positional) index = Number(positional[1])
+  }
+  const input = inputs[index]
+  return input ? inputValues[fieldKey(input, index)] : undefined
+}
+
 function paramTokenAddress(type?: SemanticType): string | undefined {
   if (semanticAmountKind(type) !== 'token-amount') return undefined
-  return (tokenAddressOf(type) ?? props.address)?.toLowerCase()
+  return resolveTokenAddress(type, {
+    contractAddress: props.address,
+    getArg: inputArgValue,
+  })
 }
 
 // Rendering/parsing info for an amount-like input, or null if not amount-like
@@ -704,7 +723,15 @@ async function resolveTokenBalances() {
 }
 
 watch(
-  () => [props.action.slug, props.readFunction, props.address] as const,
+  // collectTokenAddresses reads inputValues, so a token address typed into a
+  // `tokenParam`-referenced input triggers resolution as soon as it is valid.
+  () =>
+    [
+      props.action.slug,
+      props.readFunction,
+      props.address,
+      collectTokenAddresses().join(','),
+    ] as const,
   () => void resolveTokenMeta(),
   { immediate: true },
 )
