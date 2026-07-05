@@ -5,6 +5,10 @@ Generated from individual package changelogs — do not edit manually.
 
 ## 2026-07-05
 
+- **Minor** Resolve legacy ZeppelinOS (pre-EIP-1967) proxies via `@evmnow/sdk` 0.4.0. [`918c7f2`](https://github.com/evmnow/dapp/commit/918c7f2)
+  Contracts like Circle's USDC (`FiatTokenProxy`) store their implementation at `keccak256('org.zeppelinos.proxy.implementation')` and previously surfaced only the proxy's own ABI — the read/interact views showed the upgrade/admin functions instead of the implementation's. They now resolve through the standard proxy pipeline, so the ERC-20 functions (with their NatSpec) appear as expected.
+  _`contract-reader`_
+
 - **Minor** Move the generic reader glue from the app into the layer so any consumer gets a complete, wireable contract reader: [`d0f2c59`](https://github.com/evmnow/dapp/commit/d0f2c59)
   - `useContractWallet` — wallet-layer wiring for `readFunction`/`writeFunction`, SDK `metadataOptions`/`metadataFetch` (moved from the dapp; now falls back to the wallet layer's main chain).
   - `useTokenMetadataResolver` — token-URI metadata resolution with gateways from `appConfig.evm`.
