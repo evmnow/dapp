@@ -27,8 +27,8 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0(1e0a9ea4f9676ac66c4f30de8424dd0a)
       '@evmnow/sdk':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.4.0
+        version: 0.4.0
       '@wagmi/core':
         specifier: ^3.4.1
         version: 3.4.6(@tanstack/query-core@5.95.2)(@types/react@19.2.14)(immer@9.0.21)(react@19.2.5)(typescript@5.9.3)(viem@2.48.4(typescript@5.9.3)(zod@3.25.76))
@@ -113,8 +113,8 @@ packages:
   '@1001-digital/normalize-dweb-url@0.1.0':
     resolution: {integrity: sha512-gT+81Yf93OAR5bfSipsMY5CwwMk6AxQX0PH3046qkfuj5QPsA3AUyZt7JgDlTKxuTMjmLVkETw1HF+j6aEuXcw==}
 
-  '@1001-digital/proxies@0.1.1':
-    resolution: {integrity: sha512-T1GAOvFIV+ao7saTmYA4oNNWoXNemooaoBveAOq3J6rX3THsViQUo1jVNikeaD1VP0hmQj3yMFtMW1BGJFuSag==}
+  '@1001-digital/proxies@0.2.0':
+    resolution: {integrity: sha512-nAxt+kmQugv5RFZM+qPetSjQUPtsBPNRnlNUQ8iItbPX4NYbaC7MYSkL/631aV3204dTnj5KgfyKwrX/nmM7JA==}
 
   '@1001-digital/styles@2.7.0':
     resolution: {integrity: sha512-E2gD1CVVtS5l7MTdcle8UHQjqnjMx6ddcTpJhzWpOwVVZ4krnr9QWRTIeDtcJRznzqnXrpCSOLYbxBBHgSYS0A==}
@@ -718,8 +718,8 @@ packages:
   '@ethersproject/wordlists@5.8.0':
     resolution: {integrity: sha512-2df9bbXicZws2Sb5S6ET493uJ0Z84Fjr3pC4tu/qlnZERibZCeUVuqdtt+7Tv9xxhUxHoIekIA7avrKUWHrezg==}
 
-  '@evmnow/sdk@0.3.0':
-    resolution: {integrity: sha512-pRJQuUlogy2yKmCRBCm0g1JD+JRw7RQ/eFcy3OhyOgHiCsMJOLvb3vUvAhvDA5Tuye8+s98pna7PDWaTlLhFog==}
+  '@evmnow/sdk@0.4.0':
+    resolution: {integrity: sha512-5LK8f8XgTuSK6CxTcsl2/xt2TS6z1pdlcnS5YiTVGnsE71u2gCAVnDkyU9XH1+jbrs72ZXr8NRkH00fmHrnO9g==}
 
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
@@ -7666,7 +7666,7 @@ snapshots:
 
   '@1001-digital/normalize-dweb-url@0.1.0': {}
 
-  '@1001-digital/proxies@0.1.1':
+  '@1001-digital/proxies@0.2.0':
     dependencies:
       '@noble/hashes': 1.8.0
 
@@ -8658,10 +8658,10 @@ snapshots:
       '@ethersproject/properties': 5.8.0
       '@ethersproject/strings': 5.8.0
 
-  '@evmnow/sdk@0.3.0':
+  '@evmnow/sdk@0.4.0':
     dependencies:
       '@1001-digital/natspec': 0.1.0
-      '@1001-digital/proxies': 0.1.1
+      '@1001-digital/proxies': 0.2.0
       '@noble/hashes': 1.8.0
 
   '@fastify/busboy@2.1.1': {}
