@@ -18,7 +18,8 @@ import { appendFile, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, join, posix, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { bytesToHex, type Hex } from 'viem'
+
+type Hex = `0x${string}`
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const DAPP_DIR = resolve(SCRIPT_DIR, '..')
@@ -247,6 +248,14 @@ async function run(
       }
     })
   })
+}
+
+function bytesToHex(bytes: Uint8Array): Hex {
+  let hex = ''
+  for (const byte of bytes) {
+    hex += byte.toString(16).padStart(2, '0')
+  }
+  return `0x${hex}`
 }
 
 function encodeIpfsContenthash(cid: string): Hex {
