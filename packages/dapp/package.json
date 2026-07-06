@@ -2,7 +2,7 @@
   "name": "@evmnow/dapp",
   "private": true,
   "type": "module",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "license": "MIT",
   "scripts": {
     "dev": "nuxt dev",
