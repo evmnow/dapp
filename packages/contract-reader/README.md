@@ -126,6 +126,21 @@ Stale responses from older `get()` calls are dropped, so it's safe to react to i
 
 `resolveMetadata` takes a `MetadataResolveFn` for token-URI previews; `useTokenMetadataResolver` provides one that resolves `data:` / `ipfs://` / `ipns://` / `ar://` / https URIs through the gateways configured in `appConfig.evm` (falling back to ipfs.io / arweave.net). Point it at your own resolver endpoint instead by passing a custom `fetch`.
 
+### Host extension points on `ActionDetail`
+
+- **`resolveTokenInfo`** — resolve `token-amount` decimals/symbol through your own backend (e.g. an indexer API) instead of the default per-token `eth_call`s via `readFunction`.
+- **`autoReadWithArgs`** — auto-execute parameterized reads when hydrated `args` fill the form validly (deep links carrying arguments). Zero-input reads always auto-read; reads triggered while one is in flight are queued, and a changed `readFunction` identity (e.g. a block picker) refreshes a displayed result.
+- **`value-field` slot** — render your own msg.value input (`value`, `setValue`, `meta`, `label`, `disabled`, `error` in scope); the `actions` slot scope exposes `value`/`valueWei` so confirmation UIs can preview the amount being sent.
+- **`field` slot** — scope includes the full input record (`values`, `errors`, `setValue`) and the resolved `amount` info, so custom widgets (including tuples) bind directly to layer state.
+- **`_component` extension** — register custom components for the standard's [`_component`](https://github.com/evmnow/contract-metadata/blob/main/extensions/_component.md) convention once at startup:
+
+  ```ts
+  import { registerActionComponent } from '@evmnow/contract-reader/utils/custom-components'
+  registerActionComponent('my-preview', MyPreview) // e.g. in a Nuxt plugin
+  ```
+
+  Resolved components render in the detail's preview area with `{ value, config, args, address, abi, action }` props; unrecognized names are ignored per the standard.
+
 `ActionDetail` builds inputs from the ABI plus the metadata schema (semantic input types, autofill, validation, examples, tuple support, hidden/disabled preset params for variants like "Revoke Approval") and renders the call result back into the matching field shape.
 
 ## Reader state and routing

@@ -66,6 +66,10 @@
           :update-value="
             (value) => setInputValue(fieldKey(input, index), value)
           "
+          :values="inputValues"
+          :errors="inputErrors"
+          :set-value="setInputValue"
+          :amount="amountMeta(input)"
         >
           <div
             v-if="isTuple(input)"
@@ -100,41 +104,60 @@
             v-model="inputValues[fieldKey(input, index)]"
           />
         </slot>
+
+        <!-- Rendered outside the slot so hosts overriding `field` keep the
+             standard's parameter previews for free. -->
+        <ActionParamPreview
+          v-if="!isHidden(input) && input.meta?.preview?.image"
+          :template="input.meta.preview.image"
+          :get-arg="inputArgValue"
+          :read-function="readFunction"
+          :resolve-metadata="resolveMetadata"
+        />
       </template>
 
-      <label
+      <slot
         v-if="action.isPayable && !valueHidden"
-        class="cr-field cr-value-field"
+        name="value-field"
+        :action="action"
+        :value="txValue"
+        :set-value="setTxValue"
+        :meta="valueMeta"
+        :label="valueLabel"
+        :disabled="valueDisabled"
+        :error="valueError"
       >
-        <span class="cr-field-label">
-          {{ valueLabel }}
-          <span class="cr-field-type">(ETH)</span>
-        </span>
+        <label class="cr-field cr-value-field">
+          <span class="cr-field-label">
+            {{ valueLabel }}
+            <span class="cr-field-type">(ETH)</span>
+          </span>
 
-        <input
-          v-model="txValue"
-          class="cr-input"
-          inputmode="decimal"
-          placeholder="0"
-          spellcheck="false"
-          autocomplete="off"
-          :disabled="valueDisabled"
-        />
+          <input
+            v-model="txValue"
+            class="cr-input"
+            inputmode="decimal"
+            placeholder="0"
+            spellcheck="false"
+            autocomplete="off"
+            :disabled="valueDisabled"
+          />
 
-        <small
-          v-if="valueMeta?.description"
-          class="cr-input-help cr-muted"
-        >
-          <InlineMarkdown :text="valueMeta.description" />
-        </small>
+          <small
+            v-if="valueMeta?.description"
+            class="cr-input-help cr-muted"
+          >
+            <InlineMarkdown :text="valueMeta.description" />
+          </small>
 
-        <small
-          v-if="valueError"
-          class="cr-input-help cr-error"
-        >
-          {{ valueError }}
-        </small>
-      </label>
+          <small
+            v-if="valueError"
+            class="cr-input-help cr-error"
+          >
+            {{ valueError }}
+          </small>
+        </label>
+      </slot>
 
       <slot
         name="actions"
@@ -142,12 +165,14 @@
         :pending="pending"
         :has-errors="hasErrors"
         :auto-read="autoRead"
-        :read="read"
+        :read="triggerRead"
         :submit="submit"
         :write-request="writeRequest"
         :write-hint="writeHint"
         :labels="labels"
         :wallet-connected="walletConnected"
+        :value="txValue"
+        :value-wei="txValueWei"
       >
         <Button
           v-if="action.isRead && visibleInputCount"
@@ -300,8 +325,21 @@
       :metadata-raw-json="metadataRawJson"
       :metadata-resolving="metadataResolving"
       :metadata-error="metadataError"
+      :custom-component="customComponent"
+      :custom-args="customArgs"
     >
       <ActionArtifactPreview :value="artifactResult" />
+
+      <component
+        :is="customComponent.component"
+        v-if="customComponent"
+        :value="result"
+        :config="customComponent.config"
+        :args="customArgs"
+        :address="address"
+        :abi="abi"
+        :action="action"
+      />
 
       <ActionMetadataPreview
         v-if="showMetadataPreview"
@@ -351,8 +389,9 @@ import type {
   ContractReadFn,
   ContractWriteFn,
   MetadataResolveFn,
+  TokenInfoResolveFn,
 } from '../../types/actions'
-import type { ActionExample } from '../../types/metadata'
+import type { ActionExample, ValueMeta } from '../../types/metadata'
 import { normalizeReadError } from '../../utils/errors'
 import {
   applyInputExample,
@@ -366,7 +405,12 @@ import {
   serializeInputArgs,
   type ResolvedEnsAddresses,
 } from '../../utils/inputs'
+import {
+  resolveActionComponent,
+  type ResolvedActionComponent,
+} from '../../utils/custom-components'
 import ActionInput from './Input.vue'
+import ActionParamPreview from './ParamPreview.vue'
 import ActionArtifactPreview from './ArtifactPreview.client.vue'
 import ActionMetadataPreview from './MetadataPreview.client.vue'
 import ActionResult from './Result.vue'
@@ -402,6 +446,21 @@ defineSlots<{
     value: string
     error?: string | null
     updateValue: (value: string) => void
+    /** The full input record — lets hosts render tuples over layer state. */
+    values: Record<string, string>
+    errors: Record<string, string | null>
+    setValue: (key: string, value: string) => void
+    amount: AmountInputInfo | null
+  }) => unknown
+  'value-field'?: (props: {
+    action: ContractAction
+    /** The msg.value input, denominated in ETH. */
+    value: string
+    setValue: (value: string) => void
+    meta?: ValueMeta
+    label: string
+    disabled: boolean
+    error: string | null
   }) => unknown
   actions?: (props: {
     action: ContractAction
@@ -414,6 +473,10 @@ defineSlots<{
     writeHint: string
     labels: ActionDetailLabels
     walletConnected?: boolean
+    /** The msg.value input, denominated in ETH ('' when unset). */
+    value: string
+    /** The msg.value parsed to wei, or undefined when empty/invalid. */
+    valueWei?: bigint
   }) => unknown
   result?: (props: {
     pending: boolean
@@ -459,6 +522,8 @@ defineSlots<{
     metadataRawJson: Record<string, unknown> | null
     metadataResolving: boolean
     metadataError: string | null
+    customComponent: ResolvedActionComponent | null
+    customArgs: unknown[] | null
   }) => unknown
 }>()
 
@@ -476,11 +541,23 @@ const props = withDefaults(
     addressHref?: (address: string) => string | undefined | null
     sourceRoute?: RouteLocationRaw
     resolveMetadata?: MetadataResolveFn
+    /**
+     * Resolve a token's decimals/symbol (e.g. through an indexer API).
+     * Defaults to on-chain lookups through `readFunction`.
+     */
+    resolveTokenInfo?: TokenInfoResolveFn
     labels?: Partial<ActionDetailLabels>
     autoRead?: boolean
+    /**
+     * Auto-execute parameterized reads when hydrated `args` fill the form
+     * validly — e.g. deep links that carry arguments. Zero-input reads
+     * auto-read regardless (see `autoRead`).
+     */
+    autoReadWithArgs?: boolean
   }>(),
   {
     autoRead: true,
+    autoReadWithArgs: false,
   },
 )
 
@@ -506,7 +583,28 @@ const hasErrors = computed(
     Object.values(inputErrors.value).some((error) => !!error) ||
     Boolean(valueError.value),
 )
+
+// A read triggered while one is in flight (e.g. stepping a block picker
+// twice) is queued rather than dropped, so the displayed result always
+// matches the latest trigger. Declared before the immediate watchers below —
+// they run during setup and reset it.
+let queuedRead = false
+
 const txValue = ref('')
+
+function setTxValue(value: string) {
+  txValue.value = value
+}
+
+const txValueWei = computed(() => {
+  const raw = txValue.value.trim()
+  if (!props.action.isPayable || !raw) return undefined
+  try {
+    return parseEther(raw)
+  } catch {
+    return undefined
+  }
+})
 
 // ── Native currency (msg.value) metadata for payable calls ──
 const valueMeta = computed(() => props.action.meta?.value)
@@ -599,7 +697,8 @@ const ERC20_META_ABI = [
   },
 ] as const satisfies Abi
 
-// On-chain identity of token-amount tokens, resolved lazily via readFunction.
+// On-chain identity of token-amount tokens, resolved lazily via the injected
+// resolver (or readFunction as the fallback).
 const tokenMeta = reactive<Record<string, TokenInfo>>({})
 const tokenBalance = reactive<Record<string, bigint>>({})
 
@@ -672,28 +771,35 @@ function collectTokenAddresses(): string[] {
   return [...set]
 }
 
-async function resolveTokenMeta() {
+async function lookupTokenInfo(addr: string): Promise<TokenInfo | null> {
+  if (props.resolveTokenInfo) return props.resolveTokenInfo(addr)
+
   const reader = props.readFunction
-  if (!reader) return
+  if (!reader) return null
+  const [decimals, symbol] = await Promise.all([
+    reader({
+      address: addr,
+      abi: ERC20_META_ABI as unknown as Abi,
+      functionName: 'decimals',
+    }),
+    reader({
+      address: addr,
+      abi: ERC20_META_ABI as unknown as Abi,
+      functionName: 'symbol',
+    }).catch(() => undefined),
+  ])
+  return {
+    decimals: Number(decimals),
+    symbol: typeof symbol === 'string' ? symbol : undefined,
+  }
+}
+
+async function resolveTokenMeta() {
   for (const addr of collectTokenAddresses()) {
     if (tokenMeta[addr]) continue
     try {
-      const [decimals, symbol] = await Promise.all([
-        reader({
-          address: addr,
-          abi: ERC20_META_ABI as unknown as Abi,
-          functionName: 'decimals',
-        }),
-        reader({
-          address: addr,
-          abi: ERC20_META_ABI as unknown as Abi,
-          functionName: 'symbol',
-        }).catch(() => undefined),
-      ])
-      tokenMeta[addr] = {
-        decimals: Number(decimals),
-        symbol: typeof symbol === 'string' ? symbol : undefined,
-      }
+      const info = await lookupTokenInfo(addr)
+      if (info && Number.isFinite(info.decimals)) tokenMeta[addr] = info
     } catch {
       // leave unresolved — the input stays a raw integer field
     }
@@ -729,6 +835,7 @@ watch(
     [
       props.action.slug,
       props.readFunction,
+      props.resolveTokenInfo,
       props.address,
       collectTokenAddresses().join(','),
     ] as const,
@@ -766,6 +873,22 @@ const labels = computed<ActionDetailLabels>(() => ({
   viewCode: 'view code',
   ...props.labels,
 }))
+
+// ── Custom `_component` extension (see utils/custom-components.ts) ──
+const customComponent = computed(() =>
+  resolveActionComponent(props.action.meta),
+)
+
+// Parsed args for the custom component — raw base-unit values like a decoded
+// call; null while the inputs don't parse.
+const customArgs = computed<unknown[] | null>(() => {
+  if (!customComponent.value) return null
+  try {
+    return buildArgs()
+  } catch {
+    return null
+  }
+})
 
 const writeHint = computed(() => {
   if (!props.writeFunction) return labels.value.writeUnavailable
@@ -809,7 +932,12 @@ watch(
   () => props.args,
   (args) => {
     if (!args) return
+    const before = serializeInputArgs(props.action.inputs, inputValues).join(' ')
     hydrateInputValues(props.action.inputs, inputValues, args)
+    const after = serializeInputArgs(props.action.inputs, inputValues).join(' ')
+    // Only externally-arriving args (deep links, examples routed through the
+    // host) trigger a read — echoes of our own update:args are no-ops here.
+    if (before !== after && args.some(Boolean)) scheduleArgsRead()
   },
   { immediate: true },
 )
@@ -824,14 +952,27 @@ watch(
 
 watch(
   () => [props.action.slug, props.readFunction] as const,
-  () => {
-    if (autoRead.value) read()
+  ([slug, readFunction], previous) => {
+    if (autoRead.value) return void triggerRead()
+    // Same action, new read source (e.g. a time-travel target block):
+    // refresh the result the user is looking at.
+    if (
+      previous &&
+      slug === previous[0] &&
+      readFunction !== previous[1] &&
+      props.action.isRead &&
+      hasResult.value
+    ) {
+      void triggerRead()
+    }
   },
   { immediate: true },
 )
 
 onMounted(() => {
-  if (autoRead.value) read()
+  // Plain read(): its pending guard makes this a no-op when the immediate
+  // watcher above already started the auto-read during setup.
+  if (autoRead.value) void read()
 })
 
 watch([metadataUri, () => props.resolveMetadata], ([uri, resolveMetadata]) => {
@@ -873,6 +1014,7 @@ function resetInputs() {
   error.value = ''
   txValue.value = seededValue()
   hasResult.value = false
+  queuedRead = false
   resetMetadataPreview()
 
   for (const key of Object.keys(inputValues)) delete inputValues[key]
@@ -979,8 +1121,29 @@ async function read() {
   }
 }
 
+async function triggerRead(): Promise<void> {
+  if (pending.value) {
+    queuedRead = true
+    return
+  }
+  await read()
+  if (queuedRead) {
+    queuedRead = false
+    return triggerRead()
+  }
+}
+
+// Auto-read for externally hydrated args (deep links) — waits a tick so the
+// hydrated values have settled into validation state.
+function scheduleArgsRead() {
+  if (!props.autoReadWithArgs || autoRead.value) return
+  void nextTick(() => {
+    if (props.action.isRead && !hasErrors.value) void triggerRead()
+  })
+}
+
 function submit() {
-  if (props.action.isRead) read()
+  if (props.action.isRead) void triggerRead()
 }
 
 function applyExample(example: ActionExample) {
@@ -989,7 +1152,7 @@ function applyExample(example: ActionExample) {
 
   if (props.action.isRead) {
     nextTick(() => {
-      if (!hasErrors.value) read()
+      if (!hasErrors.value) void triggerRead()
     })
   }
 }
@@ -1002,6 +1165,11 @@ function formatValue(value: unknown) {
   const info = addr ? tokenMeta[addr] : undefined
   return formatSemanticValue(value, semanticType, info)
 }
+
+defineExpose({
+  /** Execute (or queue) a read with the current inputs. */
+  read: triggerRead,
+})
 
 interface ActionDetailLabels {
   examples: string

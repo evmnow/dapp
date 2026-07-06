@@ -44,6 +44,8 @@
                     :read-function="readFunction"
                     :write-function="writeFunction"
                     :resolve-metadata="resolveMetadata"
+                    :resolve-token-info="resolveTokenInfo"
+                    :auto-read-with-args="autoReadWithArgs"
                     :wallet-connected="walletConnected"
                     :connected-address="connectedAddress"
                     :source-route="sourceRoute?.(action)"
@@ -81,6 +83,7 @@ import type {
   ContractReadFn,
   ContractWriteFn,
   MetadataResolveFn,
+  TokenInfoResolveFn,
 } from '../../types/actions'
 import type { ContractUIMetadata } from '../../types/metadata'
 
@@ -97,6 +100,8 @@ const props = withDefaults(
     readFunction?: ContractReadFn
     writeFunction?: ContractWriteFn
     resolveMetadata?: MetadataResolveFn
+    resolveTokenInfo?: TokenInfoResolveFn
+    autoReadWithArgs?: boolean
     walletConnected?: boolean
     connectedAddress?: string
     title?: string

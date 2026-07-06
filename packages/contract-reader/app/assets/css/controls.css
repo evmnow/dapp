@@ -120,6 +120,53 @@
   .cr-hint {
     font-size: var(--font-sm);
   }
+  /* Semantic input widgets (slider / duration) */
+  .cr-slider {
+    display: flex;
+    align-items: center;
+    gap: var(--size-3);
+  }
+
+  .cr-slider input[type='range'] {
+    flex: 1;
+    accent-color: var(--cr-primary);
+  }
+
+  .cr-slider-value {
+    font-family: var(--cr-mono);
+    font-size: var(--font-sm);
+    min-width: var(--size-8);
+    text-align: right;
+  }
+
+  .cr-duration {
+    display: flex;
+    gap: var(--cr-action-field-gap);
+  }
+
+  .cr-duration input {
+    flex: 1;
+  }
+
+  .cr-duration-unit {
+    width: auto;
+  }
+
+  /* Parameter previews (contract-metadata `preview.image`) */
+  .cr-param-preview img {
+    display: block;
+    max-width: var(--size-10);
+    max-height: var(--size-10);
+    border-radius: var(--cr-radius);
+    border: var(--border-width) solid var(--cr-border);
+  }
+
+  .cr-param-preview-loading {
+    width: var(--size-10);
+    height: var(--size-10);
+    border-radius: var(--cr-radius);
+    background: var(--cr-surface-muted);
+  }
 }
 
 /* Base-layer form-item groups (amount inputs with a prefix/suffix segment):
