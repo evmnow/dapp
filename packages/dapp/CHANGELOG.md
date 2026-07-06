@@ -1,5 +1,12 @@
 # @evmnow/dapp
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [[`99aa30a`](https://github.com/evmnow/dapp/commit/99aa30a69b11ad6a2c26b4df0a522e16ca652410), [`5100264`](https://github.com/evmnow/dapp/commit/5100264014cd23e39d77e79089f1b2d175d1b5f7), [`5100264`](https://github.com/evmnow/dapp/commit/5100264014cd23e39d77e79089f1b2d175d1b5f7), [`5100264`](https://github.com/evmnow/dapp/commit/5100264014cd23e39d77e79089f1b2d175d1b5f7)]:
+  - @evmnow/contract-reader@0.8.0
+
 ## 0.2.3
 
 ### Patch Changes

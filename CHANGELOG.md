@@ -5,6 +5,16 @@ Generated from individual package changelogs — do not edit manually.
 
 ## 2026-07-06
 
+- **Minor** New public composables and a component that extract generic reader orchestration out of consuming apps: [`5100264`](https://github.com/evmnow/dapp/commit/5100264)
+  - `useContractReaderView` — the shared reader-page orchestration: tab derivation from the ABI, view-state mapping over `useReaderQueryState`, wallet-gated action filtering, function source selection, overview stat links, and read-error bookkeeping (including clearing call errors on navigation and refetching metadata off discrete chain-id/RPC watch sources). Hosts wire it to their own wallet/metadata configuration and keep only branding and layout in the page.
+  - `useTokenAmountMeta` — token metadata resolution for amount-like params: resolves token identity (decimals/symbol, lowercased-address keyed, in-flight deduplicated) and connected-wallet balances, and derives per-input amount rendering/parsing info.
+  - `ActionResultPanel` (`components/Action/ResultPanel.vue`) — the read-result live region previously inlined in `ActionDetail`, rendering loading/fields/single-value/error states with the `address` slot passthrough.
+  `ActionDetail` and the playground/reader pages now consume these; behavior is unchanged.
+  _`contract-reader`_
+
+- The action detail's vertical rhythm is now owned entirely by its grid gap (`--cr-action-detail-gap`) instead of a mix of gap and per-block margins. Grid auto-rows don't reliably include child margins in track sizing — a margined block (e.g. a custom `_component` card) could overflow its row and swallow the next section's spacing, making the gap above the source link inconsistent. Child margins inside `.cr-action-detail` are now neutralized, and every section — results, previews, custom components — gets the same separation. Tune spacing via `--cr-action-detail-gap`. [`99aa30a`](https://github.com/evmnow/dapp/commit/99aa30a)
+  _`contract-reader`_
+
 - **Minor** Host-extensibility release — everything a consuming app previously had to work around is now a first-class API: [`ccec8b0`](https://github.com/evmnow/dapp/commit/ccec8b0)
   - **msg.value is exposed**: a new `value-field` slot (with `value`/`setValue`/`meta`/`label`/`disabled`/`error` scope) lets hosts render their own payable-value input, and the `actions` slot scope now includes `value` (ETH string) and `valueWei` for confirmation previews.
   - **Tuple-aware `field` slot**: the slot scope now exposes the full input record (`values`, `errors`, `setValue`) plus the resolved `amount` info, so hosts can render tuple members and amount inputs over layer state instead of mirroring it.
