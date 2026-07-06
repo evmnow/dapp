@@ -170,8 +170,11 @@ export function useReaderQueryState<View extends string = ContractView>(
 
   function routeForState(nextState: ReaderQueryState<View>): RouteLocationRaw {
     const normalizedState = normalizeState(nextState)
-    const nextQuery: LocationQuery = { ...route.query }
-    for (const key of READER_QUERY_KEYS) delete nextQuery[key]
+    const nextQuery: LocationQuery = Object.fromEntries(
+      Object.entries(route.query).filter(
+        ([key]) => !(READER_QUERY_KEYS as readonly string[]).includes(key),
+      ),
+    )
     Object.assign(nextQuery, serializeQuery(normalizedState))
     return { path: options.path ?? route.path, query: nextQuery }
   }

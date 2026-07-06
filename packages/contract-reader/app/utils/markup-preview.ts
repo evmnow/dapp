@@ -37,7 +37,10 @@ export function toSvgDataUri(value: string): string {
 const FULL_HTML_RE = /^\s*(?:<!doctype\s+html\b[^>]*>\s*)?<html\b/i
 const HEAD_TAG_RE = /(<head\b[^>]*>)/i
 
-export function buildPreviewSrcdoc(raw: string, kind: PreviewMarkupKind): string {
+export function buildPreviewSrcdoc(
+  raw: string,
+  kind: PreviewMarkupKind,
+): string {
   const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${buildCsp()}">`
 
   if (kind === 'html' && FULL_HTML_RE.test(raw)) {
@@ -61,9 +64,9 @@ export function buildPreviewSrcdoc(raw: string, kind: PreviewMarkupKind): string
 function buildCsp(): string {
   return [
     "default-src 'none'",
-    "img-src data: blob: http: https:",
-    "media-src data: blob: http: https:",
-    "font-src data: http: https:",
+    'img-src data: blob: http: https:',
+    'media-src data: blob: http: https:',
+    'font-src data: http: https:',
     "style-src 'unsafe-inline'",
     "script-src 'unsafe-inline'",
     "base-uri 'none'",

@@ -20,16 +20,34 @@ function normalizeChainIdInput(value: unknown) {
   return chainId ? String(chainId) : ''
 }
 
+function readStorage(key: string): string | null {
+  if (!import.meta.client) return null
+  try {
+    return window.localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
 export function useReaderRpc() {
   const config = useRuntimeConfig()
   const defaultChainId = computed(() => {
     return normalizeChainId(config.public.defaultChainId) ?? 1
   })
+  // The app is ssr:false, so saved values can hydrate synchronously in the
+  // state initializers — waiting for onMounted would let the immediate
+  // watchers downstream fetch once with the defaults (possibly against the
+  // wrong chain) before the saved RPC settings kick in.
   const rpc = useState<string>('evm-now:contract-reader:rpc', () => {
-    return String(config.public.defaultRpc ?? '')
+    return (
+      readStorage(RPC_STORAGE_KEY) ?? String(config.public.defaultRpc ?? '')
+    )
   })
   const chainId = useState<string>('evm-now:contract-reader:chain-id', () => {
-    return String(defaultChainId.value)
+    return (
+      normalizeChainIdInput(readStorage(CHAIN_ID_STORAGE_KEY)) ||
+      String(defaultChainId.value)
+    )
   })
   // Dappspec ?ds-rpc-<chainId>=<url> overrides, captured once per session so
   // they survive in-app navigation but are never persisted.
@@ -37,28 +55,10 @@ export function useReaderRpc() {
     'evm-now:contract-reader:rpc-overrides',
     () => (import.meta.client ? parseRpcOverrides(window.location.search) : []),
   )
-  const hydrated = ref(false)
-
-  onMounted(() => {
-    hydrated.value = true
-
-    const savedRpc = window.localStorage.getItem(RPC_STORAGE_KEY)
-    if (savedRpc && savedRpc !== rpc.value) {
-      rpc.value = savedRpc
-    }
-
-    const savedChainId = normalizeChainIdInput(
-      window.localStorage.getItem(CHAIN_ID_STORAGE_KEY),
-    )
-    if (savedChainId && savedChainId !== chainId.value) {
-      chainId.value = savedChainId
-    }
-  })
-
   watch(
     rpc,
     (value) => {
-      if (!hydrated.value) {
+      if (!import.meta.client) {
         return
       }
 
@@ -75,7 +75,7 @@ export function useReaderRpc() {
   watch(
     chainId,
     (value) => {
-      if (!hydrated.value) {
+      if (!import.meta.client) {
         return
       }
 

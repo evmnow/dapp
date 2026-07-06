@@ -4,6 +4,9 @@
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.30.0",
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "pnpm --filter @evmnow/dapp dev",
     "build": "pnpm -r --if-present build",
@@ -11,6 +14,9 @@
     "preview": "pnpm --filter @evmnow/dapp preview",
     "publish:site": "pnpm --filter @evmnow/dapp publish:site",
     "typecheck": "pnpm -r --if-present typecheck",
+    "test": "vitest run && pnpm -r --if-present test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "changelog": "node scripts/generate-changelog.ts",
@@ -20,7 +26,11 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.31.0",
+    "@nuxt/eslint-config": "^1.16.0",
     "@types/luxon": "^3.7.2",
-    "prettier": "^3.9.4"
+    "eslint": "^10.6.0",
+    "prettier": "^3.9.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }

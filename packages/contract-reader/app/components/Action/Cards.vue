@@ -17,6 +17,8 @@
             <button
               class="cr-action-card-header"
               type="button"
+              :aria-expanded="isExpanded(action.slug)"
+              :aria-controls="cardBodyId(action.slug)"
               @click="toggleAction(action.slug)"
             >
               <span class="cr-action-card-title">{{ action.title }}</span>
@@ -29,6 +31,7 @@
             </button>
 
             <div
+              :id="cardBodyId(action.slug)"
               class="cr-action-card-expand"
               :class="{ open: isExpanded(action.slug) }"
             >
@@ -121,6 +124,13 @@ const emit = defineEmits<{
 }>()
 
 const rendered = ref(new Set<string>())
+
+// Unique per component instance so multiple card panels never collide.
+const cardsId = useId()
+
+function cardBodyId(slug: string): string {
+  return `${cardsId}-card-${slug}`
+}
 
 function isExpanded(slug: string): boolean {
   return props.selected === slug

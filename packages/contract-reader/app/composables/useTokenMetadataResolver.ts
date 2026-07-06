@@ -8,6 +8,10 @@ import {
 const DEFAULT_IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
 const DEFAULT_ARWEAVE_GATEWAY = 'https://arweave.net/'
 
+// A hung gateway (IPFS gateways routinely stall) must not leave the preview
+// in its resolving state forever.
+const METADATA_FETCH_TIMEOUT_MS = 15_000
+
 function decodeJsonDataUri(uri: string): Record<string, unknown> | null {
   const match = uri.match(
     /^data:application\/json(?:;(base64|utf-?8))?,(.*)$/is,
@@ -75,14 +79,23 @@ export function useTokenMetadataResolver(
       ? decodeJsonDataUri(input)
       : await doFetch(toFetchUrl(input), {
           headers: { accept: 'application/json' },
-        }).then(async (response) => {
-          if (!response.ok) {
-            throw new Error(`Metadata request failed: ${response.status}`)
-          }
-
-          const parsed = await response.json()
-          return looksLikeMetadata(parsed) ? parsed : null
+          signal: AbortSignal.timeout(METADATA_FETCH_TIMEOUT_MS),
         })
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error(`Metadata request failed: ${response.status}`)
+            }
+
+            const parsed = await response.json()
+            return looksLikeMetadata(parsed) ? parsed : null
+          })
+          .catch((cause: unknown) => {
+            // Surface the abort as the regular error state.
+            if ((cause as { name?: string } | null)?.name === 'TimeoutError') {
+              throw new Error('Metadata request timed out')
+            }
+            throw cause
+          })
 
     if (!rawJson) return null
 

@@ -83,11 +83,45 @@ export function normalizeForDisplay(raw: unknown): PreviewMetadata {
   }
 
   if (metadata.image) metadata.image = toGatewayUrl(metadata.image)
+  if (metadata.image_url) metadata.image_url = toGatewayUrl(metadata.image_url)
   if (metadata.animation_url) {
     metadata.animation_url = toGatewayUrl(metadata.animation_url)
   }
 
+  // These fields bind straight into img/iframe src and a href — external
+  // metadata must never smuggle javascript:, data:text/html or other active
+  // schemes into them.
+  metadata.image = sanitizeDisplayUrl(metadata.image)
+  metadata.image_url = sanitizeDisplayUrl(metadata.image_url)
+  metadata.animation_url = sanitizeDisplayUrl(metadata.animation_url)
+  metadata.external_url = sanitizeDisplayUrl(metadata.external_url)
+
   return metadata
+}
+
+/**
+ * Allowlist for URLs that end up in `src`/`href` sinks: `https:`/`http:`
+ * (gateway-resolved ipfs/ipns/ar URIs are already https) and `data:image/*`.
+ * Everything else — `javascript:`, `data:text/html`, unknown schemes,
+ * relative or unparseable values — is nulled out.
+ */
+export function sanitizeDisplayUrl(
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null
+
+  let parsed: URL
+  try {
+    parsed = new URL(url.trim())
+  } catch {
+    return null
+  }
+
+  if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return url
+  if (parsed.protocol === 'data:' && /^image\//i.test(parsed.pathname)) {
+    return url
+  }
+  return null
 }
 
 export function formatAttributeValue(attr: PreviewAttribute): string {

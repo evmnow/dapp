@@ -9,13 +9,13 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { execSync } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface ChangelogEntry {
+export interface ChangelogEntry {
   package: string
   version: string
   type: ChangeType
@@ -24,7 +24,7 @@ interface ChangelogEntry {
   pr: { number: number; url: string } | null
 }
 
-interface UnifiedEntry {
+export interface UnifiedEntry {
   packages: Array<{ name: string; version: string }>
   type: ChangeType
   description: string
@@ -33,7 +33,7 @@ interface UnifiedEntry {
   date: string | null
 }
 
-type ChangeType = 'major' | 'minor' | 'patch'
+export type ChangeType = 'major' | 'minor' | 'patch'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -49,7 +49,7 @@ const TYPE_RANK: Record<ChangeType, number> = { major: 3, minor: 2, patch: 1 }
 // Parsing
 // ---------------------------------------------------------------------------
 
-function parseChangelog(
+export function parseChangelog(
   content: string,
   packageName: string,
 ): ChangelogEntry[] {
@@ -91,7 +91,14 @@ function parseChangelog(
 
       const commit = line.match(/\[`([a-f0-9]{7,})`\]/)?.[1] ?? null
       const prMatch = line.match(/\[#(\d+)\]\(([^)]+)\)/)
-      const description = line.match(/! - (.+)$/)?.[1]?.trim() ?? null
+      // Bullets usually follow the changelog-github shape
+      // (`- [#PR](url) [`hash`](url) Thanks ...! - Description`); anything
+      // else falls back to the raw bullet text with links stripped so the
+      // entry is never silently dropped.
+      const description =
+        line.match(/! - (.+)$/)?.[1]?.trim() ||
+        stripMarkdownLinks(line.slice(2)).trim() ||
+        null
 
       if (description) {
         current = {
@@ -119,6 +126,11 @@ function parseChangelog(
   return entries
 }
 
+/** Replace markdown links (`[text](url)`) with their text. */
+export function stripMarkdownLinks(text: string): string {
+  return text.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+}
+
 // ---------------------------------------------------------------------------
 // Git helpers
 // ---------------------------------------------------------------------------
@@ -140,7 +152,7 @@ function getCommitDate(hash: string): string | null {
 // Deduplication
 // ---------------------------------------------------------------------------
 
-function deduplicateEntries(entries: ChangelogEntry[]): UnifiedEntry[] {
+export function deduplicateEntries(entries: ChangelogEntry[]): UnifiedEntry[] {
   const byCommit = new Map<string, UnifiedEntry>()
   const orphans: UnifiedEntry[] = []
 
@@ -176,7 +188,7 @@ function deduplicateEntries(entries: ChangelogEntry[]): UnifiedEntry[] {
 // Rendering
 // ---------------------------------------------------------------------------
 
-function renderChangelog(entries: UnifiedEntry[]): string {
+export function renderChangelog(entries: UnifiedEntry[]): string {
   entries.sort((a, b) => (b.date || '0').localeCompare(a.date || '0'))
 
   const groups = new Map<string, UnifiedEntry[]>()
@@ -223,19 +235,30 @@ function renderChangelog(entries: UnifiedEntry[]): string {
 // Main
 // ---------------------------------------------------------------------------
 
-const allEntries: ChangelogEntry[] = []
+function main() {
+  const allEntries: ChangelogEntry[] = []
 
-for (const dir of readdirSync(PACKAGES_DIR)) {
-  const clPath = join(PACKAGES_DIR, dir, 'CHANGELOG.md')
-  try {
-    allEntries.push(...parseChangelog(readFileSync(clPath, 'utf-8'), dir))
-  } catch {
-    continue
+  for (const dir of readdirSync(PACKAGES_DIR)) {
+    const clPath = join(PACKAGES_DIR, dir, 'CHANGELOG.md')
+    try {
+      allEntries.push(...parseChangelog(readFileSync(clPath, 'utf-8'), dir))
+    } catch {
+      continue
+    }
   }
+
+  const unified = deduplicateEntries(allEntries)
+  writeFileSync(OUTPUT, renderChangelog(unified))
+  console.log(
+    `Generated unified changelog (${unified.length} entries from ${new Set(allEntries.map((e) => e.package)).size} packages)`,
+  )
 }
 
-const unified = deduplicateEntries(allEntries)
-writeFileSync(OUTPUT, renderChangelog(unified))
-console.log(
-  `Generated unified changelog (${unified.length} entries from ${new Set(allEntries.map((e) => e.package)).size} packages)`,
-)
+// Only run the CLI when executed directly (`node scripts/generate-changelog.ts`),
+// not when the parsing helpers are imported by tests.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main()
+}

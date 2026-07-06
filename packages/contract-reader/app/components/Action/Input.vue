@@ -1,15 +1,21 @@
 <template>
   <div class="cr-field">
-    <span class="cr-field-label">
+    <label
+      class="cr-field-label"
+      :for="controlId"
+    >
       {{ label }}
       <span class="cr-field-type">({{ typeSuffix }})</span>
-    </span>
+    </label>
 
     <select
       v-if="input.type === 'bool'"
+      :id="controlId"
       v-model="model"
       class="cr-input"
       :disabled="disabled"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
     >
       <option value="false">false</option>
       <option value="true">true</option>
@@ -17,13 +23,17 @@
 
     <EvmAddressInput
       v-else-if="input.type === 'address'"
+      :id="controlId"
       v-model="model"
       class="cr-input"
       :disabled="disabled"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
     />
 
     <textarea
       v-else-if="input.type.endsWith('[]')"
+      :id="controlId"
       v-model="model"
       class="cr-input"
       placeholder="JSON array or comma-separated values"
@@ -31,13 +41,18 @@
       spellcheck="false"
       autocomplete="off"
       :disabled="disabled"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
     />
 
     <select
       v-else-if="widget === 'enum'"
+      :id="controlId"
       v-model="model"
       class="cr-input"
       :disabled="disabled"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
     >
       <option
         v-if="!model"
@@ -60,22 +75,28 @@
       class="cr-slider"
     >
       <input
+        :id="controlId"
         v-model="model"
         type="range"
         :min="slider!.min"
         :max="slider!.max"
         :step="slider!.step ?? '1'"
         :disabled="disabled"
+        :aria-describedby="describedBy"
+        :aria-invalid="invalid"
       />
       <span class="cr-slider-value">{{ model || slider!.min }}</span>
     </div>
 
     <input
       v-else-if="widget === 'date' || widget === 'datetime'"
+      :id="controlId"
       class="cr-input"
       :type="widget === 'date' ? 'date' : 'datetime-local'"
       :value="dateValue"
       :disabled="disabled"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
       @input="onDateInput(($event.target as HTMLInputElement).value)"
     />
 
@@ -84,11 +105,14 @@
       class="cr-duration"
     >
       <input
+        :id="controlId"
         class="cr-input"
         type="number"
         min="0"
         :value="durationAmount"
         :disabled="disabled"
+        :aria-describedby="describedBy"
+        :aria-invalid="invalid"
         @input="
           updateDuration(
             ($event.target as HTMLInputElement).value,
@@ -100,6 +124,7 @@
         class="cr-input cr-duration-unit"
         :value="durationUnit"
         :disabled="disabled"
+        :aria-label="`${label} unit`"
         @change="
           updateDuration(
             durationAmount,
@@ -119,6 +144,7 @@
 
     <input
       v-else-if="widget === 'bytes32-utf8'"
+      :id="controlId"
       class="cr-input"
       type="text"
       :value="utf8Text"
@@ -126,30 +152,39 @@
       spellcheck="false"
       autocomplete="off"
       :disabled="disabled"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
       @input="onUtf8Input(($event.target as HTMLInputElement).value)"
     />
 
     <EvmAmountInput
       v-else-if="amount"
+      :id="controlId"
       v-model="model"
       class="cr-input"
       :decimals="amount.decimals"
       :symbol="amount.symbol"
       :balance="amount.balance"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
     />
 
     <input
       v-else
+      :id="controlId"
       v-model="model"
       class="cr-input"
       :placeholder="input.type"
       spellcheck="false"
       autocomplete="off"
       :disabled="disabled"
+      :aria-describedby="describedBy"
+      :aria-invalid="invalid"
     />
 
     <small
       v-if="description && input.type !== 'bool'"
+      :id="helpId"
       class="cr-input-help cr-muted"
     >
       <InlineMarkdown :text="description" />
@@ -157,6 +192,7 @@
 
     <small
       v-if="error || localError"
+      :id="errorId"
       class="cr-input-help cr-error"
     >
       {{ error || localError }}
@@ -165,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import type { ContractActionParam } from '../../types/contract'
 import type { ParamMeta } from '../../types/metadata'
 import type { AmountInputInfo } from '../../utils/format'
@@ -214,6 +250,23 @@ const typeSuffix = computed(() => {
 })
 
 const localError = ref<string | null>(null)
+
+// ── Accessible wiring: real label association plus described-by/invalid ──
+const uid = useId()
+const controlId = `cr-input-${uid}`
+const helpId = `cr-input-help-${uid}`
+const errorId = `cr-input-error-${uid}`
+
+const describedBy = computed(() => {
+  const ids: string[] = []
+  if (description.value && props.input.type !== 'bool') ids.push(helpId)
+  if (props.error || localError.value) ids.push(errorId)
+  return ids.length ? ids.join(' ') : undefined
+})
+
+const invalid = computed(() =>
+  props.error || localError.value ? true : undefined,
+)
 
 // ── date / datetime / timestamp ──
 const dateValue = computed(() => {

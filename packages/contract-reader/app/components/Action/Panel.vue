@@ -93,6 +93,7 @@
           </slot>
 
           <ActionDetail
+            :key="selectedAction.slug"
             :address="address"
             :abi="abi"
             :chain-id="chainId"

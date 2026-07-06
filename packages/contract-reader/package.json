@@ -26,18 +26,24 @@
     "build": "nuxt build .playground",
     "generate": "nuxt generate .playground",
     "preview": "nuxt preview .playground",
-    "typecheck": "nuxi typecheck .playground"
+    "typecheck": "nuxi typecheck .playground",
+    "test": "vitest run"
   },
   "dependencies": {
     "@1001-digital/layers.evm": "^2.9.0",
-    "@evmnow/sdk": "^0.6.0",
+    "@evmnow/sdk": "^0.7.0",
     "@wagmi/core": "^3.4.1",
     "shiki": "^4.3.0",
-    "viem": "2.48.4"
+    "viem": "^2.48.4"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.4.0",
+    "vue": "^3.5.0"
   },
   "devDependencies": {
     "nuxt": "^4.4.8",
     "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
     "vue": "^3.5.39",
     "vue-tsc": "^3.3.6"
   }

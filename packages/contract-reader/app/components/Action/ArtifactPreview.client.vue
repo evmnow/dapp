@@ -14,7 +14,10 @@
           aria-label="View fullscreen"
           @click="fullscreen = true"
         >
-          <Icon name="lucide:expand" aria-hidden="true" />
+          <Icon
+            name="lucide:expand"
+            aria-hidden="true"
+          />
         </button>
       </div>
     </div>
@@ -47,7 +50,9 @@
       @click.self="closeFullscreen"
     >
       <div class="cr-artifact-preview__dialog-shell">
-        <div class="cr-artifact-preview__header cr-artifact-preview__header--dialog">
+        <div
+          class="cr-artifact-preview__header cr-artifact-preview__header--dialog"
+        >
           <span class="cr-artifact-preview__title">Onchain artifact</span>
           <div class="cr-artifact-preview__actions">
             <span class="cr-artifact-preview__kind">{{ artifactKind }}</span>
@@ -58,7 +63,10 @@
               aria-label="Close fullscreen"
               @click="closeFullscreen"
             >
-              <Icon name="lucide:x" aria-hidden="true" />
+              <Icon
+                name="lucide:x"
+                aria-hidden="true"
+              />
             </button>
           </div>
         </div>

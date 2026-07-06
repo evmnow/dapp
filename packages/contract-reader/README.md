@@ -27,7 +27,7 @@ export default defineNuxtConfig({
 
 That auto-imports every component, composable and util listed below, registers the base stylesheet, and brings in the wallet layer.
 
-A full reference integration lives in [`.playground/app/pages/index.vue`](./.playground/app/pages/index.vue) — address input, wallet wiring, tabbed overview/read/interact/code views, and URL-backed state, in one page.
+A full reference integration lives in [`.playground/app/pages/index.vue`](https://github.com/evmnow/dapp/blob/main/packages/contract-reader/.playground/app/pages/index.vue) — address input, wallet wiring, tabbed overview/read/interact/code views, and URL-backed state, in one page.
 
 ## Use individual pieces
 

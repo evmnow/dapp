@@ -84,16 +84,14 @@
           <nav class="cr-tabs">
             <Button
               v-for="tab in tabs"
-              :key="tab.value"
-              :class="{ active: currentView === tab.value }"
-              :to="routeForView(tab.value)"
+              :key="tab"
+              :class="{ active: currentView === tab }"
+              :to="routeForView(tab)"
               active-class=""
               exact-active-class=""
-              :aria-current-value="
-                currentView === tab.value ? 'page' : undefined
-              "
+              :aria-current-value="currentView === tab ? 'page' : undefined"
             >
-              {{ tab.label }}
+              {{ tab }}
             </Button>
           </nav>
         </header>
@@ -152,10 +150,14 @@
               </NuxtLink>
             </td>
             <td class="cr-source-code-cell">
+              <!-- Shiki output: source text arrives fully escaped inside
+                   generated span markup. -->
+              <!-- eslint-disable vue/no-v-html -->
               <pre
                 class="cr-source-code-block"
                 v-html="highlightedLine"
               />
+              <!-- eslint-enable vue/no-v-html -->
             </td>
           </template>
         </Source>
@@ -165,35 +167,10 @@
 </template>
 
 <script setup lang="ts">
-import type { RouteLocationRaw } from 'vue-router'
-import type {
-  ContractAction,
-  SourceFile,
-} from '@evmnow/contract-reader/types/contract'
-import type {
-  ContractView,
-  ContractViewState,
-  SourceSelection,
-} from '@evmnow/contract-reader/types/view'
-import { actionRequiresConnectedWallet } from '@evmnow/contract-reader/utils/abi'
-import { toContractData } from '@evmnow/contract-reader/utils/contract'
-import { findFunctionSourceSelection } from '@evmnow/contract-reader/utils/source'
-import { normalizeReadError } from '@evmnow/contract-reader/utils/errors'
-
 const config = useRuntimeConfig()
 const mainnetEnsRpc = computed(() =>
   String(config.public.mainnetEnsRpc ?? '').trim(),
 )
-const {
-  state: readerQueryState,
-  navigate: navigateReaderQuery,
-  routeFor: readerRoute,
-  hrefFor: readerHref,
-} = useReaderQueryState()
-const readerAddress = computed(
-  () => readerQueryState.value.address?.trim() || '',
-)
-const isReaderMode = computed(() => Boolean(readerAddress.value))
 const { effectiveChainId, effectiveRpc, rpcOverride, rpcOverrides } =
   useReaderRpc()
 const wallet = useContractWallet({
@@ -219,95 +196,47 @@ const { contract, error, get, pending, clear } = useContractMetadataSdk({
   ),
   fetch: wallet.metadataFetch,
 })
-const callError = shallowRef('')
+
+const {
+  viewState,
+  readerAddress,
+  isReaderMode,
+  contractData,
+  contractName,
+  fallbackFileName,
+  tabs,
+  currentView,
+  routeForView,
+  visibleActions,
+  allFunctionNames,
+  selectAction,
+  updateArgs,
+  actionSelectionRoute,
+  actionCodeRoute,
+  activeSourceSelection,
+  selectSource,
+  sourceFileHref,
+  sourceLineRoute,
+  resolveStatLink,
+  callError,
+  onReadError,
+} = useContractReaderView({
+  metadata: { contract, get, clear },
+  refetchOn: [
+    () => wallet.metadataOptions.value.chainId,
+    () => wallet.metadataOptions.value.rpc,
+  ],
+  walletConnected,
+  fallbackChainId: wallet.chainId,
+})
+
 const hasRpc = computed(() => Boolean(wallet.metadataOptions.value.rpc))
 const isMetadataNotFound = computed(
   () => error.value?.name === 'ContractMetadataNotFoundError',
 )
 
-const contractData = computed(() => {
-  const normalized = toContractData(contract.value, readerAddress.value)
-  if (!normalized || normalized.chainId) return normalized
-  return { ...normalized, chainId: wallet.chainId.value }
-})
-
-const viewState = computed<ContractViewState>(() => ({
-  view: readerQueryState.value.view,
-  fn: readerQueryState.value.fn,
-  args: readerQueryState.value.args,
-  source: readerQueryState.value.source,
-}))
-const hasAbi = computed(() => Boolean(contractData.value?.abi.length))
-const tabs = computed<{ value: ContractView; label: string }[]>(() => [
-  { value: 'overview', label: 'overview' },
-  ...(hasAbi.value
-    ? ([
-        { value: 'read', label: 'read' },
-        { value: 'interact', label: 'interact' },
-      ] satisfies { value: ContractView; label: string }[])
-    : []),
-  { value: 'code', label: 'code' },
-])
-const currentView = computed<ContractView>(() => {
-  if (!hasAbi.value && ['read', 'interact'].includes(viewState.value.view)) {
-    return 'overview'
-  }
-
-  return viewState.value.view
-})
-const activeSourceSelection = computed(() => {
-  if (readerQueryState.value.source) return readerQueryState.value.source
-  if (currentView.value !== 'code') return undefined
-
-  return (
-    findFunctionSourceSelection(
-      contractData.value?.sourceFiles ?? [],
-      viewState.value.fn,
-    ) ?? undefined
-  )
-})
-const visibleActions = computed(() => {
-  return actionsForView(currentView.value)
-})
-const allFunctionNames = computed(() => {
-  if (!contractData.value) return undefined
-  return new Set(
-    [
-      ...contractData.value.actions.read,
-      ...contractData.value.actions.write,
-    ].map((action) => action.name),
-  )
-})
-const STAT_VIEW_MAP: Record<string, ContractView> = {
-  read: 'read',
-  write: 'interact',
-  source: 'code',
-}
-
-function resolveStatLink(stat: {
-  key: string
-  value: string | number
-}): RouteLocationRaw | undefined {
-  const view = STAT_VIEW_MAP[stat.key]
-  if (!view || !stat.value) return undefined
-  return readerRoute({ view })
-}
-
-const fallbackFileName = computed(() => {
-  const sources = contractData.value?.sources
-  if (!sources?.length) return undefined
-  const main = sources.find((source) => source.role === 'main') ?? sources[0]
-  const path = main?.entryFileName
-  if (!path) return undefined
-  const slash = path.lastIndexOf('/')
-  return slash === -1 ? path : path.slice(slash + 1)
-})
 const title = computed(
-  () =>
-    contractData.value?.metadata?.name ||
-    contractData.value?.name ||
-    fallbackFileName.value ||
-    'Contract',
+  () => contractName.value || fallbackFileName.value || 'Contract',
 )
 const emptyActionText = computed(() =>
   currentView.value === 'interact'
@@ -324,119 +253,7 @@ const contentClass = computed(() =>
 useHead({
   title: computed(() => {
     if (!isReaderMode.value) return undefined
-    const name =
-      contractData.value?.metadata?.name ||
-      contractData.value?.name ||
-      fallbackFileName.value
-    return name || readerAddress.value
+    return contractName.value || fallbackFileName.value || readerAddress.value
   }),
 })
-
-watch(
-  [readerAddress, wallet.metadataOptions],
-  ([input]) => {
-    callError.value = ''
-
-    if (!input) {
-      clear()
-      return
-    }
-
-    void get(input)
-  },
-  { immediate: true },
-)
-
-function onReadError(cause: unknown) {
-  callError.value = normalizeReadError(cause)
-}
-
-function viewStateForTab(view: ContractView) {
-  const nextState = { ...viewState.value, view }
-  const actions = actionsForView(view)
-
-  if (
-    (view === 'read' || view === 'interact') &&
-    nextState.fn &&
-    !actions.some((action) => action.slug === nextState.fn)
-  ) {
-    nextState.fn = undefined
-    nextState.args = []
-  }
-
-  return nextState
-}
-
-function routeForView(view: ContractView): RouteLocationRaw {
-  return readerRoute(viewStateForTab(view))
-}
-
-function selectAction(fn: string | undefined) {
-  if (fn === viewState.value.fn) return
-  navigateViewState({ fn, args: [] })
-}
-
-function updateArgs(args: string[]) {
-  navigateViewState({ args }, { replace: true })
-}
-
-function selectSource(source: SourceSelection) {
-  navigateViewState({
-    view: 'code',
-    fn: undefined,
-    source,
-  })
-}
-
-function actionsForView(view: ContractView) {
-  if (!contractData.value) return []
-  const actions =
-    view === 'interact'
-      ? contractData.value.actions.write
-      : contractData.value.actions.read
-
-  // Actions locked to the connected address (e.g. "My Balance") have nothing
-  // to autofill without a wallet — list them only once one is connected.
-  if (walletConnected.value) return actions
-  return actions.filter((action) => !actionRequiresConnectedWallet(action))
-}
-
-function actionSelectionRoute(action: ContractAction): RouteLocationRaw {
-  return readerRoute({
-    view: currentView.value,
-    fn: action.slug,
-    args: action.slug === viewState.value.fn ? viewState.value.args : [],
-  })
-}
-
-function actionCodeRoute(action: ContractAction): RouteLocationRaw | undefined {
-  const files = contractData.value?.sourceFiles ?? []
-  if (!findFunctionSourceSelection(files, action.slug)) return undefined
-
-  return readerRoute({ view: 'code', fn: action.slug })
-}
-
-function sourceFileHref(_file: SourceFile, file: number) {
-  return readerHref(sourceSelectionState({ file }))
-}
-
-function sourceLineRoute(file: number, line: number): RouteLocationRaw {
-  return readerRoute(sourceSelectionState({ file, line }))
-}
-
-function sourceSelectionState(
-  source: SourceSelection,
-): Partial<ContractViewState> {
-  return {
-    view: 'code',
-    source,
-  }
-}
-
-function navigateViewState(
-  nextState: Partial<ContractViewState>,
-  options: { replace?: boolean } = {},
-) {
-  navigateReaderQuery(nextState, options)
-}
 </script>

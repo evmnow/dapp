@@ -10,7 +10,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "publish:site": "node scripts/publish-site.ts",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run"
   },
   "dependencies": {
     "@evmnow/contract-reader": "workspace:*",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
     "vue-tsc": "^3.3.6"
   }
 }

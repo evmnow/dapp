@@ -329,8 +329,7 @@ export function toContractData(
     ...(deploymentTxHash ? { deploymentTxHash } : {}),
     ...(deployedAt ? { deployedAt } : {}),
     actions:
-      normalizeActions(raw.actions) ||
-      parseActions(abi, metadata, sources),
+      normalizeActions(raw.actions) || parseActions(abi, metadata, sources),
     sourceFiles,
     sources,
     proxy,

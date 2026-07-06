@@ -240,29 +240,33 @@ export function parseSourceCode(
 
   if (trimmed.startsWith('{{')) {
     try {
-      const json = JSON.parse(trimmed.slice(1, -1))
-      if (json.sources) {
-        return Object.entries(json.sources).map(
-          ([path, value]: [string, any]) => ({
-            path,
-            content: value.content,
-          }),
-        )
+      const json = JSON.parse(trimmed.slice(1, -1)) as {
+        sources?: Record<string, { content: string }>
       }
-    } catch {}
-  }
-
-  if (trimmed.startsWith('{')) {
-    try {
-      const json = JSON.parse(trimmed)
-      const entries = Object.entries(json)
-      if (typeof (entries[0]?.[1] as any)?.content === 'string') {
-        return entries.map(([path, value]: [string, any]) => ({
+      if (json.sources) {
+        return Object.entries(json.sources).map(([path, value]) => ({
           path,
           content: value.content,
         }))
       }
-    } catch {}
+    } catch {
+      // Not solc standard-JSON — fall through to the other formats.
+    }
+  }
+
+  if (trimmed.startsWith('{')) {
+    try {
+      const json = JSON.parse(trimmed) as Record<string, { content?: unknown }>
+      const entries = Object.entries(json)
+      if (typeof entries[0]?.[1]?.content === 'string') {
+        return entries.map(([path, value]) => ({
+          path,
+          content: value.content as string,
+        }))
+      }
+    } catch {
+      // Not a source map — treat the payload as a single flat file below.
+    }
   }
 
   return [

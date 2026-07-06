@@ -94,7 +94,7 @@
         <Source
           v-else-if="currentView === 'code'"
           :files="contractData.sourceFiles"
-          :selected-source="viewState.source"
+          :selected-source="activeSourceSelection"
           @update:source="selectSource"
         />
       </template>
@@ -103,11 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ContractView, SourceSelection } from '../../../app/types/view'
-import { toContractData } from '../../../app/utils/contract'
-import { actionRequiresConnectedWallet } from '../../../app/utils/abi'
-
-const { state: viewState, navigate } = useReaderQueryState()
+import type { ContractView } from '../../../app/types/view'
 
 const addressInput = ref('')
 const chainIdInput = ref('1')
@@ -131,47 +127,30 @@ const { contract, error, get, pending, clear } = useContractMetadataSdk({
   fetch: wallet.metadataFetch,
 })
 
-const contractData = computed(() =>
-  toContractData(contract.value, viewState.value.address),
-)
-
-const hasAbi = computed(() => Boolean(contractData.value?.abi.length))
-const tabs = computed<ContractView[]>(() => [
-  'overview',
-  ...(hasAbi.value ? (['read', 'interact'] as ContractView[]) : []),
-  'code',
-])
-const currentView = computed<ContractView>(() =>
-  tabs.value.includes(viewState.value.view) ? viewState.value.view : 'overview',
-)
-
-const visibleActions = computed(() => {
-  if (!contractData.value) return []
-  const actions =
-    currentView.value === 'interact'
-      ? contractData.value.actions.write
-      : contractData.value.actions.read
-
-  if (wallet.walletConnected.value) return actions
-  return actions.filter((action) => !actionRequiresConnectedWallet(action))
+const {
+  viewState,
+  navigate,
+  readerAddress,
+  contractData,
+  contractName,
+  tabs,
+  currentView,
+  visibleActions,
+  allFunctionNames,
+  selectAction,
+  updateArgs,
+  activeSourceSelection,
+  selectSource,
+} = useContractReaderView({
+  metadata: { contract, get, clear },
+  refetchOn: [
+    () => wallet.metadataOptions.value.chainId,
+    () => wallet.metadataOptions.value.rpc,
+  ],
+  walletConnected: wallet.walletConnected,
 })
 
-const allFunctionNames = computed(() => {
-  if (!contractData.value) return undefined
-  return new Set(
-    [
-      ...contractData.value.actions.read,
-      ...contractData.value.actions.write,
-    ].map((action) => action.name),
-  )
-})
-
-const title = computed(
-  () =>
-    contractData.value?.metadata?.name ||
-    contractData.value?.name ||
-    'Contract Reader Playground',
-)
+const title = computed(() => contractName.value || 'Contract Reader Playground')
 
 function load() {
   navigate({ address: addressInput.value.trim() })
@@ -181,29 +160,11 @@ function selectView(view: ContractView) {
   navigate({ view, fn: undefined, args: [], source: undefined })
 }
 
-function selectAction(fn: string | undefined) {
-  if (fn === viewState.value.fn) return
-  navigate({ view: currentView.value, fn, args: [] })
-}
-
-function updateArgs(args: string[]) {
-  navigate({ view: currentView.value, args }, { replace: true })
-}
-
-function selectSource(source: SourceSelection) {
-  navigate({ view: 'code', fn: undefined, source })
-}
-
+// Keep the address form in sync with addresses arriving via the URL.
 watch(
-  [() => viewState.value.address, wallet.metadataOptions],
-  ([input]) => {
-    if (!input) {
-      clear()
-      return
-    }
-
-    addressInput.value = input
-    void get(input)
+  readerAddress,
+  (input) => {
+    if (input) addressInput.value = input
   },
   { immediate: true },
 )

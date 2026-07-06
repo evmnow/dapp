@@ -18,6 +18,11 @@ export interface ContractWalletWriteParams extends Omit<
   ContractWriteParams,
   'value'
 > {
+  /**
+   * Transaction value. A `bigint` is taken as wei, a `number` as wei
+   * (truncated to an integer), and a `string` is always ETH-denominated —
+   * `"1"` and `"1.5"` both go through `parseEther`.
+   */
   value?: bigint | number | string
   chainId?: number
 }
@@ -44,11 +49,10 @@ function normalizeWriteValue(
   }
 
   if (typeof value === 'string') {
+    // Strings are always ETH-denominated; only bigint/number carry wei.
     const trimmed = value.trim()
     if (!trimmed) return undefined
-    return trimmed.includes('.')
-      ? parseEther(trimmed as `${number}`)
-      : BigInt(trimmed)
+    return parseEther(trimmed)
   }
 
   return undefined

@@ -1,22 +1,40 @@
-import { createHighlighterCoreSync } from 'shiki/core'
-import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
-import solidity from 'shiki/langs/solidity.mjs'
-import oneLight from 'shiki/themes/one-light.mjs'
+import type { HighlighterCore } from 'shiki/core'
 
-const highlighter = createHighlighterCoreSync({
-  themes: [oneLight],
-  langs: [solidity],
-  engine: createJavaScriptRegexEngine(),
-})
+// Shiki (+ the solidity grammar and theme) is a heavy dependency that only
+// matters on the source view — it is loaded lazily behind dynamic imports so
+// it never lands in the initial chunk. `highlightSolidity` stays synchronous
+// and falls back to escaped plain text until `loadHighlighter` resolves.
+let highlighter: HighlighterCore | null = null
+let highlighterPromise: Promise<HighlighterCore> | null = null
+
+/** Load shiki and the solidity grammar; idempotent and safe to re-await. */
+export function loadHighlighter(): Promise<HighlighterCore> {
+  if (!highlighterPromise) {
+    highlighterPromise = Promise.all([
+      import('shiki/core'),
+      import('shiki/engine/javascript'),
+      import('shiki/langs/solidity.mjs'),
+      import('shiki/themes/one-light.mjs'),
+    ]).then(([core, engine, solidity, oneLight]) => {
+      highlighter = core.createHighlighterCoreSync({
+        themes: [oneLight.default],
+        langs: [solidity.default],
+        engine: engine.createJavaScriptRegexEngine(),
+      })
+      return highlighter
+    })
+  }
+  return highlighterPromise
+}
 
 const DEFAULT_THEME = 'one-light'
 let activeTheme = DEFAULT_THEME
 
-type SyntaxTheme = Parameters<(typeof highlighter)['loadTheme']>[number]
+type SyntaxTheme = Parameters<HighlighterCore['loadTheme']>[number]
 
 /** Register an additional shiki theme for `highlightSolidity`. */
 export async function loadSyntaxTheme(theme: SyntaxTheme): Promise<void> {
-  await highlighter.loadTheme(theme)
+  await (await loadHighlighter()).loadTheme(theme)
 }
 
 /** Set the theme used by `highlightSolidity` when none is passed explicitly.
@@ -54,6 +72,10 @@ function renderToken(content: string, style: unknown): string {
 
 export function highlightSolidity(source: string, theme?: string): string[] {
   const sourceLines = source.split('\n')
+
+  // Escaped plain text until the lazy highlighter is ready (see
+  // `loadHighlighter`); callers re-run once it resolves.
+  if (!highlighter) return sourceLines.map(escapeCodeHtml)
 
   try {
     const { tokens } = highlighter.codeToTokens(source, {

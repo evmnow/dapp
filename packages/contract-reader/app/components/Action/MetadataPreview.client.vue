@@ -29,6 +29,7 @@
             type="button"
             class="cr-metadata-preview__toggle"
             :class="{ active: !showRaw }"
+            :aria-pressed="!showRaw"
             @click="showRaw = false"
           >
             Preview
@@ -37,6 +38,7 @@
             type="button"
             class="cr-metadata-preview__toggle"
             :class="{ active: showRaw }"
+            :aria-pressed="showRaw"
             @click="showRaw = true"
           >
             JSON
@@ -89,6 +91,7 @@
               type="button"
               class="cr-metadata-preview__toggle"
               :class="{ active: !showAnimation }"
+              :aria-pressed="!showAnimation"
               @click="showAnimation = false"
             >
               Image
@@ -97,6 +100,7 @@
               type="button"
               class="cr-metadata-preview__toggle"
               :class="{ active: showAnimation }"
+              :aria-pressed="showAnimation"
               @click="showAnimation = true"
             >
               Animation

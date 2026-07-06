@@ -76,7 +76,7 @@ const slots = defineSlots<{
   }) => unknown
 }>()
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     actions: ContractAction[]
     metadata?: ContractUIMetadata

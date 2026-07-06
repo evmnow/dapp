@@ -1,4 +1,7 @@
 <template>
+  <!-- renderInlineMarkdown HTML-escapes its input before formatting and only
+       links http(s) URLs, so this markup never carries raw metadata HTML. -->
+  <!-- eslint-disable-next-line vue/no-v-html -->
   <span v-html="html" />
 </template>
 

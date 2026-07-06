@@ -2,13 +2,13 @@
   <button
     class="cr-copy"
     type="button"
-    :title="copied ? 'copied' : title"
-    :aria-label="copied ? 'copied' : label"
+    :title="copied ? 'copied' : failed ? 'copy failed' : title"
+    :aria-label="copied ? 'copied' : failed ? 'copy failed' : label"
     @click="copy"
   >
     <Icon
       class="cr-copy-icon"
-      :name="copied ? 'lucide:check' : 'lucide:copy'"
+      :name="failed ? 'lucide:x' : copied ? 'lucide:check' : 'lucide:copy'"
       aria-hidden="true"
     />
   </button>
@@ -28,15 +28,25 @@ const props = withDefaults(
 )
 
 const copied = ref(false)
+const failed = ref(false)
 let timer: ReturnType<typeof setTimeout> | undefined
 
 async function copy() {
   if (!import.meta.client) return
-  await navigator.clipboard.writeText(props.text)
-  copied.value = true
+  try {
+    await navigator.clipboard.writeText(props.text)
+    copied.value = true
+    failed.value = false
+  } catch {
+    // Clipboard access can be denied (permissions policy, insecure context,
+    // no user activation) — show a brief failed state instead of throwing.
+    copied.value = false
+    failed.value = true
+  }
   if (timer) clearTimeout(timer)
   timer = setTimeout(() => {
     copied.value = false
+    failed.value = false
   }, 1200)
 }
 

@@ -85,6 +85,7 @@
               :prefix="fieldKey(input, index)"
               :values="inputValues"
               :errors="inputErrors"
+              :amount-meta="amountMeta"
             />
 
             <small
@@ -97,11 +98,11 @@
 
           <ActionInput
             v-else
+            v-model="inputValues[fieldKey(input, index)]"
             :input="input"
             :meta="input.meta"
             :amount="amountMeta(input)"
             :error="inputErrors[fieldKey(input, index)]"
-            v-model="inputValues[fieldKey(input, index)]"
           />
         </slot>
 
@@ -224,94 +225,29 @@
         :address-href="addressHref"
         :format-value="formatValue"
       >
-        <template v-if="autoRead">
-          <ActionResult
-            v-if="pending || !hasResult"
-            label="result"
-            value="loading..."
-            :address-href="addressHref"
-          >
-          </ActionResult>
-
-          <ActionResultFields
-            v-else-if="hasResultFields"
-            :result="result"
-            :outputs="action.outputs"
-            :returns-meta="action.meta?.returns"
-            :address-href="addressHref"
-            :token-info="tokenMeta"
-            :contract-address="address"
-          >
-            <template #address="slotProps">
-              <slot
-                name="address"
-                v-bind="slotProps"
-              >
-                {{ slotProps.value }}
-              </slot>
-            </template>
-          </ActionResultFields>
-
-          <ActionResult
-            v-else
-            label="result"
-            :value="formatValue(result)"
-            :address-href="addressHref"
-          >
-            <template #address="slotProps">
-              <slot
-                name="address"
-                v-bind="slotProps"
-              >
-                {{ slotProps.value }}
-              </slot>
-            </template>
-          </ActionResult>
-        </template>
-
-        <template v-else-if="result !== null">
-          <ActionResultFields
-            v-if="hasResultFields"
-            :result="result"
-            :outputs="action.outputs"
-            :returns-meta="action.meta?.returns"
-            :address-href="addressHref"
-            :token-info="tokenMeta"
-            :contract-address="address"
-          >
-            <template #address="slotProps">
-              <slot
-                name="address"
-                v-bind="slotProps"
-              >
-                {{ slotProps.value }}
-              </slot>
-            </template>
-          </ActionResultFields>
-
-          <ActionResult
-            v-else
-            label="result"
-            :value="formatValue(result)"
-            :address-href="addressHref"
-          >
-            <template #address="slotProps">
-              <slot
-                name="address"
-                v-bind="slotProps"
-              >
-                {{ slotProps.value }}
-              </slot>
-            </template>
-          </ActionResult>
-        </template>
-
-        <ActionResult
-          v-if="error"
-          label="error"
-          :value="error"
-          is-error
-        />
+        <ActionResultPanel
+          :pending="pending"
+          :has-result="hasResult"
+          :auto-read="autoRead"
+          :result="result"
+          :error="error"
+          :outputs="action.outputs"
+          :returns-meta="action.meta?.returns"
+          :has-result-fields="hasResultFields"
+          :address-href="addressHref"
+          :token-info="tokenMeta"
+          :contract-address="address"
+          :format-value="formatValue"
+        >
+          <template #address="slotProps">
+            <slot
+              name="address"
+              v-bind="slotProps"
+            >
+              {{ slotProps.value }}
+            </slot>
+          </template>
+        </ActionResultPanel>
       </slot>
     </slot>
 
@@ -382,9 +318,7 @@
 import type { Abi, Hash } from 'viem'
 import type { RouteLocationRaw } from 'vue-router'
 import { formatEther, parseEther } from 'viem'
-import { resolveAmountDisplay, type ParamType } from '@evmnow/sdk'
-import type { ContractAction, ContractActionParam } from '../../types/contract'
-import type { SemanticType } from '../../types/metadata'
+import type { ContractAction } from '../../types/contract'
 import type {
   ContractReadFn,
   ContractWriteFn,
@@ -399,6 +333,7 @@ import {
   buildInputArgs,
   buildInputErrors,
   hydrateInputValues,
+  parseBigInt,
   resolveAutofillValue,
   resolveEnsInputs,
   seedInputValues,
@@ -413,17 +348,13 @@ import ActionInput from './Input.vue'
 import ActionParamPreview from './ParamPreview.vue'
 import ActionArtifactPreview from './ArtifactPreview.client.vue'
 import ActionMetadataPreview from './MetadataPreview.client.vue'
-import ActionResult from './Result.vue'
-import ActionResultFields from './ResultFields.vue'
+import ActionResultPanel from './ResultPanel.vue'
 import ActionTupleInput from './TupleInput.vue'
 import {
   formatArgValue,
   formatSemanticValue,
   getOutputSemanticType,
-  resolveTokenAddress,
-  semanticAmountKind,
   type AmountInputInfo,
-  type TokenInfo,
 } from '../../utils/format'
 import { detectPreviewMarkupKind } from '../../utils/markup-preview'
 import {
@@ -590,6 +521,11 @@ const hasErrors = computed(
 // they run during setup and reset it.
 let queuedRead = false
 
+// Request-generation counter (mirrors useContractMetadataSdk): responses of
+// superseded reads — e.g. after switching actions mid-flight — are dropped
+// instead of writing a stale result/error into the current view.
+let readId = 0
+
 const txValue = ref('')
 
 function setTxValue(value: string) {
@@ -629,20 +565,28 @@ function seededValue(): string {
 }
 
 const valueError = computed(() => {
+  if (!props.action.isPayable) return null
   const rule = valueMeta.value?.validation
   const raw = txValue.value.trim()
-  if (!rule || !raw) return null
+  if (!raw) return null
+  // A non-empty value that doesn't parse is always an error, whether or not
+  // metadata supplies a validation rule — it would otherwise only throw
+  // inside writeRequest.
   let wei: bigint
   try {
     wei = parseEther(raw)
   } catch {
-    return rule.message || 'invalid amount'
+    return rule?.message || 'invalid amount'
   }
-  if (rule.min != null && wei < BigInt(rule.min)) {
-    return rule.message || `minimum ${formatEther(BigInt(rule.min))} ETH`
+  if (!rule) return null
+  // Bounds come from untrusted external metadata — ignore unparseable ones.
+  const min = rule.min != null ? parseBigInt(String(rule.min)) : null
+  if (min !== null && wei < min) {
+    return rule.message || `minimum ${formatEther(min)} ETH`
   }
-  if (rule.max != null && wei > BigInt(rule.max)) {
-    return rule.message || `maximum ${formatEther(BigInt(rule.max))} ETH`
+  const max = rule.max != null ? parseBigInt(String(rule.max)) : null
+  if (max !== null && wei > max) {
+    return rule.message || `maximum ${formatEther(max)} ETH`
   }
   return null
 })
@@ -672,36 +616,6 @@ const hasForm = computed(
 )
 const hasResultFields = computed(() => props.action.outputs.length > 1)
 
-// ── Amount-like params (eth / gwei / amount / token-amount) ──
-const ERC20_META_ABI = [
-  {
-    type: 'function',
-    name: 'decimals',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'uint8' }],
-  },
-  {
-    type: 'function',
-    name: 'symbol',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'string' }],
-  },
-  {
-    type: 'function',
-    name: 'balanceOf',
-    stateMutability: 'view',
-    inputs: [{ type: 'address' }],
-    outputs: [{ type: 'uint256' }],
-  },
-] as const satisfies Abi
-
-// On-chain identity of token-amount tokens, resolved lazily via the injected
-// resolver (or readFunction as the fallback).
-const tokenMeta = reactive<Record<string, TokenInfo>>({})
-const tokenBalance = reactive<Record<string, bigint>>({})
-
 // Current value of the input the given metadata key (ABI name or `_N`
 // positional) refers to — lets `tokenParam` references resolve against what
 // the user has typed so far.
@@ -718,135 +632,16 @@ function inputArgValue(key: string): unknown {
   return input ? inputValues[fieldKey(input, index)] : undefined
 }
 
-function paramTokenAddress(type?: SemanticType): string | undefined {
-  if (semanticAmountKind(type) !== 'token-amount') return undefined
-  return resolveTokenAddress(type, {
-    contractAddress: props.address,
+// ── Amount-like params (eth / gwei / amount / token-amount) ──
+const { tokenMeta, amountMeta, amountDecimals, paramTokenAddress } =
+  useTokenAmountMeta({
+    action: () => props.action,
+    contractAddress: () => props.address,
+    connectedAddress: () => props.connectedAddress,
+    readFunction: () => props.readFunction,
+    resolveTokenInfo: () => props.resolveTokenInfo,
     getArg: inputArgValue,
   })
-}
-
-// Rendering/parsing info for an amount-like input, or null if not amount-like
-// (or a token-amount whose decimals are not resolved yet — kept as a raw field).
-function amountMeta(param: ContractActionParam): AmountInputInfo | null {
-  const type = param.meta?.type
-  const kind = semanticAmountKind(type)
-  if (!kind) return null
-  if (!/^u?int/.test(param.type)) return null
-
-  if (kind === 'token-amount') {
-    const addr = paramTokenAddress(type)
-    const info = addr ? tokenMeta[addr] : undefined
-    if (!info) return null
-    return {
-      decimals: info.decimals,
-      symbol: info.symbol,
-      balance: addr ? tokenBalance[addr] : undefined,
-    }
-  }
-
-  const display = resolveAmountDisplay(type as ParamType)
-  if (!display) return null
-  return { decimals: display.decimals, symbol: display.symbol }
-}
-
-const amountDecimals = (input: ContractActionParam) =>
-  amountMeta(input)?.decimals ?? null
-
-function collectTokenAddresses(): string[] {
-  const set = new Set<string>()
-  for (const input of props.action.inputs) {
-    const addr = paramTokenAddress(input.meta?.type)
-    if (addr) set.add(addr)
-  }
-  if (!hasResultFields.value) {
-    const out = props.action.outputs[0]
-    const addr = out
-      ? paramTokenAddress(
-          getOutputSemanticType(out, props.action.meta?.returns),
-        )
-      : undefined
-    if (addr) set.add(addr)
-  }
-  return [...set]
-}
-
-async function lookupTokenInfo(addr: string): Promise<TokenInfo | null> {
-  if (props.resolveTokenInfo) return props.resolveTokenInfo(addr)
-
-  const reader = props.readFunction
-  if (!reader) return null
-  const [decimals, symbol] = await Promise.all([
-    reader({
-      address: addr,
-      abi: ERC20_META_ABI as unknown as Abi,
-      functionName: 'decimals',
-    }),
-    reader({
-      address: addr,
-      abi: ERC20_META_ABI as unknown as Abi,
-      functionName: 'symbol',
-    }).catch(() => undefined),
-  ])
-  return {
-    decimals: Number(decimals),
-    symbol: typeof symbol === 'string' ? symbol : undefined,
-  }
-}
-
-async function resolveTokenMeta() {
-  for (const addr of collectTokenAddresses()) {
-    if (tokenMeta[addr]) continue
-    try {
-      const info = await lookupTokenInfo(addr)
-      if (info && Number.isFinite(info.decimals)) tokenMeta[addr] = info
-    } catch {
-      // leave unresolved — the input stays a raw integer field
-    }
-  }
-  await resolveTokenBalances()
-}
-
-async function resolveTokenBalances() {
-  const reader = props.readFunction
-  const holder = props.connectedAddress
-  if (!reader || !holder) return
-  for (const input of props.action.inputs) {
-    const addr = paramTokenAddress(input.meta?.type)
-    if (!addr || !tokenMeta[addr]) continue
-    try {
-      const balance = await reader({
-        address: addr,
-        abi: ERC20_META_ABI as unknown as Abi,
-        functionName: 'balanceOf',
-        args: [holder],
-      })
-      tokenBalance[addr] = BigInt(balance as bigint | number | string)
-    } catch {
-      // ignore — max button simply won't render
-    }
-  }
-}
-
-watch(
-  // collectTokenAddresses reads inputValues, so a token address typed into a
-  // `tokenParam`-referenced input triggers resolution as soon as it is valid.
-  () =>
-    [
-      props.action.slug,
-      props.readFunction,
-      props.resolveTokenInfo,
-      props.address,
-      collectTokenAddresses().join(','),
-    ] as const,
-  () => void resolveTokenMeta(),
-  { immediate: true },
-)
-
-watch(
-  () => props.connectedAddress,
-  () => void resolveTokenBalances(),
-)
 
 const artifactResult = computed(() => {
   if (typeof result.value !== 'string') return null
@@ -932,9 +727,15 @@ watch(
   () => props.args,
   (args) => {
     if (!args) return
-    const before = serializeInputArgs(props.action.inputs, inputValues).join(' ')
+    // JSON-serialized comparison — separator-joined strings are ambiguous for
+    // values that contain the separator themselves.
+    const before = JSON.stringify(
+      serializeInputArgs(props.action.inputs, inputValues),
+    )
     hydrateInputValues(props.action.inputs, inputValues, args)
-    const after = serializeInputArgs(props.action.inputs, inputValues).join(' ')
+    const after = JSON.stringify(
+      serializeInputArgs(props.action.inputs, inputValues),
+    )
     // Only externally-arriving args (deep links, examples routed through the
     // host) trigger a read — echoes of our own update:args are no-ops here.
     if (before !== after && args.some(Boolean)) scheduleArgsRead()
@@ -1010,6 +811,10 @@ function setInputValue(key: string, value: string) {
 }
 
 function resetInputs() {
+  // Invalidate any in-flight read: its response must not land in the view
+  // of the action/address we are switching to.
+  readId++
+  pending.value = false
   result.value = null
   error.value = ''
   txValue.value = seededValue()
@@ -1017,6 +822,9 @@ function resetInputs() {
   queuedRead = false
   resetMetadataPreview()
 
+  // Deleting is deliberate: stale keys must leave the reactive record, not
+  // linger as empty strings that seeding would then skip.
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
   for (const key of Object.keys(inputValues)) delete inputValues[key]
   seedInputValues(
     props.action.inputs,
@@ -1066,11 +874,13 @@ async function resolveMetadataPreview(
     if (!resolved?.metadata) {
       metadataError.value = 'Response is not token metadata'
     }
-  } catch (err: any) {
+  } catch (err) {
     if (metadataUri.value !== uri) return
 
+    const cause = err as
+      { data?: { message?: string }; message?: string } | null | undefined
     metadataError.value =
-      err?.data?.message || err?.message || 'Failed to resolve metadata'
+      cause?.data?.message || cause?.message || 'Failed to resolve metadata'
   } finally {
     if (metadataUri.value === uri) metadataResolving.value = false
   }
@@ -1088,6 +898,7 @@ async function read() {
     return
   }
 
+  const id = ++readId
   pending.value = true
   error.value = ''
   result.value = null
@@ -1099,25 +910,29 @@ async function read() {
       inputValues,
       resolveEnsAddress,
     )
+    if (id !== readId) return
     if (ensError) {
       error.value = ensError
       hasResult.value = true
       return
     }
 
-    result.value = await props.readFunction({
+    const value = await props.readFunction({
       address: props.address,
       abi: props.abi,
       functionName: props.action.name,
       args: buildArgs(resolved),
     })
+    if (id !== readId) return
+    result.value = value
     hasResult.value = true
-  } catch (err: any) {
+  } catch (err) {
+    if (id !== readId) return
     emit('error', err)
     error.value = normalizeReadError(err, { functionName: props.action.name })
     hasResult.value = true
   } finally {
-    pending.value = false
+    if (id === readId) pending.value = false
   }
 }
 

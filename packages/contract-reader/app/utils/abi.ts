@@ -48,13 +48,15 @@ function buildFacetMap(sources: ContractSourceUnit[]): Map<string, string> {
     if (unit.role !== 'facet') continue
     const facetName = unit.name || unit.address
     for (const item of unit.abi) {
-      if ((item as any).type !== 'function') continue
+      if ((item as { type?: string }).type !== 'function') continue
       try {
         map.set(
           toFunctionSelector(item as AbiFunction).toLowerCase(),
           facetName,
         )
-      } catch {}
+      } catch {
+        // Skip malformed ABI entries — facet attribution is best-effort.
+      }
     }
   }
 
@@ -67,7 +69,8 @@ function buildAction(
 ): ContractAction {
   const fn = resolved.abi as unknown as AbiFunction
   const meta = resolved.meta
-  const raw = fn as any
+  // Pre-0.4.x ABIs carry `payable`/`constant` instead of `stateMutability`.
+  const raw = fn as AbiFunction & { payable?: boolean; constant?: boolean }
   const inferred =
     fn.stateMutability ??
     (raw.payable ? 'payable' : raw.constant ? 'view' : 'nonpayable')

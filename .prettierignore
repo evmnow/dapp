@@ -1,0 +1,4 @@
+# Generated files — not hand-formatted
+pnpm-lock.yaml
+CHANGELOG.md
+packages/*/CHANGELOG.md

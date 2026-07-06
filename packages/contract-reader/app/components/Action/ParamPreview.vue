@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import type { Abi } from 'viem'
 import { numberToHex } from 'viem'
 import type { ContractReadFn, MetadataResolveFn } from '../../types/actions'
@@ -86,6 +86,10 @@ watch(
   },
   { immediate: true },
 )
+
+onUnmounted(() => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+})
 
 async function resolvePreview(uri: string | null) {
   resolvedImage.value = null

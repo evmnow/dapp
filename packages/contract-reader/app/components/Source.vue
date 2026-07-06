@@ -83,10 +83,14 @@
                 </button>
               </td>
               <td class="cr-source-code-cell">
+                <!-- Shiki output: source text arrives fully escaped inside
+                     generated span markup. -->
+                <!-- eslint-disable vue/no-v-html -->
                 <pre
                   class="cr-source-code-block"
                   v-html="highlightedLines[index]"
                 />
+                <!-- eslint-enable vue/no-v-html -->
               </td>
             </slot>
           </tr>
@@ -106,7 +110,7 @@
 <script setup lang="ts">
 import type { SourceFile } from '../types/contract'
 import type { SourceSelection } from '../utils/source'
-import { highlightSolidity } from '../utils/syntax'
+import { highlightSolidity, loadHighlighter } from '../utils/syntax'
 
 const props = defineProps<{
   files: SourceFile[]
@@ -157,8 +161,20 @@ const activeFile = computed(
   () => props.files[activeFileIndex.value] || props.files[0],
 )
 const lines = computed(() => activeFile.value?.content.split('\n') || [])
+
+// Shiki loads lazily the first time a source view renders; lines show as
+// escaped plain text until then and re-highlight when it is ready.
+const highlighterGeneration = ref(0)
+if (!props.highlight) {
+  void loadHighlighter().then(() => {
+    highlighterGeneration.value++
+  })
+}
+
 const highlightedLines = computed(() => {
   if (!activeFile.value) return []
+  // Re-run once the lazily loaded highlighter becomes available.
+  void highlighterGeneration.value
   return (props.highlight ?? highlightSolidity)(activeFile.value.content)
 })
 const lineElements = new Map<number, HTMLElement>()

@@ -1,6 +1,6 @@
 import { isAddress } from 'viem'
 import { parseUnits } from '@evmnow/sdk'
-import { ensCache } from '@1001-digital/layers.evm/app/utils/ens'
+import { ensCache } from './ens-cache'
 import type { ContractActionParam } from '../types/contract'
 import type { Autofill, ParamMeta, ValidationRule } from '../types/metadata'
 
@@ -41,12 +41,38 @@ function isIntegerType(type: string): boolean {
   return /^u?int\d*$/.test(type)
 }
 
-function parseBigInt(value: string): bigint | null {
+/** Parse an integer string to bigint, or `null` when it doesn't parse. */
+export function parseBigInt(value: string): bigint | null {
   try {
     return BigInt(value)
   } catch {
     return null
   }
+}
+
+// ── Validation patterns from untrusted metadata (ReDoS mitigation) ──
+// Patterns are length-capped, compiled once with a try/catch (invalid or
+// oversized patterns disable the rule), and never run against oversized
+// values — they execute per keystroke.
+const MAX_PATTERN_LENGTH = 200
+const MAX_PATTERN_TEST_LENGTH = 10_000
+const MAX_CACHED_PATTERNS = 200
+const compiledPatterns = new Map<string, RegExp | null>()
+
+function getValidationPattern(source: string): RegExp | null {
+  if (source.length > MAX_PATTERN_LENGTH) return null
+
+  let compiled = compiledPatterns.get(source)
+  if (compiled === undefined) {
+    try {
+      compiled = new RegExp(source)
+    } catch {
+      compiled = null
+    }
+    if (compiledPatterns.size >= MAX_CACHED_PATTERNS) compiledPatterns.clear()
+    compiledPatterns.set(source, compiled)
+  }
+  return compiled
 }
 
 function parseArrayEntries(value: string): unknown[] {
@@ -143,12 +169,12 @@ function validatePrimitiveValue(
   }
 
   if (validation?.pattern) {
-    try {
-      const pattern = new RegExp(validation.pattern)
-      if (!pattern.test(trimmed)) {
-        return validation.message || 'Invalid value'
-      }
-    } catch {
+    const pattern = getValidationPattern(validation.pattern)
+    if (
+      pattern &&
+      trimmed.length <= MAX_PATTERN_TEST_LENGTH &&
+      !pattern.test(trimmed)
+    ) {
       return validation.message || 'Invalid value'
     }
   }
@@ -480,7 +506,9 @@ export function hydrateInputValues(
           if (Array.isArray(parsed)) {
             hydrateInputValues(input.components!, values, parsed, key)
           }
-        } catch {}
+        } catch {
+          // Malformed serialized tuple — leave the member fields untouched.
+        }
       }
       return
     }

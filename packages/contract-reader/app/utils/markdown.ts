@@ -23,7 +23,7 @@ export function renderMarkdown(text: string): string {
   const lines = text.replace(/\r\n/g, '\n').trim().split('\n')
   const blocks: string[] = []
 
-  for (let index = 0; index < lines.length; ) {
+  for (let index = 0; index < lines.length;) {
     const line = lines[index]!
 
     if (!line.trim()) {
