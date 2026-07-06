@@ -34,6 +34,7 @@
     --cr-action-card-header-padding-block: var(--size-2);
     --cr-action-card-header-padding-inline: var(--size-3);
     --cr-action-card-body-padding: var(--size-3);
+    /* Uniform grid gap between the action detail's sections. */
     --cr-action-detail-gap: var(--size-4);
     --cr-action-detail-button-justify: start;
     --cr-input-help-margin-top: calc(
