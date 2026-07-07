@@ -101,6 +101,7 @@ async function main() {
   console.log(`ipfs://     ipfs://${cid}`)
   console.log(`Contenthash ${contenthash}`)
   console.log(`Gateway     https://${ipfsEnv.gatewayHost}/ipfs/${cid}/`)
+  console.log(`Preview     https://${toSubdomainCid(cid)}.ipfs.dweb.link/`)
   console.log('')
   console.log(
     `Update ${ensName} from the SAFE: set the contenthash above (or ipfs://${cid} in the ENS manager).`,
@@ -314,6 +315,34 @@ function decodeBase58(value: string): Uint8Array {
   const bytes = hex === '00' ? [] : decodeBase16(hex)
   const leadingZeroes = value.match(/^1*/)?.[0].length ?? 0
   return new Uint8Array([...new Array<number>(leadingZeroes).fill(0), ...bytes])
+}
+
+// Subdomain gateways need a case-insensitive CID, so anything that is not
+// already base32 CIDv1 gets re-encoded.
+function toSubdomainCid(cid: string): string {
+  if (cid.startsWith('b')) return cid
+  return `b${encodeBase32(cidToBytes(cid))}`
+}
+
+function encodeBase32(bytes: Uint8Array): string {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz234567'
+  let out = ''
+  let bits = 0
+  let buffer = 0
+
+  for (const byte of bytes) {
+    buffer = (buffer << 8) | byte
+    bits += 8
+    while (bits >= 5) {
+      bits -= 5
+      out += alphabet[(buffer >> bits) & 0x1f]
+      buffer &= (1 << bits) - 1
+    }
+  }
+  if (bits > 0) {
+    out += alphabet[(buffer << (5 - bits)) & 0x1f]
+  }
+  return out
 }
 
 function decodeBase32(value: string): Uint8Array {
