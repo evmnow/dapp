@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 export function useRpcTester() {
   const testing = ref(false)
   const testStatus = ref<'idle' | 'success' | 'error'>('idle')

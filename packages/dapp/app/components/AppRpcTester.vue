@@ -21,9 +21,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRpcTester } from '~/composables/useRpcTester'
-import { computed } from 'vue'
-
 const props = defineProps<{ rpc?: string | null; chainId?: string | number | null; label?: string }>()
 const { rpc, chainId, label } = toRefs(props)
 
@@ -32,8 +29,6 @@ const { testing, testStatus, testResult, testError, testRpcConnection } = useRpc
 function onTest() {
   void testRpcConnection(rpc.value, chainId.value)
 }
-
-const disabled = computed(() => !rpc.value || testing.value)
 </script>
 
 <style scoped>
