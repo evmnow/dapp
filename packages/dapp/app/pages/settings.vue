@@ -25,33 +25,7 @@
       v-model:chain-id="chainId"
     />
 
-    <Alert
-      v-if="testStatus === 'success'"
-      type="info"
-      dismissable
-    >
-      <p>
-        RPC connection successful! Connected to chain ID {{ testResult?.chainId }}.
-      </p>
-    </Alert>
-
-    <Alert
-      v-if="testStatus === 'error'"
-      type="error"
-      dismissable
-    >
-      <p>{{ testError }}</p>
-    </Alert>
-
-    <Actions>
-      <Button
-        class="tertiary small"
-        :disabled="!rpc || testing"
-        @click="testRpcConnection"
-      >
-        {{ testing ? 'Testing...' : 'Test RPC Connection' }}
-      </Button>
-    </Actions>
+    <AppRpcTester :rpc="rpc" :chain-id="chainId" />
   </AppPage>
 </template>
 
