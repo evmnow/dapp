@@ -25,6 +25,9 @@ export function useRpcTester() {
       if (data.error) throw new Error(data.error.message || 'RPC request failed')
 
       const returnedChainId = parseInt(data.result, 16)
+      if (Number.isNaN(returnedChainId)) {
+        throw new Error('RPC returned an invalid chain ID')
+      }
       testResult.value = { chainId: returnedChainId.toString() }
 
       const configuredChainId = chainId != null ? parseInt(String(chainId), 10) : null
