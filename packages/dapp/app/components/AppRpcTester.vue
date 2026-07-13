@@ -32,10 +32,10 @@ function onTest() {
 </script>
 
 <style scoped>
-.rpc-tester {
-  margin-top: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+@layer components {
+  .rpc-tester {
+    display: grid;
+    gap: var(--size-3);
+  }
 }
 </style>
