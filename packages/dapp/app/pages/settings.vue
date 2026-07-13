@@ -24,11 +24,17 @@
       v-model="rpc"
       v-model:chain-id="chainId"
     />
+
+    <AppRpcTester
+      :rpc="effectiveRpc"
+      :chain-id="effectiveChainId"
+    />
   </AppPage>
 </template>
 
 <script setup lang="ts">
-const { chainId, rpc, rpcOverride } = useReaderRpc()
+const { chainId, effectiveChainId, effectiveRpc, rpc, rpcOverride } =
+  useReaderRpc()
 
 useHead({ title: 'Settings' })
 </script>
