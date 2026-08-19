@@ -3,6 +3,12 @@
 All notable changes across all packages in this monorepo.
 Generated from individual package changelogs — do not edit manually.
 
+## 2026-07-13
+
+- **Minor** Add a "Test RPC Connection" button to the settings page. ([#15](https://github.com/evmnow/dapp/pull/15)) [`ca58b3d`](https://github.com/evmnow/dapp/commit/ca58b3d)
+  The button sends an `eth_chainId` request to the effective reader RPC and reports success, connection failures, or a mismatch between the returned chain ID and the configured one — handy for verifying a local dev endpoint before using it.
+  _`dapp`_
+
 ## 2026-07-06
 
 - **Minor** New public composables and a component that extract generic reader orchestration out of consuming apps: [`5100264`](https://github.com/evmnow/dapp/commit/5100264)

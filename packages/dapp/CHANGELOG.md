@@ -1,5 +1,13 @@
 # @evmnow/dapp
 
+## 0.3.0
+
+### Minor Changes
+
+- [#15](https://github.com/evmnow/dapp/pull/15) [`ca58b3d`](https://github.com/evmnow/dapp/commit/ca58b3d782dd6aad610feb993d40dccab8718fc1) Thanks [@nishantrpai](https://github.com/nishantrpai)! - Add a "Test RPC Connection" button to the settings page.
+
+  The button sends an `eth_chainId` request to the effective reader RPC and reports success, connection failures, or a mismatch between the returned chain ID and the configured one — handy for verifying a local dev endpoint before using it.
+
 ## 0.2.4
 
 ### Patch Changes
