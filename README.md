@@ -5,7 +5,7 @@ A streamlined, open-source version of the block explorer experience at [evm.now]
 This repo ships two packages:
 
 - **`@evmnow/dapp`** — the Nuxt app behind evm.now (published as versioned GitHub releases, not to npm).
-- **`@evmnow/contract-reader`** — the reusable pieces powering the dapp as a Nuxt layer: Vue components, composables, and utilities for rendering ABIs, decoding inputs/outputs, resolving ENS, and wiring up read and write calls via viem and wagmi. Extend it from another Nuxt project to drop a contract UI into your own app.
+- **`@evmnow/contract-reader`** — the reusable pieces powering the dapp as a Nuxt layer: Vue components, composables, and utilities for rendering ABIs, decoding inputs/outputs, resolving ENS/GNS/WNS names, and wiring up read and write calls via viem and wagmi. Extend it from another Nuxt project to drop a contract UI into your own app.
 
 We believe EVM contracts deserve a simple, open UI that lets users interact with them permissionlessly. This is the foundation — alongside the contract-metadata standard and SDK we're building to power better UX across the ecosystem.
 
@@ -35,7 +35,7 @@ NUXT_PUBLIC_DEFAULT_CHAIN_ID=1
 NUXT_PUBLIC_DEFAULT_RPC=https://rpc.example.org
 ```
 
-`NUXT_PUBLIC_MAINNET_ENS_RPC` can be set when you want a dedicated Ethereum mainnet RPC for `.eth` ENS resolution.
+`NUXT_PUBLIC_MAINNET_ENS_RPC` can be set when you want a dedicated Ethereum mainnet RPC for `.eth`, `.gwei`, and `.wei` name resolution. The environment variable keeps its established name for compatibility.
 
 ### RPC via URL
 
@@ -45,7 +45,7 @@ Links can pass an RPC endpoint with the [dappspec](https://ethereum-magicians.or
 https://evmnow.eth.link/?ds-rpc-1=https%3A%2F%2Frpc.example.org
 ```
 
-The override takes priority over saved settings for the session and is never stored. When several `ds-rpc-*` parameters are present, the one matching the selected chain wins, falling back to the first. A `ds-rpc-1` endpoint is also used for `.eth` ENS resolution.
+The override takes priority over saved settings for the session and is never stored. When several `ds-rpc-*` parameters are present, the one matching the selected chain wins, falling back to the first. A `ds-rpc-1` endpoint is also used for ENS, GNS, and WNS resolution.
 
 ## Repo
 

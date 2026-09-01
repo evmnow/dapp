@@ -4,6 +4,10 @@ import {
   type SourceConfig,
 } from '@evmnow/sdk'
 import type { ContractMetadataResult } from '../types/metadata-result'
+import {
+  createEthereumNameClient,
+  resolveContractIdentifier,
+} from '../utils/names'
 
 function cleanRpc(value: string | undefined) {
   const rpc = value?.trim()
@@ -86,9 +90,13 @@ export function useContractMetadataSdk(options: {
       sources: options.sources ? toValue(options.sources) : undefined,
       fetch: resolveFetch(options.fetch),
     })
+    const names = createEthereumNameClient({
+      rpcUrl: cleanRpc(options.ensRpc ? toValue(options.ensRpc) : undefined),
+    })
 
     try {
-      const result = await client.get(input)
+      const identifier = await resolveContractIdentifier(input, names)
+      const result = await client.get(identifier)
       if (isLatestRequest(id)) {
         contract.value = result
       }

@@ -335,7 +335,7 @@ import {
   hydrateInputValues,
   parseBigInt,
   resolveAutofillValue,
-  resolveEnsInputs,
+  resolveNameInputs,
   seedInputValues,
   serializeInputArgs,
   type ResolvedEnsAddresses,
@@ -497,7 +497,7 @@ const emit = defineEmits<{
   error: [error: unknown]
 }>()
 
-const { resolveAddress: resolveEnsAddress } = useEnsResolver()
+const { resolveAddress: resolveNameAddress } = useEthereumNames()
 
 const inputValues = reactive<Record<string, string>>({})
 const inputErrors = computed(() =>
@@ -700,12 +700,12 @@ const writeRequest = computed<(() => Promise<Hash>) | undefined>(() => {
   return async () => {
     const value = props.action.isPayable ? txValue.value.trim() : ''
 
-    const { resolved, error: ensError } = await resolveEnsInputs(
+    const { resolved, error: nameError } = await resolveNameInputs(
       props.action.inputs,
       inputValues,
-      resolveEnsAddress,
+      resolveNameAddress,
     )
-    if (ensError) throw new Error(ensError)
+    if (nameError) throw new Error(nameError)
 
     return writeFunction({
       address: props.address,
@@ -905,14 +905,14 @@ async function read() {
   hasResult.value = false
 
   try {
-    const { resolved, error: ensError } = await resolveEnsInputs(
+    const { resolved, error: nameError } = await resolveNameInputs(
       props.action.inputs,
       inputValues,
-      resolveEnsAddress,
+      resolveNameAddress,
     )
     if (id !== readId) return
-    if (ensError) {
-      error.value = ensError
+    if (nameError) {
+      error.value = nameError
       hasResult.value = true
       return
     }

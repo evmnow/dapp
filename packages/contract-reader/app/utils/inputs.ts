@@ -379,16 +379,20 @@ export function buildInputArgs(
   })
 }
 
-/** Addresses keyed by the ENS name they were resolved from. */
-export type ResolvedEnsAddresses = Record<string, string>
+/** Addresses keyed by the Ethereum name they were resolved from. */
+export type ResolvedNameAddresses = Record<string, string>
+/** @deprecated Use ResolvedNameAddresses. */
+export type ResolvedEnsAddresses = ResolvedNameAddresses
 
-export type EnsAddressResolver = (identifier: string) => Promise<string | null>
+export type NameAddressResolver = (identifier: string) => Promise<string | null>
+/** @deprecated Use NameAddressResolver. */
+export type EnsAddressResolver = NameAddressResolver
 
-function isEnsName(value: string): boolean {
+function isEthereumName(value: string): boolean {
   return !!value && !isAddress(value) && value.includes('.')
 }
 
-function collectEnsNames(
+function collectEthereumNames(
   inputs: ContractActionParam[],
   values: Record<string, string>,
   prefix?: string,
@@ -399,7 +403,7 @@ function collectEnsNames(
     const key = buildInputKey(prefix, input.name, index)
 
     if (isTupleInput(input)) {
-      for (const name of collectEnsNames(input.components!, values, key)) {
+      for (const name of collectEthereumNames(input.components!, values, key)) {
         names.add(name)
       }
       return
@@ -409,7 +413,7 @@ function collectEnsNames(
 
     if (input.type === 'address') {
       const trimmed = value.trim()
-      if (isEnsName(trimmed)) names.add(trimmed)
+      if (isEthereumName(trimmed)) names.add(trimmed)
       return
     }
 
@@ -418,7 +422,7 @@ function collectEnsNames(
       for (const entry of parseArrayEntries(value)) {
         if (typeof entry !== 'string') continue
         const trimmed = entry.trim()
-        if (isEnsName(trimmed)) names.add(trimmed)
+        if (isEthereumName(trimmed)) names.add(trimmed)
       }
     }
   })
@@ -427,18 +431,18 @@ function collectEnsNames(
 }
 
 /**
- * Force-resolve every ENS name used in address-typed inputs before args are
+ * Force-resolve every Ethereum name used in address-typed inputs before args are
  * built, so a read/write never races the background resolution of the address
  * input fields. Returns the resolved name → address map for `buildInputArgs`,
  * or an error message for the first name that fails to resolve.
  */
-export async function resolveEnsInputs(
+export async function resolveNameInputs(
   inputs: ContractActionParam[],
   values: Record<string, string>,
-  resolveAddress: EnsAddressResolver,
-): Promise<{ resolved: ResolvedEnsAddresses; error: string | null }> {
-  const resolved: ResolvedEnsAddresses = {}
-  const names = [...collectEnsNames(inputs, values)]
+  resolveAddress: NameAddressResolver,
+): Promise<{ resolved: ResolvedNameAddresses; error: string | null }> {
+  const resolved: ResolvedNameAddresses = {}
+  const names = [...collectEthereumNames(inputs, values)]
 
   const addresses = await Promise.all(
     names.map((name) => resolveAddress(name).catch(() => null)),
@@ -447,13 +451,16 @@ export async function resolveEnsInputs(
   for (const [index, name] of names.entries()) {
     const address = addresses[index]
     if (!address || !isAddress(address)) {
-      return { resolved, error: `Could not resolve ENS name "${name}"` }
+      return { resolved, error: `Could not resolve Ethereum name "${name}"` }
     }
     resolved[name] = address
   }
 
   return { resolved, error: null }
 }
+
+/** @deprecated Use resolveNameInputs. */
+export const resolveEnsInputs = resolveNameInputs
 
 /** Validate a human decimal amount string (non-negative, optional fraction). */
 export function validateAmountString(

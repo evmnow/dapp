@@ -30,6 +30,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@1001-digital/ethereum-names": "^0.5.0",
     "@1001-digital/layers.evm": "^2.9.0",
     "@evmnow/sdk": "^0.7.0",
     "@wagmi/core": "^3.4.1",

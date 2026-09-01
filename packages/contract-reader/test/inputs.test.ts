@@ -8,6 +8,7 @@ import {
   hydrateInputValues,
   parseBigInt,
   parseInputValue,
+  resolveNameInputs,
   resolveAutofillValue,
   serializeInputArgs,
   validateAmountString,
@@ -184,6 +185,12 @@ describe('buildInputErrors', () => {
     expect(buildInputErrors(inputs, { to: 'vitalik.eth' }).to).toBeNull()
   })
 
+  it('accepts GNS and WNS names for address inputs', () => {
+    const inputs = [param({ name: 'to', type: 'address' })]
+    expect(buildInputErrors(inputs, { to: 'ross.gwei' }).to).toBeNull()
+    expect(buildInputErrors(inputs, { to: 'ross.wei' }).to).toBeNull()
+  })
+
   it('applies metadata validation patterns', () => {
     const inputs = [
       param({
@@ -272,6 +279,46 @@ describe('buildInputErrors', () => {
 
     expect(buildInputErrors(inputs, { 'config.count': 'xyz' })).toEqual({
       'config.count': 'Enter a valid number',
+    })
+  })
+})
+
+describe('resolveNameInputs', () => {
+  it('resolves .eth, .gwei, and .wei names before building arguments', async () => {
+    const inputs = [
+      param({ name: 'to', type: 'address' }),
+      param({ name: 'recipients', type: 'address[]' }),
+    ]
+    const values = {
+      to: 'ross.wei',
+      recipients: 'alice.gwei, vitalik.eth',
+    }
+    const addresses: Record<string, string> = {
+      'ross.wei': '0x0000000000000000000000000000000000000001',
+      'alice.gwei': '0x0000000000000000000000000000000000000002',
+      'vitalik.eth': '0x0000000000000000000000000000000000000003',
+    }
+
+    const result = await resolveNameInputs(
+      inputs,
+      values,
+      async (name) => addresses[name] ?? null,
+    )
+
+    expect(result).toEqual({ resolved: addresses, error: null })
+  })
+
+  it('reports an unresolved name without passing it to viem', async () => {
+    const inputs = [param({ name: 'to', type: 'address' })]
+    const result = await resolveNameInputs(
+      inputs,
+      { to: 'missing.wei' },
+      async () => null,
+    )
+
+    expect(result).toEqual({
+      resolved: {},
+      error: 'Could not resolve Ethereum name "missing.wei"',
     })
   })
 })

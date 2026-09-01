@@ -35,6 +35,9 @@ importers:
 
   packages/contract-reader:
     dependencies:
+      '@1001-digital/ethereum-names':
+        specifier: ^0.5.0
+        version: 0.5.0(viem@2.48.4(typescript@5.9.3)(zod@3.25.76))
       '@1001-digital/layers.evm':
         specifier: ^2.9.0
         version: 2.9.0(039a58bb2513231a4d05ca93d9b0bbad)
@@ -118,6 +121,11 @@ packages:
     peerDependenciesMeta:
       '@helia/verified-fetch':
         optional: true
+
+  '@1001-digital/ethereum-names@0.5.0':
+    resolution: {integrity: sha512-2HLjr+dRYQw3dmx6yiM1uDTBuAQXms08QYLQ0ea2akiQww7MQMfg4J9+9u3PS/kWGqJSBKh7lxlGSyOsXmTXCQ==}
+    peerDependencies:
+      viem: ^2.0.0
 
   '@1001-digital/layers.base@2.0.36':
     resolution: {integrity: sha512-z+3H0LBB1WftLKC8ejWnTCk6YPiSET1/dMFQw3xXUNNB+VwYokgqB7dqaYoD5RwC1UkKKNh/cIT9AHyU7eaEzg==}
@@ -8356,6 +8364,10 @@ snapshots:
       - debug
       - supports-color
       - utf-8-validate
+
+  '@1001-digital/ethereum-names@0.5.0(viem@2.48.4(typescript@5.9.3)(zod@3.25.76))':
+    dependencies:
+      viem: 2.48.4(typescript@5.9.3)(zod@3.25.76)
 
   '@1001-digital/layers.base@2.0.36(magicast@0.5.3)(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue@3.5.39(typescript@5.9.3))':
     dependencies:

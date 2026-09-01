@@ -11,8 +11,12 @@
       v-else
       class-name="wallet-button"
     >
-      <template #default="{ display }">
-        {{ display }}
+      <template #default="{ address, display }">
+        <AccountName
+          v-if="address"
+          :address="address"
+        />
+        <template v-else>{{ display }}</template>
       </template>
     </EvmProfile>
   </ClientOnly>

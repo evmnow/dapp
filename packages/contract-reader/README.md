@@ -68,7 +68,7 @@ import { highlightSolidity } from '@evmnow/contract-reader/utils/syntax'
 
 ## Loading contract metadata
 
-`useContractMetadataSdk` wraps `createContractClient` from `@evmnow/sdk` as a reactive composable. Pass an address (or `chainId:address` / ENS name) to `get()` and the result is exposed through `contract`, with `pending` and `error` for UI state.
+`useContractMetadataSdk` wraps `createContractClient` from `@evmnow/sdk` as a reactive composable. Pass an address (or `chainId:address` / `.eth`, `.gwei`, or `.wei` name) to `get()` and the result is exposed through `contract`, with `pending` and `error` for UI state.
 
 `useContractWallet` connects the wallet layer to everything else: it resolves reads through an explicit RPC URL, the connected wallet's provider, or the wagmi public client (in that order), and exposes the pieces the other APIs expect.
 

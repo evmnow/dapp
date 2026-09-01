@@ -4,8 +4,8 @@
       <FormGroup>
         <FormInputGroup>
           <input
-            v-model="addressOrEns"
-            placeholder="controller.ens.eth or 0x..."
+            v-model="identifier"
+            placeholder="Ethereum name or 0x..."
             autocomplete="off"
             spellcheck="false"
           />
@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-const addressOrEns = ref('')
+const identifier = ref('')
 
 const examples = [
   {
@@ -77,7 +77,7 @@ const examples = [
 ]
 
 async function openContract() {
-  const value = addressOrEns.value.trim()
+  const value = identifier.value.trim()
   if (!value) return
 
   await navigateTo({

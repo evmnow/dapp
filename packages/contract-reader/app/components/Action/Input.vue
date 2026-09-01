@@ -21,7 +21,7 @@
       <option value="true">true</option>
     </select>
 
-    <EvmAddressInput
+    <NameAddressInput
       v-else-if="input.type === 'address'"
       :id="controlId"
       v-model="model"

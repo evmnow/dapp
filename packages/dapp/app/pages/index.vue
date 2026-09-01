@@ -22,8 +22,9 @@
       >
         <p>
           Repository and Sourcify metadata can load verified addresses without
-          RPC. Set an RPC URL in settings for ENS lookup and contractURI
-          metadata, or connect a wallet for provider-backed metadata and reads.
+          RPC. Set an RPC URL in settings for ENS, GNS, and WNS lookup and
+          contractURI metadata, or connect a wallet for provider-backed metadata
+          and reads.
         </p>
 
         <Actions>
