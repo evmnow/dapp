@@ -3,6 +3,11 @@
 All notable changes across all packages in this monorepo.
 Generated from individual package changelogs — do not edit manually.
 
+## 2026-09-01
+
+- **Minor** Resolve and reverse-resolve ENS (`.eth`), GNS (`.gwei`), and WNS (`.wei`) names across contract lookup, ABI address inputs, result displays, and the connected-wallet label. [`a0cff7b`](https://github.com/evmnow/dapp/commit/a0cff7b)
+  _`contract-reader`, `dapp`_
+
 ## 2026-07-13
 
 - **Minor** Add a "Test RPC Connection" button to the settings page. ([#15](https://github.com/evmnow/dapp/pull/15)) [`ca58b3d`](https://github.com/evmnow/dapp/commit/ca58b3d)
