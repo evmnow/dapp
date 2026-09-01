@@ -1,5 +1,11 @@
 # @evmnow/contract-reader
 
+## 0.9.0
+
+### Minor Changes
+
+- [`a0cff7b`](https://github.com/evmnow/dapp/commit/a0cff7b119135be4f904e6cbf61f03b8cffc2a0e) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Resolve and reverse-resolve ENS (`.eth`), GNS (`.gwei`), and WNS (`.wei`) names across contract lookup, ABI address inputs, result displays, and the connected-wallet label.
+
 ## 0.8.0
 
 ### Minor Changes
